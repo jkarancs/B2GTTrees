@@ -1,0 +1,28 @@
+from WMCore.Configuration import Configuration
+config = Configuration()
+
+config.section_('General')
+config.General.transferOutputs = True
+config.General.requestName = 'TASK'
+
+config.section_('JobType')
+config.JobType.psetName = '../../../../../Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py'
+config.JobType.pluginName = 'Analysis'
+config.JobType.pyCfgParams = [
+    'isData=False',
+    'maxEvts=-1',
+    'LHE=False'
+]
+
+config.section_('Data')
+config.Data.outLFN = 'SE_USERDIR'
+config.Data.inputDataset = 'DATASET'
+config.Data.inputDBS = 'global'
+config.Data.splitting = 'FileBased'
+config.Data.unitsPerJob = 1
+config.Data.publication = True
+config.Data.publishDataName = 'PUBNAME'
+
+config.section_('User')
+config.section_('Site')
+config.Site.storageSite = 'SE_SITE'

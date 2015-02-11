@@ -26,3 +26,25 @@ cmsRun Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py maxEvts=100 sample="file:/dat
 Convert EdmNtuple to TTreeNtuple:
 
 cmsRun Analysis/B2GTTrees/test/B2GEdmtToTTreeNtuple_cfg.py
+
+CRAB3 Tool - mass produce B2GEdmNtuples
+=======================================
+
+cd Analysis/B2GTTrees/test/crab3
+cmsenv
+source /cvmfs/cms.cern.ch/crab3/crab.csh
+
+Usage:
+source crab3_B2GEdmNtuples.csh --help
+
+Edit crab3_B2GEdmNtuples.csh
+  Set: SE_SITE, SE_USERDIR, DATASETS variables
+  and optionally DLDIR (if you want to download output too)
+  check if your site is set in se_util.csh (SITE_INFO variable)
+
+Then:
+source crab3_B2GEdmNtuples.csh create <TASKNAME>
+source crab3_B2GEdmNtuples.csh submit <TASKNAME>
+source crab3_B2GEdmNtuples.csh status <TASKNAME>
+source crab3_B2GEdmNtuples.csh report <TASKNAME>
+source crab3_B2GEdmNtuples.csh download <TASKNAME>
