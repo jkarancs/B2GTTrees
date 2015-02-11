@@ -105,7 +105,6 @@ void B2GTTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     for (size_t i=0; i<variablesFloat.size(); ++i) {
       std::string varname_in=prefix_in+variablesFloat[i];
       edm::InputTag tag(label, varname_in);
-      std::cout<<label<<" "<<i<<" "<<varname_in<<std::endl;
       iEvent.getByLabel(tag, h_floats[varname_in]);
       for (size_t fi = 0;fi < maxInstance; ++fi) 
 	vfloats_values[variablesFloat[i]+"_"+label][fi] = (fi <h_floats[varname_in]->size()) ? h_floats[varname_in]->at(fi) : -9999.;
