@@ -1,10 +1,24 @@
 import FWCore.ParameterSet.Config as cms
 import copy
 
-leptons_size = cms.untracked.int32(5)
-jets_size    = cms.untracked.int32(20)
-subjets_size = cms.untracked.int32(50)
+gen_size = cms.untracked.int32(250)
+leptons_size = cms.untracked.int32(10)
+jets_size    = cms.untracked.int32(40)
+fatjets_size = cms.untracked.int32(15)
+subjets_size = cms.untracked.int32(30)
 
+genVars = cms.vstring(
+    "Charge",
+    "E",
+    "Eta",
+    "ID",
+    "Mass",
+    "MomID",
+    "Phi",
+    "Pt",
+    "Status",
+    "Y",
+)
 metVars = cms.vstring(
     "Pt",
     "Px",
@@ -163,6 +177,17 @@ fatJetVars += cms.vstring(
 
 B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
     physicsObjects = cms.VPSet(
+        # GenParticles
+        cms.PSet(
+            label = cms.string("genPart"),
+            prefix_in = cms.string("genPart"),
+            prefix_out = cms.string("gen_"),
+            maxInstances = gen_size,
+            variablesF = genVars,
+            variablesI = cms.vstring(),
+            singleI = cms.vstring(),
+            singleF = cms.vstring(),
+            ),
         # Electrons
         cms.PSet(
             label = cms.string("electrons"),
@@ -212,7 +237,7 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
             label = cms.string("jetsAK8"),
             prefix_in = cms.string("jetAK8"),
             prefix_out = cms.string("jetAK8_"),
-            maxInstances = jets_size,
+            maxInstances = fatjets_size,
             variablesF = fatJetVars,
             variablesI = cms.vstring(),
             singleI = cms.vstring(),
@@ -223,7 +248,7 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
             label = cms.string("jetsCmsTopTag"),
             prefix_in = cms.string("jetsCmsTopTag"),
             prefix_out = cms.string("jetsCmsTopTag_"),
-            maxInstances = jets_size,
+            maxInstances = fatjets_size,
             variablesF = fatJetVars,
             variablesI = cms.vstring(),
             singleI = cms.vstring(),

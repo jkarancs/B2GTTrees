@@ -23,8 +23,8 @@ private:
   
   std::map<std::string, int > max_instances; 
   std::map<std::string, int > sizes;
-  std::map<std::string, float[50] > vfloats_values;
-  std::map<std::string, int[50] > vints_values;
+  std::map<std::string, float[250] > vfloats_values;
+  std::map<std::string, int[250] > vints_values;
   std::map<std::string, float > float_values;
   std::map<std::string, int > int_values;
   

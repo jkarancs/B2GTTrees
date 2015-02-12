@@ -1,8 +1,28 @@
 // Razor recipe taken from the RazorBoost gurus: N. Strobbe, S. Sekmen
 //   https://github.com/nstrobbe/RazorBoost/blob/master/analyzer/utils.h
+// also info here:
+//   https://twiki.cern.ch/twiki/bin/view/CMSPublic/RazorLikelihoodHowTo
 #include "TLorentzVector.h"
 
 namespace Razor {
+  
+  // deltaR:
+  double fdeltaR(double eta1, double phi1, double eta2, double phi2) {
+    double deltaphi = fabs(phi1 - phi2);
+    if (deltaphi > TMath::Pi())
+      deltaphi = TMath::TwoPi() - deltaphi;
+    double deltaeta = fabs(eta1 - eta2);
+    double deltaR = sqrt(deltaphi*deltaphi + deltaeta*deltaeta);
+    return deltaR;
+  }
+  
+  // deltaPhi:
+  double fdeltaPhi(double phi1, double phi2) {
+    double deltaphi = fabs(phi1 - phi2);
+    if (deltaphi > TMath::Pi())
+      deltaphi = TMath::TwoPi() - deltaphi;
+    return deltaphi;
+  }
   
   // Hemispheres:
   std::vector<TLorentzVector> CombineJets_(std::vector<TLorentzVector> myjets) {
