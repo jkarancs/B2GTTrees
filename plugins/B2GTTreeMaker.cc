@@ -58,7 +58,8 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
     max_instance_str<<maxI;
     max_instances[label]=maxI;
     
-    tree->Branch((prefix_out+"size").c_str(), &sizes[label]);
+    if (variablesFloat.size() || variablesInt.size())
+      tree->Branch((prefix_out+"size").c_str(), &sizes[label]);
     
     for (size_t i=0; i<variablesFloat.size(); ++i) {
       std::string varname_out = prefix_out + variablesFloat[i].c_str();

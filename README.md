@@ -24,9 +24,13 @@ Running
 
 cmsRun Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py maxEvts=100 sample="file:/data/store/mc/Phys14DR/TT_Tune4C_13TeV-pythia8-tauola/MINIAODSIM/PU40bx25_tsg_PHYS14_25_V1-v1/00000/06E41ADB-7870-E411-8850-0025905A605E.root" LHE=False
 
-- Convert EdmNtuple to TTreeNtuple:
+- B2G EdmNtuple -> TTreeNtuple:
 
-cmsRun Analysis/B2GTTrees/test/B2GEdmtToTTreeNtuple_cfg.py
+cmsRun Analysis/B2GTTrees/test/B2GEdmToTTreeNtuple_cfg.py
+
+- B2G EdmNtuple + ExtraVariables -> TTreeNtuple:
+
+cmsRun Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py
 
 CRAB3 Tool
 ==========
