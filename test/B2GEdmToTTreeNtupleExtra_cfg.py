@@ -37,6 +37,7 @@ process = cms.Process("b2gAnalysisTTrees")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.categories.append('HLTrigReport')
+process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 from Configuration.AlCa.GlobalTag import GlobalTag as customiseGlobalTag

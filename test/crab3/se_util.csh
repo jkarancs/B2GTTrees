@@ -1,5 +1,5 @@
 #!/bin/tcsh
-if ( `which par_source | grep "aliased to" | wc -l` != 0 ) then
+if ( `which par_source | grep "aliased to" | wc -l` == 0 ) then
     if ( -e source_parallel.csh ) then
 	alias par_source 'source source_parallel.csh \!*'
     else
@@ -213,18 +213,18 @@ else if ( $cmd == "cp-v" ) then
     peek_or_source "cp.csh"
 
 else if ( $cmd == "cplfn" ) then
-    set localfile="/data"$arg1
+    set localfile="/data"`echo "$arg1" | sed "s;$PATH;;"`
     #  Create subdirectories and download file
     echo "-------------------------------------------------------"
-    echo "Copying file: "$arg1
-    echo "To: "$localfile
-    mkdir -p `dirname $localfile`
+    echo "Copying file: $arg1"
+    echo "To: $localfile"
+    echo_or_eval "mkdir -p "`dirname $localfile`
     # Copy from the cern server
-    lcg-cp -v -D srmv2 --vo cms "srm://srm-eoscms.cern.ch/eos/cms"$arg1 $localfile
+    echo_or_eval "$se_cp $arg1 "$localfile
     echo "-------------------------------------------------------"
     echo "Setting file and directry read/write permissions"
-    find `dirname $localfile` -type d -exec chmod 775 {} +
-    find `dirname $localfile` -type f -exec chmod 664 {} +
+    echo_or_eval "find "`dirname $localfile`" -type d -exec chmod 775 {} +"
+    echo_or_eval "find "`dirname $localfile`" -type f -exec chmod 664 {} +"
     echo "-------------------------------------------------------"
     unset localfile
 
@@ -245,7 +245,7 @@ else if ( $cmd == "rm" ) then
                 else 
                     set list_lastfile=`sed "s;/; ;g" lsout.txt | awk '{ print $NF }'`
                     set arg1_lastfile=`echo "$arg1" | sed "s;/; ;g" | awk '{ print $NF }'`
-                    if ( $list_lastfile == $arg1_lastfile ) then
+                    if ( $list_lastfile == "$arg1"_lastfile ) then
 			echo "$se_rm $arg1" >! rm.csh
                     else 
 			echo "$se_rmdir $arg1" >> rm.csh
@@ -299,7 +299,7 @@ else if ( $cmd == "set-perm" ) then
 	    else
                 set list_lastfile=`sed "s;/; ;g" lsout.txt | awk '{ print $NF }'`
                 set arg1_lastfile=`echo "$arg1" | sed "s;/; ;g" | awk '{ print $NF }'`
-                if ( $list_lastfile == $arg1_lastfile ) then
+                if ( $list_lastfile == "$arg1"_lastfile ) then
 	            echo "$se_chmod_664 $arg1" >! rm.csh
                 else 
 	            echo "$se_chmod_775 $arg1" >> rm.csh

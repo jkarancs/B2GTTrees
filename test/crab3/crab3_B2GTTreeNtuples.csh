@@ -1,22 +1,22 @@
 #!/bin/tcsh
 # Author: Janos Karancsi
 # E-mail: janos.karancsi@cern.ch
-# Tool: multicrab-like tool to create, submit, get status of crab3 tasks for B2GEdmNtuples
+# Tool: multicrab-like tool to create, submit, get status of crab3 tasks for B2G TTreeNtuples
 #       When jobs finish, we can also get report and download all output files locally
 
 echo "Usage:"                                                    >! Usage.txt
-echo "  source crab3_B2GEdmNtuples.csh <cmd> <TASKNAME> ..."     >> Usage.txt
+echo "  source crab3_B2GTTreeNtuples.csh <cmd> <TASKNAME> ..."   >> Usage.txt
 echo "  there is a default safety mechanism for each command"    >> Usage.txt
 echo "  add --run at the end to excecute them"                   >> Usage.txt
 echo ""                                                          >> Usage.txt
 echo "Commands:"                                                 >> Usage.txt
 echo "1) create <TASKNAME> <DATASETS.txt> <SE_SITE> <SE_USERDIR>">> Usage.txt
 echo "  The txt file should contain a short name and the"        >> Usage.txt
-echo "  MINIAODSIM dataset on each line"                         >> Usage.txt
+echo "  B2GEdmNTuple dataset on each line"                       >> Usage.txt
 echo "  SE_SITE and SE_USERDIR should be the location you want"  >> Usage.txt
 echo "  to send the output to, eg:"                              >> Usage.txt
 echo "  T2_HU_Budapest"                                          >> Usage.txt
-echo "  /store/user/jkarancs/SusyAnalysis/B2GEdmNtuple"          >> Usage.txt
+echo "  /store/user/jkarancs/SusyAnalysis/B2GTTreeNtuple"        >> Usage.txt
 echo ""                                                          >> Usage.txt
 echo "2) submit <TASKNAME>"                                      >> Usage.txt
 echo "  Submit tasks to the grid (check cfg files first)"        >> Usage.txt
@@ -27,20 +27,11 @@ echo "" 						         >> Usage.txt
 echo "4) report <TASKNAME>"                                      >> Usage.txt
 echo "  Show commands to get report of tasks"		         >> Usage.txt
 echo "" 						         >> Usage.txt
-echo "5) get_datasets <TASKNAME>"                                >> Usage.txt
-echo "  Get a list of produced datasets"		         >> Usage.txt
-echo "" 						         >> Usage.txt
-echo "6) download <TASKNAME> <DLDIR>"                            >> Usage.txt
+echo "5) download <TASKNAME> <DLDIR>"                            >> Usage.txt
 echo "  Download all root output files from the Storage"         >> Usage.txt
 echo "  element to a local directory DLDIR"                      >> Usage.txt
 echo "  Check that the SRM site name and url is defined for"     >> Usage.txt
 echo "  SE_SITE in the se_util.csh script (look for SITE_INFO)"  >> Usage.txt
-echo "" 						         >> Usage.txt
-echo "7) make_ttrees <TASKNAME> <DIR> <NPARALLEL>"               >> Usage.txt
-echo "  Produce locally TTreeNtuples from EdmNtuples"            >> Usage.txt
-echo "  Files need to be downloaded with the download command"   >> Usage.txt
-echo "  Multiple background cmsRuns can be run in parallel"      >> Usage.txt
-echo "  Useful if you have small samples (Few GB)"               >> Usage.txt
 
 if ( $1 == "-h" || $1 == "--help" || $#argv < 2 ) then
     cat Usage.txt; rm Usage.txt; exit
@@ -50,7 +41,7 @@ endif
 set cmd=$1
 set TASKNAME=$2
 # Working directory name (created in the current directory)
-set TASKDIR="B2G_edm_"$TASKNAME
+set TASKDIR="B2G_ttree_"$TASKNAME
 
 # Aliases
 if ( ! (-e $PWD/source_parallel.csh) || ! (-e $PWD/se_util.csh) ) then
@@ -90,15 +81,15 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
     if ( !(-f $TXT_FILE) ) then
 	echo "$TXT_FILE doesn't exist"; exit
     endif
-    grep "/" $TXT_FILE >! $TASKDIR/input_datasets.txt
-    sed "s;TASKDIR;$TASKDIR;;s;PUBNAME;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_edmntuple_py.txt > $TASKDIR/crab_template_edmntuple_py.txt
-    set N=`cat $TASKDIR/input_datasets.txt | wc -l`
+    cp $TXT_FILE $TASKDIR/input_datasets.txt
+    sed "s;TASKDIR;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_ttreentuple_py.txt > $TASKDIR/crab_template_ttreentuple_py.txt
+    set N=`grep "/" $TASKDIR/input_datasets.txt | wc -l`
     foreach i ( `seq 1 $N` )
 	set SHORT=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
 	set DATASET=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
-	sed "s;TASKNAME;$SHORT;;s;DATASET;$DATASET;" $TASKDIR/crab_template_edmntuple_py.txt > $TASKDIR/crab_$SHORT.py
+	sed "s;TASKNAME;$SHORT;;s;DATASET;$DATASET;" $TASKDIR/crab_template_ttreentuple_py.txt > $TASKDIR/crab_$SHORT.py
     end
-    rm $TASKDIR/crab_template_edmntuple_py.txt
+    rm $TASKDIR/crab_template_ttreentuple_py.txt
     echo "Config files ready in directory: "$TASKDIR
     ls -ltr $TASKDIR
 
@@ -111,43 +102,13 @@ else if ( `echo $cmd | grep "submit" | wc -l` ) then
 else if ( `echo $cmd | grep "status" | wc -l` ) then
     if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
     foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
-        eval_or_echo "crab status -d $dir"
+        eval_or_echo "crab status -d $dir | grep finished"
     end
 
 else if ( `echo $cmd | grep "report" | wc -l` ) then
     if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
     foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
         eval_or_echo "crab report -d $dir"
-    end
-
-else if ( `echo $cmd | grep "get_datasets" | wc -l` ) then
-    if ( (-f $TASKDIR/output_datasets.txt) ) then
-	if ( `cat $TASKDIR/output_datasets.txt | wc -l` != `cat $TASKDIR/input_datasets.txt | wc -l` ) then
-	    rm $TASKDIR/output_datasets.txt
-	    if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
-		foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
-		eval_or_echo "crab status -d $dir | grep 'Output dataset:' | awk '{ print "'$NF'" }' >>! $TASKDIR/output_datasets.txt"
-	    end
-	endif
-    else
-	exit
-	if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
-	foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
-	    eval_or_echo "crab status -d $dir | grep 'Output dataset:' | awk '{ print "'$NF'" }' >>! $TASKDIR/output_datasets.txt"
-	end
-    endif
-    eval_or_echo "cat $TASKDIR/output_datasets.txt"
-    set Nchar_max="0"
-    foreach short ( `cat B2G_edm_Feb04/input_datasets.txt | awk '{ print $1 }'` )
-	set Nchar=`echo $short | wc -m`
-	if ( $Nchar > $Nchar_max ) set Nchar_max=$Nchar
-    end
-    set N=`cat $TASKDIR/input_datasets.txt | wc -l`
-    if ( -f EdmNtuple_"$TASKNAME"_input.txt ) rm EdmNtuple_"$TASKNAME"_input.txt
-    foreach i ( `seq 1 $N` )
-	set SHORT=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
-	set OUT_DATASET=`sed -n "$i"p $TASKDIR/output_datasets.txt`
-	printf "%-"$Nchar_max"s %s\n" $SHORT $OUT_DATASET >>! EdmNtuple_"$TASKNAME"_input.txt
     end
 
 else if ( `echo $cmd | grep "getoutput" | wc -l` ) then
@@ -167,7 +128,7 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
     endif
     if ( $dry == "1" ) echo "source dl_$TASKNAME.csh \nOR add --run after command to excecute following lines:\n"
     set DLDIR=`echo $3"/"$TASKNAME | sed "s;//;/;"`
-    if ( `grep "EDM_NTUPLE" $TASKDIR/config.txt | wc -l` == 1 ) then
+    if ( `grep "TTREE_NTUPLE" $TASKDIR/config.txt | wc -l` == 1 ) then
 	echo "Files are already downloaded in "$DLDIR
     else
         set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
@@ -176,7 +137,7 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
         echo 'alias se "source se_util.csh \\!*"\n' >> dl_$TASKNAME.csh
         echo 'mkdir -p $DLDIR' >> dl_$TASKNAME.csh
         eval_or_echo "mkdir -p $DLDIR"
-        foreach taskdir ( `ls -ltrd $TASKDIR/*/ | sed "s;/; ;g" | awk '{ print $NF }'`)
+        foreach taskdir ( `ls -ltrd $TASKDIR/*/ | sed "s;/; ;g" | awk '{ print $NF }' | head -1`)
             set primary_dataset=`crab status -d $TASKDIR/$taskdir | grep "Output dataset:" | awk '{ print $3 }' | sed "s;/; ;g" | awk '{ print $1 }'`
             set SAMPLEDIR=`echo $taskdir | sed "s;crab_;;"`
             eval_or_echo "mkdir -p $DLDIR/$SAMPLEDIR"
@@ -189,31 +150,7 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
             echo "se dl $SE_SITE":"$SE_USERDIR/$primary_dataset/$TASKDIR/$time/0000 --par 4 --run" >> dl_$TASKNAME.csh
             echo "cd -" >> dl_$TASKNAME.csh
         end
-	if ( $dry == "0" ) echo "EDM_NTUPLE $DLDIR" >> $TASKDIR/config.txt
-    endif
-
-else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
-    if ( $#argv < 4 ) then
-	cat Usage.txt; rm Usage.txt; exit
-    endif
-    if ( `grep "EDM_NTUPLE" $TASKDIR/config.txt | wc -l` == 0 ) then
-	echo "EdmNtuple not yet downloaded, issue command:\ndownload <TASKNAME> <DLDIR>"
-    else
-	if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
-        set EDM_NTUPLE=`grep EDM_NTUPLE $TASKDIR/config.txt | awk '{ print $2 }'`
-	set TTREEDIR=$3
-        set Nparallel=$4
-        eval_or_echo "mkdir -p $TTREEDIR"
-        foreach dir ( `ls -ltrd $EDM_NTUPLE/* | grep "^d" | sed "s;/; ;g" | awk '{ print $NF }'` )
-            eval_or_echo "mkdir -p $TTREEDIR/$dir"
-            if ( -f $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh ) rm $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh
-            foreach file ( `ls $EDM_NTUPLE/$dir | grep ".root"` )
-                set outfile=`echo "$file" | sed "s;B2GEDMNtuple;B2GTTreeNtupleExtra;"`
-                echo "nice cmsRun ../../../../Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py sample=file:$EDM_NTUPLE/$dir/$file outputLabel=$TTREEDIR/$dir/$outfile" >>! $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh
-            end
-            eval_or_echo "source source_parallel.csh $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh $Nparallel"
-        end
+	if ( $dry == "0" ) echo "TTREE_NTUPLE $DLDIR" >> $TASKDIR/config.txt
     endif
     
 endif
-rm Usage.txt

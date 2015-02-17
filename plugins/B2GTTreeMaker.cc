@@ -38,7 +38,6 @@ private:
 B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
   
   Service<TFileService> fs;
-  TFileDirectory B2GTrees = fs->mkdir( "systematics_trees" );
   
   tree = new TTree("B2GTree", "B2G TTree Ntuple");
   
