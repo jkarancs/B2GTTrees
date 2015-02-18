@@ -9,7 +9,7 @@ config.General.workArea = 'TASKDIR'
 
 config.section_('JobType')
 config.JobType.pluginName = 'Analysis'
-config.JobType.psetName = '../../../../../Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py'
+config.JobType.psetName = '../../../../Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py'
 config.JobType.pyCfgParams = ['isData=False', 'maxEvts=-1', 'LHE=False']
 
 config.section_('Data')

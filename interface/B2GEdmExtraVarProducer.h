@@ -41,8 +41,8 @@ B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(const edm::ParameterSet& iConfig)
   met_prefix_(iConfig.getParameter<std::string>("met_prefix")),
   AK8Jets_label_(iConfig.getParameter<std::string>("AK8Jets_label")),
   AK8Jets_prefix_(iConfig.getParameter<std::string>("AK8Jets_prefix")),
-  singleF_(iConfig.getParameter<std::vector<std::string> >("singleF")),
-  singleI_(iConfig.getParameter<std::vector<std::string> >("singleI"))
+  singleF_(iConfig.getUntrackedParameter<std::vector<std::string> >("singleF")),
+  singleI_(iConfig.getUntrackedParameter<std::vector<std::string> >("singleI"))
 {
   for ( auto nameF : singleF_ ) produces<float>(nameF);
   for ( auto nameI : singleI_ ) produces<int>(nameI);

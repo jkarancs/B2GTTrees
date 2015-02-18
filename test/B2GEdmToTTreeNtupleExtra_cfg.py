@@ -71,13 +71,13 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
     met_prefix = cms.string("met"),
     AK8Jets_label = cms.string("jetsAK8"),
     AK8Jets_prefix = cms.string("jetAK8"),
-    singleF = cms.vstring(
+    singleF = cms.untracked.vstring(
         "MR",
         "MTR",
         "R",
         "R2",
         ),
-    singleI = cms.vstring(),
+    singleI = cms.untracked.vstring(),
     )
 
 ### B2GTTreeMaker
@@ -89,8 +89,6 @@ process.B2GTTreeMaker.physicsObjects.append(
         prefix_in = cms.string(""),
         prefix_out = cms.string("evt_"),
         maxInstances = cms.untracked.int32(1),
-        variablesF = cms.vstring(),
-        variablesI = cms.vstring(),
         singleF = process.extraVar.singleF,
         singleI = process.extraVar.singleI,
         ),

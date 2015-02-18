@@ -105,7 +105,7 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 else if ( `echo $cmd | grep "submit" | wc -l` ) then
     if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
     foreach cfg_file ( `ls -ltr $TASKDIR/*.py | awk '{ print $NF }'`)
-        eval_or_echo "crab submit -c $cfg_file"
+        eval_or_echo "crab submit -c $cfg_file --wait"
     end
 
 else if ( `echo $cmd | grep "status" | wc -l` ) then
@@ -130,7 +130,6 @@ else if ( `echo $cmd | grep "get_datasets" | wc -l` ) then
 	    end
 	endif
     else
-	exit
 	if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
 	foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
 	    eval_or_echo "crab status -d $dir | grep 'Output dataset:' | awk '{ print "'$NF'" }' >>! $TASKDIR/output_datasets.txt"

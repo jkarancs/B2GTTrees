@@ -96,7 +96,7 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 else if ( `echo $cmd | grep "submit" | wc -l` ) then
     if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
     foreach cfg_file ( `ls -ltr $TASKDIR/*.py | awk '{ print $NF }'`)
-        eval_or_echo "crab submit -c $cfg_file"
+        eval_or_echo "crab submit -c $cfg_file --wait"
     end
 
 else if ( `echo $cmd | grep "status" | wc -l` ) then

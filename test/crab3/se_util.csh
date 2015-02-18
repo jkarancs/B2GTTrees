@@ -76,7 +76,7 @@ foreach arg ( $rest_args )
 	    else if ( `echo $SITE | grep "caf" | wc -l` && $has_eos == 1 ) then
 	        set use_eos="1"
 	        set PATH=`echo $SITE_INFO[$l] | sed "s;SFN=;;"`
-	    else if ( `echo $SITE | grep "kfki" | wc -l` && $has_rfio == 1 ) then
+	    else if ( (`echo $SITE | grep "kfki" | wc -l` || `echo $SITE | grep "T2_HU_Budapest" | wc -l`) && $has_rfio == 1 ) then
 	        set use_rfio="1"
 	        setenv DPNS_HOST grid143.kfki.hu
 	        setenv DPM_HOST grid143.kfki.hu
@@ -352,9 +352,12 @@ else if ( $cmd == "dl_mis" ) then
 	if ( -f dl_mis.csh ) mv dl_mis.csh dl_mis_old.csh
 	foreach jobnum ( `cat jobnums_se.txt` )
 	    if ( ! `grep '^'$jobnum'$' jobnums_dled.txt | wc -l` ) then
-		grep "_"$jobnum"_[0-9]_[0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z]\.root" dl_temp.csh >>! dl_mis.csh
+		# old crab format
+		#grep "_"$jobnum"_[0-9]_[0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z]\.root" dl_temp.csh >>! dl_mis.csh
 		# This is for TSBatch output format
-		grep "_"`printf "%04d" $jobnum`"\.root" dl_temp.csh >>! dl_mis.csh
+		#grep "_"`printf "%04d" $jobnum`"\.root" dl_temp.csh >>! dl_mis.csh
+		# crab3 format
+		grep "_"`printf "%d" $jobnum`"\.root" dl_temp.csh >>! dl_mis.csh
 	    endif
 	end
 	rm jobnums_se.txt jobnums_dled.txt dl_temp.csh
