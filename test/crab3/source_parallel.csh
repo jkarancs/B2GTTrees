@@ -15,6 +15,7 @@ if ( $npar > 10 ) then
     echo "Too many jobs!, setting N_parallel = 10"
     set npar=10
 endif
+if ( `cat $script | wc -l` < $npar) set npar=`cat $script | wc -l`
 
 set username=`whoami`
 set time=`date | sed "s;:;;g" | awk '{ printf "%d_%s_%d_%d\n",$6,$2,$3,$4 }'`

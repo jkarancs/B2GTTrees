@@ -164,32 +164,23 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
     if ( $#argv < 3 ) then
 	cat Usage.txt; rm Usage.txt; exit
     endif
-    if ( $dry == "1" ) echo "source dl_$TASKNAME.csh \nOR add --run after command to excecute following lines:\n"
     set DLDIR=`echo $3"/"$TASKNAME | sed "s;//;/;"`
-    if ( `grep "EDM_NTUPLE" $TASKDIR/config.txt | wc -l` == 1 ) then
-	echo "Files are already downloaded in "$DLDIR
-    else
-        set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
-        set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
-        echo 'set DLDIR="/data/gridout/jkarancs/SusyAnalysis/B2G/EdmNtuple/'"$TASKNAME"'"' >! dl_$TASKNAME.csh
-        echo 'alias se "source se_util.csh \\!*"\n' >> dl_$TASKNAME.csh
-        echo 'mkdir -p $DLDIR' >> dl_$TASKNAME.csh
-        eval_or_echo "mkdir -p $DLDIR"
-        foreach taskdir ( `ls -ltrd $TASKDIR/*/ | sed "s;/; ;g" | awk '{ print $NF }'`)
-            set primary_dataset=`crab status -d $TASKDIR/$taskdir | grep "Output dataset:" | awk '{ print $3 }' | sed "s;/; ;g" | awk '{ print $1 }'`
-            set SAMPLEDIR=`echo $taskdir | sed "s;crab_;;"`
-            eval_or_echo "mkdir -p $DLDIR/$SAMPLEDIR"
-            eval_or_echo "cd $DLDIR/$SAMPLEDIR"
-            set time=`se ls "$SE_SITE":"$SE_USERDIR/$primary_dataset/$TASKDIR"`
-            eval_or_echo "se dl $SE_SITE":"$SE_USERDIR/$primary_dataset/$TASKDIR/$time/0000 --par 4 --run"
-            eval_or_echo "cd -"
-            echo "mkdir -p "'$DLDIR'"/$SAMPLEDIR" >> dl_$TASKNAME.csh
-            echo "cd "'$DLDIR'"/$SAMPLEDIR" >> dl_$TASKNAME.csh
-            echo "se dl $SE_SITE":"$SE_USERDIR/$primary_dataset/$TASKDIR/$time/0000 --par 4 --run" >> dl_$TASKNAME.csh
-            echo "cd -" >> dl_$TASKNAME.csh
-        end
-	if ( $dry == "0" ) echo "EDM_NTUPLE $DLDIR" >> $TASKDIR/config.txt
-    endif
+    set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
+    set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
+    if ( $dry == "1" ) echo "source dl_$TASKNAME.csh $DLDIR\nOR add --run after command to excecute following lines:\n"
+    echo 'if ( $#argv < 1 ) echo "Please specify directory where you want to download files"' >! dl_$TASKNAME.csh
+    echo 'alias par_source "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/source_parallel.csh \\!*"' >> dl_$TASKNAME.csh
+    echo 'alias se         "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/se_util.csh \\!*"\n' >> dl_$TASKNAME.csh
+    foreach taskdir ( `ls -ltrd $TASKDIR/*/ | sed "s;/; ;g" | awk '{ print $NF }'`)
+        set primary_dataset=`grep inputDataset $TASKDIR/$taskdir.py | sed "s;/; ;g" | awk '{ print $4 }'`
+        set SAMPLEDIR=`echo $taskdir | sed "s;crab_;;"`
+        set time=`se ls "$SE_SITE":"$SE_USERDIR/$primary_dataset/$TASKDIR"`
+        eval_or_echo "mkdir -p $DLDIR/$SAMPLEDIR"
+        eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$TASKDIR/$time/0000 $DLDIR/$SAMPLEDIR --par 4 --run"
+        echo "mkdir -p "'$1'"/$SAMPLEDIR" >> dl_$TASKNAME.csh
+        echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$TASKDIR/$time/0000 "'$1'"/$SAMPLEDIR --par 4 --run" >> dl_$TASKNAME.csh
+    end
+    if ( ( `grep "EDM_NTUPLE" $TASKDIR/config.txt | wc -l` == 1 ) && ( $dry == "0" ) ) echo "EDM_NTUPLE $DLDIR" >> $TASKDIR/config.txt
 
 else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
     if ( $#argv < 4 ) then
@@ -202,13 +193,12 @@ else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
         set EDM_NTUPLE=`grep EDM_NTUPLE $TASKDIR/config.txt | awk '{ print $2 }'`
 	set TTREEDIR=$3
         set Nparallel=$4
-        eval_or_echo "mkdir -p $TTREEDIR"
         foreach dir ( `ls -ltrd $EDM_NTUPLE/* | grep "^d" | sed "s;/; ;g" | awk '{ print $NF }'` )
             eval_or_echo "mkdir -p $TTREEDIR/$dir"
             if ( -f $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh ) rm $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh
             foreach file ( `ls $EDM_NTUPLE/$dir | grep ".root"` )
                 set outfile=`echo "$file" | sed "s;B2GEDMNtuple;B2GTTreeNtupleExtra;"`
-                echo "nice cmsRun ../../../../Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py sample=file:$EDM_NTUPLE/$dir/$file outputLabel=$TTREEDIR/$dir/$outfile" >>! $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh
+                echo "nice cmsRun $CMSSW_BASE/src/Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py sample=file:$EDM_NTUPLE/$dir/$file outputLabel=$TTREEDIR/$dir/$outfile" >>! $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh
             end
             eval_or_echo "source source_parallel.csh $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh $Nparallel"
         end

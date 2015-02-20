@@ -32,6 +32,11 @@ echo "  Download all root output files from the Storage"         >> Usage.txt
 echo "  element to a local directory DLDIR"                      >> Usage.txt
 echo "  Check that the SRM site name and url is defined for"     >> Usage.txt
 echo "  SE_SITE in the se_util.csh script (look for SITE_INFO)"  >> Usage.txt
+echo "" 						         >> Usage.txt
+echo "6) make_ttrees <TASKNAME> <INDIR> <OUTDIR> <NPARALLEL>"    >> Usage.txt
+echo "  Produce locally TTreeNtuples from EdmNtuples"            >> Usage.txt
+echo "  Multiple background cmsRuns can be run in parallel"      >> Usage.txt
+echo "  Useful if you have small samples (Few GB)"               >> Usage.txt
 
 if ( $1 == "-h" || $1 == "--help" || $#argv < 2 ) then
     cat Usage.txt; rm Usage.txt; exit
@@ -50,9 +55,9 @@ if ( ! (-e $PWD/source_parallel.csh) || ! (-e $PWD/se_util.csh) ) then
 endif
 # script that takes another script as argument and runs n lines in parallel
 # used by se_util.csh
-alias par_source 'source source_parallel.csh \!*'
+alias par_source 'source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/source_parallel.csh \!*'
 # Storage element utility (ls, cp, dl, mkdir etc commands)
-alias se         'source se_util.csh \!*'
+alias se         'source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/se_util.csh \!*'
 
 set rest_args=""
 foreach n ( `seq 3 $#argv` )
@@ -102,7 +107,7 @@ else if ( `echo $cmd | grep "submit" | wc -l` ) then
 else if ( `echo $cmd | grep "status" | wc -l` ) then
     if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
     foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
-        eval_or_echo "crab status -d $dir | grep finished"
+        eval_or_echo "crab status -d $dir"
     end
 
 else if ( `echo $cmd | grep "report" | wc -l` ) then
@@ -126,31 +131,40 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
     if ( $#argv < 3 ) then
 	cat Usage.txt; rm Usage.txt; exit
     endif
-    if ( $dry == "1" ) echo "source dl_$TASKNAME.csh \nOR add --run after command to excecute following lines:\n"
     set DLDIR=`echo $3"/"$TASKNAME | sed "s;//;/;"`
-    if ( `grep "TTREE_NTUPLE" $TASKDIR/config.txt | wc -l` == 1 ) then
-	echo "Files are already downloaded in "$DLDIR
-    else
-        set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
-        set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
-        echo 'set DLDIR="/data/gridout/jkarancs/SusyAnalysis/B2G/EdmNtuple/'"$TASKNAME"'"' >! dl_$TASKNAME.csh
-        echo 'alias se "source se_util.csh \\!*"\n' >> dl_$TASKNAME.csh
-        echo 'mkdir -p $DLDIR' >> dl_$TASKNAME.csh
-        eval_or_echo "mkdir -p $DLDIR"
-        foreach taskdir ( `ls -ltrd $TASKDIR/*/ | sed "s;/; ;g" | awk '{ print $NF }' | head -1`)
-            set primary_dataset=`crab status -d $TASKDIR/$taskdir | grep "Output dataset:" | awk '{ print $3 }' | sed "s;/; ;g" | awk '{ print $1 }'`
-            set SAMPLEDIR=`echo $taskdir | sed "s;crab_;;"`
-            eval_or_echo "mkdir -p $DLDIR/$SAMPLEDIR"
-            eval_or_echo "cd $DLDIR/$SAMPLEDIR"
-            set time=`se ls "$SE_SITE":"$SE_USERDIR/$primary_dataset/$TASKDIR"`
-            eval_or_echo "se dl $SE_SITE":"$SE_USERDIR/$primary_dataset/$TASKDIR/$time/0000 --par 4 --run"
-            eval_or_echo "cd -"
-            echo "mkdir -p "'$DLDIR'"/$SAMPLEDIR" >> dl_$TASKNAME.csh
-            echo "cd "'$DLDIR'"/$SAMPLEDIR" >> dl_$TASKNAME.csh
-            echo "se dl $SE_SITE":"$SE_USERDIR/$primary_dataset/$TASKDIR/$time/0000 --par 4 --run" >> dl_$TASKNAME.csh
-            echo "cd -" >> dl_$TASKNAME.csh
-        end
-	if ( $dry == "0" ) echo "TTREE_NTUPLE $DLDIR" >> $TASKDIR/config.txt
+    set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
+    set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
+    if ( $dry == "1" ) echo "source dl_$TASKNAME.csh $DLDIR\nOR add --run after command to excecute following lines\n"
+    echo 'if ( $#argv < 1 ) echo "Please specify directory where you want to download files"' >! dl_$TASKNAME.csh
+    echo 'alias par_source "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/source_parallel.csh \\!*"' >> dl_$TASKNAME.csh
+    echo 'alias se         "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/se_util.csh \\!*"\n' >> dl_$TASKNAME.csh
+    foreach taskdir ( `ls -ltrd $TASKDIR/*/ | sed "s;/; ;g" | awk '{ print $NF }'`)
+        set primary_dataset=`grep inputDataset $TASKDIR/$taskdir.py | sed "s;/; ;g" | awk '{ print $4 }'`
+        set time=`se ls "$SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir" | tail -1`
+        set SAMPLEDIR=`echo $taskdir | sed "s;crab_;;"`
+        eval_or_echo "mkdir -p $DLDIR/$SAMPLEDIR"
+        eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir/$time/0000 $DLDIR/$SAMPLEDIR/ --par 4 --run"
+        echo "mkdir -p "'$1'"/$SAMPLEDIR" >> dl_$TASKNAME.csh
+        echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir/$time/0000 "'$1'"/$SAMPLEDIR/ --par 4 --run" >> dl_$TASKNAME.csh
+    end
+
+else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
+    if ( $#argv < 5 ) then
+	cat Usage.txt; rm Usage.txt; exit
     endif
-    
+    if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
+    set EDM_NTUPLE=$3
+    set TTREEDIR=$4
+    set Nparallel=$5
+    foreach dir ( `ls -ltrd $EDM_NTUPLE/* | grep "^d" | sed "s;/; ;g" | awk '{ print $NF }'` )
+        eval_or_echo "mkdir -p $TTREEDIR/$dir"
+        if ( -f $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh ) rm $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh
+        foreach file ( `ls $EDM_NTUPLE/$dir | grep ".root"` )
+            set outfile=`echo "$file" | sed "s;B2GEDMNtuple;B2GTTreeNtupleExtra;"`
+            echo "nice cmsRun $CMSSW_BASE/src/Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py sample=file:$EDM_NTUPLE/$dir/$file outputLabel=$TTREEDIR/$dir/$outfile" >>! $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh
+        end
+        eval_or_echo "source source_parallel.csh $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh $Nparallel"
+    end
+
 endif
+rm Usage.txt
