@@ -33,25 +33,25 @@ CRAB3 Tool
 ==========
 INFO: You can mass produce B2GEdmNtuples similar to multicrab
 
+Usage:  
 cd Analysis/B2GTTrees/test/crab3  
 cmsenv  
 source /cvmfs/cms.cern.ch/crab3/crab.csh  
-
-- Print usage:  
 source crab3_B2GEdmNtuples.csh --help  
 source crab3_B2GTTreeNtuples.csh --help  
 
-- Example usage:
-
+Examples:  
 - 1/crab3) Make Edm ntuples on grid
-cd $CMSSW_BAS/src/Analysis/B2GTTrees/test/crab3  
+cd $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3  
 source crab3_B2GEdmNtuples.csh create Feb13 MINIAODSIM_input.txt T2_HU_Budapest /store/user/jkarancs/SusyAnalysis/B2GEdmNtuple  
 source crab3_B2GEdmNtuples.csh submit Feb13  
 source crab3_B2GEdmNtuples.csh status Feb13  
 source crab3_B2GEdmNtuples.csh report Feb13  
 source crab3_B2GEdmNtuples.csh get_datasets Feb13  
 source crab3_B2GEdmNtuples.csh make_twiki Feb13  
-- Optional steps (download edm ntuple and make TTrees locally - parallel background jobs)  
+
+Optional steps (download edm ntuple and make TTrees locally - parallel background jobs)  
+
 source crab3_B2GEdmNtuples.csh download Feb13 /data/gridout/jkarancs/SusyAnalysis/B2G/EdmNtuple  
 source crab3_B2GEdmNtuples.csh make_ttrees Feb13 /data/gridout/jkarancs/SusyAnalysis/B2G/TTreeNtuple 5  
 
