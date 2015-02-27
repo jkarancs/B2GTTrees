@@ -6,7 +6,7 @@ import copy
 getVariablesFromConfig = True
 
 if getVariablesFromConfig:
-    from Analysis.B2GAnaFW.b2gedmntuples_cff import met, genPart, electrons, muons, jetsAK4, jetsAK8, subjetsAK8, jetsCmsTopTag, subjetsCmsTopTag
+    from Analysis.B2GAnaFW.b2gedmntuples_cff import met, genPart, electrons, muons, jetsAK4, jetsAK8, subjetsAK8, subjetsCmsTopTag
     
     met_var = cms.untracked.vstring()
     for pset in met.variables:
@@ -43,37 +43,19 @@ if getVariablesFromConfig:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
         subjetsAK8_var.append(s)
     
-    jetsCmsTopTag_var = cms.untracked.vstring()
-    for pset in jetsCmsTopTag.variables:
-        s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
-        jetsCmsTopTag_var.append(s)
-    
     subjetsCmsTopTag_var = cms.untracked.vstring()
     for pset in subjetsCmsTopTag.variables:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
         subjetsCmsTopTag_var.append(s)
     
 else:
-    # Currrent ver: Version 1 (13 Feb) of B2GAnaFW
+    # Currrent B2GAnaFW ver: 20 Feb
     met_var = cms.untracked.vstring(
         "Pt",
         "Px",
         "Py",
         "Phi",
         )
-    
-    genPart_var = cms.untracked.vstring(
-        "Charge",
-        "E",
-        "Eta",
-        "ID",
-        "Mass",
-        "MomID",
-        "Phi",
-        "Pt",
-        "Status",
-        "Y",
-    )
     
     basicVars = cms.untracked.vstring(
         "Mass",
@@ -85,8 +67,13 @@ else:
         "Charge",
         )
     
-    electrons_var  = copy.deepcopy(basicVars)
-    electrons_var += cms.untracked.vstring(
+    genPartVars = cms.untracked.vstring(
+        "ID",
+        "Status",
+        "MomID",
+    )
+    
+    electronVars = cms.untracked.vstring(
         "Key",
         "Iso03",
         "D0",
@@ -106,8 +93,7 @@ else:
         "scEta",
         )
     
-    muons_var  = copy.deepcopy(basicVars)
-    muons_var += cms.untracked.vstring(
+    muonVars = cms.untracked.vstring(
         "Key",
         "Iso04",
         "D0",
@@ -142,8 +128,7 @@ else:
         "GenMuonCharge",
         )
     
-    jetVars  = copy.deepcopy(basicVars)
-    jetVars += cms.untracked.vstring(
+    jetVars = cms.untracked.vstring(
         "CSV",
         "CSVV1",
         "GenPartonY",
@@ -190,12 +175,13 @@ else:
         "JERdown",
         )
     
-    fatJetVars  = copy.deepcopy(jetVars)
-    fatJetVars += cms.untracked.vstring(
-        "subjetIndex0",
-        "subjetIndex1",
-        "subjetIndex2",
-        "subjetIndex4",
+    jetAK8Vars = cms.untracked.vstring(
+        "vSubjetIndex0",
+        "vSubjetIndex1",
+        "topSubjetIndex0",
+        "topSubjetIndex1",
+        "topSubjetIndex2",
+        "topSubjetIndex3",
         "tau1",
         "tau2",
         "tau3",
@@ -208,16 +194,35 @@ else:
         "minmass",
         )
     
-    subJetVars  = copy.deepcopy(jetVars)
-    subJetVars += cms.untracked.vstring(
+    subjetVars = cms.untracked.vstring(
         "subjetCSV",
+        "subjetCSVV1",
         )
     
-    jetsAK4_var = copy.deepcopy(jetVars)
-    jetsAK8_var = copy.deepcopy(fatJetVars)
-    subjetsAK8_var = copy.deepcopy(subJetVars)
-    jetsCmsTopTag_var = copy.deepcopy(fatJetVars)
-    subjetsCmsTopTag_var = copy.deepcopy(jetVars)
+    genPart_var    = copy.deepcopy(basicVars)
+    genPart_var   += genPartVars
+    
+    electrons_var  = copy.deepcopy(basicVars)
+    electrons_var += electronVars
+    
+    muons_var      = copy.deepcopy(basicVars)
+    muons_var     += muonVars
+    
+    jetsAK4_var  = copy.deepcopy(basicVars)
+    jetsAK4_var += jetVars
+    
+    jetsAK8_var  = copy.deepcopy(basicVars)
+    jetsAK8_var += jetVars
+    jetsAK8_var += jetAK8Vars
+    jetsAK8_var += subjetVars
+    
+    subjetsAK8_var  = copy.deepcopy(basicVars)
+    subjetsAK8_var += jetVars
+    subjetsAK8_var += subjetVars
+    
+    subjetsCmsTopTag_var  = copy.deepcopy(basicVars)
+    subjetsCmsTopTag_var += jetVars
+    subjetsCmsTopTag_var += subjetVars
 
 
 B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
@@ -264,13 +269,6 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
             prefix_in = cms.string("jetAK8"),
             prefix_out = cms.string("jetAK8_"),
             vectorF = jetsAK8_var,
-            ),
-        # CMS Top-tag Jets
-        cms.PSet(
-            label = cms.string("jetsCmsTopTag"),
-            prefix_in = cms.string("jetsCmsTopTag"),
-            prefix_out = cms.string("jetsCmsTopTag_"),
-            vectorF = jetsCmsTopTag_var,
             ),
         # Subjets of AK8 Jets
         cms.PSet(

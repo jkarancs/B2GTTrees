@@ -1,3 +1,4 @@
+import os
 from WMCore.Configuration import Configuration
 config = Configuration()
 
@@ -9,7 +10,7 @@ config.General.workArea = 'TASKDIR'
 
 config.section_('JobType')
 config.JobType.pluginName = 'Analysis'
-config.JobType.psetName = '$CMSSW_BASE/src/Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py'
+config.JobType.psetName = os.environ['CMSSW_BASE']+'/src/Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py'
 
 config.section_('Data')
 config.Data.outLFN = 'SE_USERDIR'

@@ -1,3 +1,4 @@
+import os
 from WMCore.Configuration import Configuration
 config = Configuration()
 
@@ -9,8 +10,8 @@ config.General.workArea = 'TASKDIR'
 
 config.section_('JobType')
 config.JobType.pluginName = 'Analysis'
-config.JobType.psetName = '$CMSSW_BASE/src/Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py'
-config.JobType.pyCfgParams = ['isData=False', 'maxEvts=-1', 'LHE=False']
+config.JobType.psetName = os.environ['CMSSW_BASE']+'/src/Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py'
+config.JobType.pyCfgParams = ['isData=False', 'LHE=0']
 
 config.section_('Data')
 config.Data.outLFN = 'SE_USERDIR'
@@ -20,6 +21,7 @@ config.Data.splitting = 'FileBased'
 config.Data.unitsPerJob = 1
 config.Data.publication = True
 config.Data.publishDataName = 'PUBNAME'
+config.Data.publishDBS = 'phys03'
 
 config.section_('Site')
 config.Site.storageSite = 'SE_SITE'
