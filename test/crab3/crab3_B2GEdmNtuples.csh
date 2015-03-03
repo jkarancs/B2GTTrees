@@ -119,6 +119,12 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
         eval_or_echo "crab status -d $dir"
     end
 
+else if ( `echo $cmd | grep "finished" | wc -l` ) then
+    if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
+    foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
+        eval_or_echo "crab status -d $dir | grep finished"
+    end
+
 else if ( `echo $cmd | grep "report" | wc -l` ) then
     if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
     foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)

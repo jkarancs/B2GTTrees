@@ -116,7 +116,7 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
     single_float_["Ht"] += h_floats_["AK8_Pt"]->at(i);                              /* Ht */
   }
   single_float_["HtAll"] = single_float_["Ht"] +                                    /* HtAll */
-    h_floats_["met_Pt"]->at(0) + single_float_["Htlep"];
+    h_floats_["met_Pt"]->at(0) + single_float_["HtLep"];
   single_float_["HtEx"] = single_float_["HtAll"] - single_float_["HtTop"];          /* HtEx */
   single_float_["HtExFr"] = single_float_["HtEx"] / single_float_["HtAll"];         /* HtExFr */
   single_float_["HtTopFr"] = single_float_["HtTop"] / single_float_["HtAll"];       /* HtTopFr */
