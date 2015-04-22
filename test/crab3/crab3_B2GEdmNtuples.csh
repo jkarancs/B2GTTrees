@@ -231,7 +231,12 @@ else if ( `echo $cmd | grep "make_twiki" | wc -l` ) then
 	while ( (`echo $parent | grep '/GEN-SIM$' | wc -l` == 0) && ( $ntry < 10 ) )
 	    set ntry=`expr $ntry + 1`
 	    set parent2=`./das_client.py --query="parent dataset=$parent" | tail -1`
-	    if ( parent2 != "None" ) set parent=$parent2
+	    if ( $parent2 != "None" ) then
+		set parent=$parent2
+	    else 
+		set ntry=10
+	    endif
+
 	end
 	set prep_id=`./das_client.py --query="dataset=$parent | grep dataset.prep_id" | tail -1`
 	#set LO_XSec=`./das_client.py --query="mcm prepid=$prep_id | grep mcm.generator_parameters.cross_section" | tail -1`

@@ -11,7 +11,7 @@ config.General.workArea = 'TASKDIR'
 config.section_('JobType')
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = os.environ['CMSSW_BASE']+'/src/Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py'
-config.JobType.pyCfgParams = ['isData=False', 'LHE=0']
+config.JobType.pyCfgParams = ['isData=False', 'LHE=0', 'globalTag=PHYS14_25_V3']
 
 config.section_('Data')
 config.Data.outLFN = 'SE_USERDIR'
