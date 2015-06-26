@@ -148,7 +148,7 @@ else if ( `echo $cmd | grep "get_datasets" | wc -l` ) then
     endif
     eval_or_echo "cat $TASKDIR/output_datasets.txt"
     set Nchar_max="0"
-    foreach short ( `cat B2G_edm_Feb04/input_datasets.txt | awk '{ print $1 }'` )
+    foreach short ( `cat $TASKDIR/input_datasets.txt | awk '{ print $1 }'` )
 	set Nchar=`echo $short | wc -m`
 	if ( $Nchar > $Nchar_max ) set Nchar_max=$Nchar
     end
@@ -216,21 +216,19 @@ else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
     endif
 
 else if ( `echo $cmd | grep "make_twiki" | wc -l` ) then
-    ( curl -k https://cmsweb.cern.ch/das/cli > das_client.py ) >& /dev/null
-    chmod a+x das_client.py
     set infile=$TASKDIR/input_datasets.txt
     set outfile=$TASKDIR/output_datasets.txt
     echo "|  *Dataset*  |  *B2GEdmNtuple*  |  *Nevents*  |  *Nfile*  |  *LO cross section (pb)*  |"
     foreach in_dataset (`awk '{ print $2 }' $infile`)
 	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
 	set out_dataset=`grep "/$primary_dataset/" $outfile`
-	set nevents=`./das_client.py --query="dataset=$in_dataset | grep dataset.nevents" | tail -1`
-	set nfiles=`./das_client.py --query="dataset=$in_dataset | grep dataset.nfiles" | tail -1`
-	set parent=`./das_client.py --query="parent dataset=$in_dataset" | tail -1`
+	set nevents=`das_client.py --query="dataset=$in_dataset | grep dataset.nevents" | tail -1`
+	set nfiles=`das_client.py --query="dataset=$in_dataset | grep dataset.nfiles" | tail -1`
+	set parent=`das_client.py --query="parent dataset=$in_dataset" | tail -1`
 	set ntry=0
 	while ( (`echo $parent | grep '/GEN-SIM$' | wc -l` == 0) && ( $ntry < 10 ) )
 	    set ntry=`expr $ntry + 1`
-	    set parent2=`./das_client.py --query="parent dataset=$parent" | tail -1`
+	    set parent2=`das_client.py --query="parent dataset=$parent" | tail -1`
 	    if ( $parent2 != "None" ) then
 		set parent=$parent2
 	    else 
@@ -238,9 +236,9 @@ else if ( `echo $cmd | grep "make_twiki" | wc -l` ) then
 	    endif
 
 	end
-	set prep_id=`./das_client.py --query="dataset=$parent | grep dataset.prep_id" | tail -1`
-	#set LO_XSec=`./das_client.py --query="mcm prepid=$prep_id | grep mcm.generator_parameters.cross_section" | tail -1`
-	set LO_XSec=`./das_client.py --format=json --query="mcm prepid=$prep_id | grep mcm.generator_parameters.cross_section" | tr "," "\n" | grep '"cross_section"' | tail -1 | sed "s;};;g;s;];;g" | awk '{ print $NF }'`
+	set prep_id=`das_client.py --query="dataset=$parent | grep dataset.prep_id" | tail -1`
+	#set LO_XSec=`das_client.py --query="mcm prepid=$prep_id | grep mcm.generator_parameters.cross_section" | tail -1`
+	set LO_XSec=`das_client.py --format=json --query="mcm prepid=$prep_id | grep mcm.generator_parameters.cross_section" | tr "," "\n" | grep '"cross_section"' | tail -1 | sed "s;};;g;s;];;g" | awk '{ print $NF }'`
 	echo -n "| [[https://cmsweb.cern.ch/das/request?input=$in_dataset&instance=prod%2Fglobal]["`echo $in_dataset | cut -d '/' -f-3`"]] "
 	echo -n "|  [[https://cmsweb.cern.ch/das/request?input=$out_dataset&instance=prod%2Fphys03][DAS link]]  "
 	echo -n "|  $nevents "
@@ -248,7 +246,6 @@ else if ( `echo $cmd | grep "make_twiki" | wc -l` ) then
 	#echo -n "|  $LO_XSec [[https://cmsweb.cern.ch/das/request?view=list&limit=10&instance=prod%2Fglobal&input=mcm+prepid%3D$prep_id+|+grep+mcm.generator_parameters.cross_section][(Link)]] |\n"
 	echo -n "|  $LO_XSec [[https://cms-pdmv.cern.ch/mcm/requests?dataset_name=$primary_dataset&page=0&shown=262163][(Link)]] |\n"
     end
-    rm das_client.py
 
 endif
 rm Usage.txt

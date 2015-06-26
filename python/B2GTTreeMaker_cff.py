@@ -3,10 +3,11 @@ import copy
 
 # Default settings: add all variables from b2gedmntuples_cff
 # Set to false, and define your own lists (eg. comment out unused vairables)
-getVariablesFromConfig = True
+getVariablesFromConfig = False
+
+from Analysis.B2GAnaFW.b2gedmntuples_cff import met, genPart, electrons, muons, jetsAK4, jetsAK8, subjetsAK8, subjetsCmsTopTag, genJetsAK8, genJetsAK8SoftDrop, eventInfo
 
 if getVariablesFromConfig:
-    from Analysis.B2GAnaFW.b2gedmntuples_cff import met, genPart, electrons, muons, jetsAK4, jetsAK8, subjetsAK8, subjetsCmsTopTag
     
     met_var = cms.untracked.vstring()
     for pset in met.variables:
@@ -48,8 +49,18 @@ if getVariablesFromConfig:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
         subjetsCmsTopTag_var.append(s)
     
+    genJetsAK8_var = cms.untracked.vstring()
+    for pset in genJetsAK8.variables:
+        s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
+        genJetsAK8_var.append(s)
+
+    genJetsAK8SoftDrop_var = cms.untracked.vstring()
+    for pset in genJetsAK8SoftDrop.variables:
+        s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
+        genJetsAK8SoftDrop_var.append(s)
+
 else:
-    # Currrent B2GAnaFW ver: 20 Feb
+    # Currrent B2GAnaFW ver: 26 Jun (V2 ntuple version)
     met_var = cms.untracked.vstring(
         "Pt",
         "Px",
@@ -58,10 +69,10 @@ else:
         )
     
     basicVars = cms.untracked.vstring(
-        "Mass",
+        #"Mass",
         "Pt",
         "Eta",
-        "Y",
+        #"Y",
         "Phi",
         "E",
         "Charge",
@@ -185,6 +196,7 @@ else:
         "tau1",
         "tau2",
         "tau3",
+        "softDropMass",
         "trimmedMass",
         "prunedMass",
         "filteredMass",
@@ -192,11 +204,6 @@ else:
         "wMass",
         "nSubJets",
         "minmass",
-        )
-    
-    subjetVars = cms.untracked.vstring(
-        "subjetCSV",
-        "subjetCSVV1",
         )
     
     genPart_var    = copy.deepcopy(basicVars)
@@ -214,99 +221,121 @@ else:
     jetsAK8_var  = copy.deepcopy(basicVars)
     jetsAK8_var += jetVars
     jetsAK8_var += jetAK8Vars
-    jetsAK8_var += subjetVars
     
     subjetsAK8_var  = copy.deepcopy(basicVars)
     subjetsAK8_var += jetVars
-    subjetsAK8_var += subjetVars
     
     subjetsCmsTopTag_var  = copy.deepcopy(basicVars)
     subjetsCmsTopTag_var += jetVars
-    subjetsCmsTopTag_var += subjetVars
 
+    genJetsAK8_var = copy.deepcopy(basicVars)
+    
+    genJetsAK8SoftDrop_var = copy.deepcopy(basicVars)
+    
 
 B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
     physicsObjects = cms.VPSet(
         # MET
         #template.clone(
         cms.PSet(
-            label = cms.string("met"),
-            prefix_in = cms.string("met"),
-            prefix_out = cms.string("met_"),
+            label = cms.untracked.string("met"),
+            prefix_in = met.prefix,
+            prefix_out = cms.untracked.string("met_"),
             vectorF = met_var,
             ),
         # GenParticles
         cms.PSet(
-            label = cms.string("genPart"),
-            prefix_in = cms.string("genPart"),
-            prefix_out = cms.string("gen_"),
+            label = cms.untracked.string("genPart"),
+            prefix_in = genPart.prefix,
+            prefix_out = cms.untracked.string("gen_"),
             vectorF = genPart_var,
             ),
         # Electrons
         cms.PSet(
-            label = cms.string("electrons"),
-            prefix_in = cms.string("el"),
-            prefix_out = cms.string("el_"),
+            label = cms.untracked.string("electrons"),
+            prefix_in = electrons.prefix,
+            prefix_out = cms.untracked.string("el_"),
             vectorF = electrons_var,
             ),
         # Muons
         cms.PSet(
-            label = cms.string("muons"),
-            prefix_in = cms.string("mu"),
-            prefix_out = cms.string("mu_"),
+            label = cms.untracked.string("muons"),
+            prefix_in = muons.prefix,
+            prefix_out = cms.untracked.string("mu_"),
             vectorF = muons_var,
             ),
         # AK4 Jets
-        cms.PSet(
-            label = cms.string("jetsAK4"),
-            prefix_in = cms.string("jetAK4"),
-            prefix_out = cms.string("jetAK4_"),
-            vectorF = jetsAK4_var,
-            ),
+        #cms.PSet(
+        #    label = cms.untracked.string("jetsAK4"),
+        #    prefix_in = jetsAK4.prefix,
+        #    prefix_out = cms.untracked.string("jetAK4_"),
+        #    vectorF = jetsAK4_var,
+        #    ),
         # AK8 Jets
         cms.PSet(
-            label = cms.string("jetsAK8"),
-            prefix_in = cms.string("jetAK8"),
-            prefix_out = cms.string("jetAK8_"),
+            label = cms.untracked.string("jetsAK8"),
+            prefix_in = jetsAK8.prefix,
+            prefix_out = cms.untracked.string("jetAK8_"),
             vectorF = jetsAK8_var,
             ),
         # Subjets of AK8 Jets
         cms.PSet(
-            label = cms.string("subjetsAK8"),
-            prefix_in = cms.string("subjetAK8"),
-            prefix_out = cms.string("subjetAK8_"),
+            label = cms.untracked.string("subjetsAK8"),
+            prefix_in = subjetsAK8.prefix,
+            prefix_out = cms.untracked.string("subjetAK8_"),
             vectorF = subjetsAK8_var,
             ),
         # Subjets of CMS Top-tag Jets
         cms.PSet(
-            label = cms.string("subjetsCmsTopTag"),
-            prefix_in = cms.string("subjetsCmsTopTag"),
-            prefix_out = cms.string("subjetsCmsTopTag_"),
+            label = cms.untracked.string("subjetsCmsTopTag"),
+            prefix_in = subjetsCmsTopTag.prefix,
+            prefix_out = cms.untracked.string("subjetsCmsTopTag_"),
             vectorF = subjetsCmsTopTag_var,
             ),
-        # Trigger data
+        # AK8 Gen jets
+        #cms.PSet(
+        #    label = cms.untracked.string("genJetsAK8"),
+        #    prefix_in = genJetsAK8.prefix,
+        #    prefix_out = cms.untracked.string("genjetAK8_"),
+        #    vectorF = genJetsAK8_var,
+        #    ),
+        # AK8 Gen jets (with SoftDrop grooming)
         cms.PSet(
-            label = cms.string("TriggerUserData"),
-            prefix_in = cms.string("trigger"),
-            prefix_out = cms.string("trigger_"),
-            vectorF = cms.untracked.vstring("BitTree"),
-            vectorI = cms.untracked.vstring("PrescaleTree"),
+            label = cms.untracked.string("genJetsAK8SoftDrop"),
+            prefix_in = genJetsAK8SoftDrop.prefix,
+            prefix_out = cms.untracked.string("genjetAK8SD_"),
+            vectorF = genJetsAK8SoftDrop_var,
             ),
+        # Trigger data
+        #cms.PSet(
+        #    label = cms.untracked.string("TriggerUserData"),
+        #    prefix_in = cms.untracked.string("trigger"),
+        #    prefix_out = cms.untracked.string("trigger_"),
+        #    vectorF = cms.untracked.vstring("BitTree"),
+        #    vectorI = cms.untracked.vstring("PrescaleTree"),
+        #    ),
         # Event data
         cms.PSet(
-            label = cms.string("eventUserData"),
-            prefix_in = cms.string(""),
-            prefix_out = cms.string("evt_"),
-            vectorI = cms.untracked.vstring("puBX","puNInt"),
-            singleI = cms.untracked.vstring("npv", "puNtrueInt"),
+            label = cms.untracked.string("eventUserData"),
+            prefix_in = cms.untracked.string("pu"),
+            prefix_out = cms.untracked.string("pu_"),
+            vectorI = cms.untracked.vstring("BX","NInt"),
+            singleI = cms.untracked.vstring("NtrueInt"),
+            ),
+        cms.PSet(
+            label = cms.untracked.string("eventUserData"),
+            prefix_in = cms.untracked.string(""),
+            prefix_out = cms.untracked.string("evt_"),
+            singleI = cms.untracked.vstring("npv"),
             singleD = cms.untracked.vstring("vx", "vy", "vz"),
             ),
         cms.PSet(
-            label = cms.string("eventInfo"),
-            prefix_in = cms.string("evtInfo"),
-            prefix_out = cms.string("evt_"),
+            label = cms.untracked.string("eventInfo"),
+            prefix_in = eventInfo.prefix,
+            prefix_out = cms.untracked.string("evt_"),
             singleUI = cms.untracked.vstring("RunNumber", "LumiBlock"),
             singleULL = cms.untracked.vstring("EventNumber"),
-            ),
+            )
         )
     )
+

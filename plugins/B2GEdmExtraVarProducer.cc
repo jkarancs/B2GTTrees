@@ -185,6 +185,19 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
     single_float_["R2"]  = std::pow(single_float_["R"], 2);                         /* R2 */
   }
   
+  // ---------------------
+  // - Trigger variables -
+  // ---------------------
+  
+  if (first_event_) {
+    first_event_=0;
+    iEvent.getByLabel(edm::InputTag("TriggerUserData", "triggerNameTree"),      h_strings_["trigger_names"]);
+    for ( auto trig : trigger_names_ ) for (size_t i=0, n=h_strings_["trigger_names"]->size(); i<n; ++i)
+      if (h_strings_["trigger_names"]->at(i).find(trig+"_v")==0) triggers_[trig] = i;
+  }
+  iEvent.getByLabel(edm::InputTag("TriggerUserData", "triggerBitTree"),       h_floats_["trigger_bits"]);
+  //iEvent.getByLabel(edm::InputTag("TriggerUserData", "triggerPrescaleTree"),  h_ints_["trigger_prescales"]);
+  for ( auto trigger : triggers_ ) single_int_[trigger.first] = h_floats_["trigger_bits"]->at(trigger.second);
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"

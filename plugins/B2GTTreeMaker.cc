@@ -45,8 +45,8 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
   
   physObjects = iConfig.getParameter<std::vector<edm::ParameterSet> >("physicsObjects");
   for (auto pset : physObjects) { 
-    std::string label = pset.getParameter<std::string >("label");
-    std::string prefix_out = pset.getParameter<std::string >("prefix_out");
+    std::string label = pset.getUntrackedParameter<std::string >("label");
+    std::string prefix_out = pset.getUntrackedParameter<std::string >("prefix_out");
     vectorFloat = pset.getUntrackedParameter<std::vector<std::string > >("vectorF", std::vector<std::string >()); 
     vectorInt = pset.getUntrackedParameter<std::vector<std::string > >("vectorI", std::vector<std::string >()); 
     singleDouble = pset.getUntrackedParameter<std::vector<std::string > >("singleD", std::vector<std::string >()); 
@@ -100,8 +100,8 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
 
 void B2GTTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   for (auto pset : physObjects) { 
-    std::string label = pset.getParameter< std::string >("label");
-    std::string prefix_in = pset.getParameter<std::string >("prefix_in");
+    std::string label = pset.getUntrackedParameter< std::string >("label");
+    std::string prefix_in = pset.getUntrackedParameter<std::string >("prefix_in");
     vectorFloat = pset.getUntrackedParameter<std::vector<std::string > >("vectorF", std::vector<std::string >()); 
     vectorInt = pset.getUntrackedParameter<std::vector<std::string > >("vectorI", std::vector<std::string >()); 
     singleDouble = pset.getUntrackedParameter<std::vector<std::string > >("singleD", std::vector<std::string >()); 
@@ -149,7 +149,9 @@ void B2GTTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     //Single ints
     for (size_t i=0; i<singleInt.size(); ++i) {
       std::string varname_in=prefix_in+singleInt[i];
-      edm::InputTag tag(label, varname_in);
+      std::string varname_in_nodash = varname_in; // Remove "_" from HLT paths
+      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
+      edm::InputTag tag(label, varname_in_nodash);
       iEvent.getByLabel(tag, h_int[varname_in]);
       int_values[singleInt[i]+"_"+label]=*h_int[varname_in];
     }
