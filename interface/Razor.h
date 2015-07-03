@@ -25,7 +25,7 @@ namespace Razor {
   }
   
   // Hemispheres:
-  std::vector<TLorentzVector> CombineJets_(std::vector<TLorentzVector> myjets) {
+  std::vector<TLorentzVector> CombineJets(std::vector<TLorentzVector> myjets) {
     std::vector<TLorentzVector> mynewjets;
     TLorentzVector j1, j2;
     //bool foundGood = false;
@@ -69,7 +69,7 @@ namespace Razor {
   }
   
   // MR
-  double CalcMR_(TLorentzVector ja, TLorentzVector jb){
+  double CalcMR(TLorentzVector ja, TLorentzVector jb){
     double A = ja.P();
     double B = jb.P();
     double az = ja.Pz();
@@ -88,7 +88,7 @@ namespace Razor {
   }
   
   // MTR
-  double CalcMTR_(TLorentzVector ja, TLorentzVector jb, TVector3 met){
+  double CalcMTR(TLorentzVector ja, TLorentzVector jb, TVector3 met){
     double temp = met.Mag()*(ja.Pt()+jb.Pt()) - met.Dot(ja.Vect()+jb.Vect());
     temp /= 2.;
     temp = sqrt(temp);
@@ -96,7 +96,7 @@ namespace Razor {
   }
   
   // MT
-  double CalcMT_(TLorentzVector lepton, TLorentzVector pfmet){
+  double CalcMT(TLorentzVector lepton, TLorentzVector pfmet){
     return sqrt( 2 * lepton.Pt() * pfmet.Pt() * ( 1 - cos( pfmet.Phi() - lepton.Phi() ) ) );
   }
   

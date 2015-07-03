@@ -244,12 +244,12 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
             vectorF = met_var,
             ),
         # GenParticles
-        cms.PSet(
-            label = cms.untracked.string("genPart"),
-            prefix_in = genPart.prefix,
-            prefix_out = cms.untracked.string("gen_"),
-            vectorF = genPart_var,
-            ),
+        #cms.PSet(
+        #    label = cms.untracked.string("genPart"),
+        #    prefix_in = genPart.prefix,
+        #    prefix_out = cms.untracked.string("gen_"),
+        #    vectorF = genPart_var,
+        #    ),
         # Electrons
         cms.PSet(
             label = cms.untracked.string("electrons"),
@@ -265,12 +265,12 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
             vectorF = muons_var,
             ),
         # AK4 Jets
-        #cms.PSet(
-        #    label = cms.untracked.string("jetsAK4"),
-        #    prefix_in = jetsAK4.prefix,
-        #    prefix_out = cms.untracked.string("jetAK4_"),
-        #    vectorF = jetsAK4_var,
-        #    ),
+        cms.PSet(
+            label = cms.untracked.string("jetsAK4"),
+            prefix_in = jetsAK4.prefix,
+            prefix_out = cms.untracked.string("jetAK4_"),
+            vectorF = jetsAK4_var,
+            ),
         # AK8 Jets
         cms.PSet(
             label = cms.untracked.string("jetsAK8"),

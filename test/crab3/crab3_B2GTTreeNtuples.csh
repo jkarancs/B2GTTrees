@@ -10,9 +10,12 @@ echo "  there is a default safety mechanism for each command"    >> Usage.txt
 echo "  add --run at the end to excecute them"                   >> Usage.txt
 echo ""                                                          >> Usage.txt
 echo "Commands:"                                                 >> Usage.txt
-echo "1) create <TASKNAME> <DATASETS.txt> <SE_SITE> <SE_USERDIR>">> Usage.txt
-echo "  The txt file should contain a short name and the"        >> Usage.txt
+echo "1) create <TASKNAME> <DATASETS.txt> <XSECS.txt> \\"        >> Usage.txt
+echo "          <SE_SITE> <SE_USERDIR>"                          >> Usage.txt
+echo "  The 1st txt file should contain a short name and the"    >> Usage.txt
 echo "  B2GEdmNTuple dataset on each line"                       >> Usage.txt
+echo "  The 2nd txt file should contain the primary_dataset_name">> Usage.txt
+echo "  and the corresponding cross-section (pb) on each line"   >> Usage.txt
 echo "  SE_SITE and SE_USERDIR should be the location you want"  >> Usage.txt
 echo "  to send the output to, eg:"                              >> Usage.txt
 echo "  T2_HU_Budapest"                                          >> Usage.txt
@@ -74,25 +77,41 @@ endif
 
 
 if ( `echo $cmd | grep "create" | wc -l` ) then
-    if ( $#argv < 5 ) then
+    if ( $#argv < 6 ) then
 	cat Usage.txt; rm Usage.txt; exit
     endif
-    set TXT_FILE=$3
-    set SE_SITE=$4
-    set SE_USERDIR=$5
-    mkdir $TASKDIR
+    set INPUT_FILE=$3
+    set XSEC_FILE=$4
+    set SE_SITE=$5
+    set SE_USERDIR=$6
+    if (-d $TASKDIR ) then
+	echo "Error: task directory: "$TASKDIR" already exists. exiting..."
+	exit
+    else
+	mkdir $TASKDIR
+    endif
     echo "SE_SITE "$SE_SITE >! $TASKDIR/config.txt
     echo "SE_USERDIR "$SE_USERDIR >> $TASKDIR/config.txt
     if ( !(-f $TXT_FILE) ) then
 	echo "$TXT_FILE doesn't exist"; exit
     endif
     cp $TXT_FILE $TASKDIR/input_datasets.txt
+    cp $XSEC_FILE $TASKDIR/xsec_datasets.txt
     sed "s;TASKDIR;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_ttreentuple_py.txt > $TASKDIR/crab_template_ttreentuple_py.txt
     set N=`grep "/" $TASKDIR/input_datasets.txt | wc -l`
     foreach i ( `seq 1 $N` )
 	set SHORT=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
 	set DATASET=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
-	sed "s;TASKNAME;$SHORT;;s;DATASET;$DATASET;" $TASKDIR/crab_template_ttreentuple_py.txt > $TASKDIR/crab_$SHORT.py
+	set primary=`echo $DATASET | sed "s;/; ;g" | awk '{ print $1 }'`
+	set xsec=`grep $primary $TASKDIR/xsec_datasets.txt | awk '{ print $2 }'`
+	if ( $xsec == "" ) then
+	    echo "Error: Cross-section is missing for $primary, exiting..."
+	    rm -r $TASKDIR
+	    exit
+	endif
+	set nevent=`das_client.py --query="dataset=$DATASET instance=prod/phys03 | grep dataset.nevents" | tail -1`
+	set WEIGHT=`echo | awk '{ printf "%lf", 1000*'$xsec'/'$nevent' }'`
+	sed "s;TASKNAME;$SHORT;;s;DATASET;$DATASET;;s;weight=1.0;weight=$nevent;" $TASKDIR/crab_template_ttreentuple_py.txt > $TASKDIR/crab_$SHORT.py
     end
     rm $TASKDIR/crab_template_ttreentuple_py.txt
     echo "Config files ready in directory: "$TASKDIR
@@ -140,18 +159,28 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
     set DLDIR=`echo $3"/"$TASKNAME | sed "s;//;/;"`
     set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
     set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
-    if ( $dry == "1" ) echo "source dl_$TASKNAME.csh $DLDIR\nOR add --run after command to excecute following lines\n"
+    if ( $dry == "1" ) then 
+	echo "source dl_$TASKNAME.csh $DLDIR\nOR add --run after command to excecute following lines\n"
+        echo "kinit jkarancs@FNAL.GOV"
+        echo "ssh -YX jkarancs@cmslpc-sl6.fnal.gov"
+        echo "cd /uscms_data/d3/jkarancs/CMSSW/CMSSW_7_4_4_patch1/src"
+        echo "cmsenv"
+        echo "cd /uscms_data/d3/jkarancs/B2GTTreeNtuple"
+        echo "scp jkarancs@grid18.kfki.hu:$PWD/dl_$TASKNAME.csh ."
+        echo "source dl_$TASKNAME.csh "`echo $TASKNAME | sed "s;_; ;g" | awk '{ print $1 }'`
+	exit
+    endif
     echo 'if ( $#argv < 1 ) echo "Please specify directory where you want to download files"' >! dl_$TASKNAME.csh
     echo 'alias par_source "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/source_parallel.csh \\!*"' >> dl_$TASKNAME.csh
     echo 'alias se         "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/se_util.csh \\!*"\n' >> dl_$TASKNAME.csh
     foreach taskdir ( `ls -ltrd $TASKDIR/*/ | sed "s;/; ;g" | awk '{ print $NF }'`)
         set primary_dataset=`grep inputDataset $TASKDIR/$taskdir.py | sed "s;/; ;g" | awk '{ print $4 }'`
-        set time=`se ls "$SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir" | tail -1`
+        set TIME=`se ls "$SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir" | tail -1`
         set SAMPLEDIR=`echo $taskdir | sed "s;crab_;;"`
         eval_or_echo "mkdir -p $DLDIR/$SAMPLEDIR"
-        eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir/$time/0000 $DLDIR/$SAMPLEDIR/ --par 4 --run"
+        eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir/$TIME/0000 $DLDIR/$SAMPLEDIR/ --par 4 --run"
         echo "mkdir -p "'$1'"/$SAMPLEDIR" >> dl_$TASKNAME.csh
-        echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir/$time/0000 "'$1'"/$SAMPLEDIR/ --par 4 --run" >> dl_$TASKNAME.csh
+        echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir/$TIME/0000 "'$1'"/$SAMPLEDIR/ --par 4 --run" >> dl_$TASKNAME.csh
     end
 
 else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then

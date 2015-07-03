@@ -1,0 +1,15 @@
+TTJets_amcatnloFXFX-pythia8          /TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/jkarancs-B2G_edm_Jun03-2d795eb3afab936a7f2a1ff83e30a90b/USER
+TTJets_madgraphMLM-pythia8           /TTJets_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/jkarancs-B2G_edm_Jun03-2d795eb3afab936a7f2a1ff83e30a90b/USER
+TT_TuneCUETP8M1_pythia8              /TT_TuneCUETP8M1_13TeV-powheg-pythia8/jkarancs-B2G_edm_Jun03-2d795eb3afab936a7f2a1ff83e30a90b/USER
+TT_TuneZ2star_powheg-pythia6-tauola  /TT_TuneZ2star_13TeV-powheg-pythia6-tauola/jkarancs-B2G_edm_Jun03-2d795eb3afab936a7f2a1ff83e30a90b/USER
+WJetsToLNu_HT-100To200               /WJetsToLNu_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/jkarancs-B2G_edm_Jun03-2d795eb3afab936a7f2a1ff83e30a90b/USER
+WJetsToLNu_HT-200To400               /WJetsToLNu_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/jkarancs-B2G_edm_Jun03-2d795eb3afab936a7f2a1ff83e30a90b/USER
+WJetsToLNu_HT-400To600               /WJetsToLNu_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/jkarancs-B2G_edm_Jun03-2d795eb3afab936a7f2a1ff83e30a90b/USER
+WJetsToLNu_HT-600ToInf               /WJetsToLNu_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/jkarancs-B2G_edm_Jun03-2d795eb3afab936a7f2a1ff83e30a90b/USER
+WW                                   /WW_TuneCUETP8M1_13TeV-pythia8/jkarancs-B2G_edm_Jun03-2d795eb3afab936a7f2a1ff83e30a90b/USER
+WZ                                   /WZ_TuneCUETP8M1_13TeV-pythia8/jkarancs-B2G_edm_Jun03-2d795eb3afab936a7f2a1ff83e30a90b/USER
+ZZ                                   /ZZ_TuneCUETP8M1_13TeV-pythia8/jkarancs-B2G_edm_Jun03-2d795eb3afab936a7f2a1ff83e30a90b/USER
+ST_s-channel_4f_leptonDecays         /ST_s-channel_4f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1/jkarancs-B2G_edm_Jun03-2d795eb3afab936a7f2a1ff83e30a90b/USER
+ST_t-channel_5f_leptonDecays         /ST_t-channel_5f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1/jkarancs-B2G_edm_Jun03-2d795eb3afab936a7f2a1ff83e30a90b/USER
+ST_tW_top_5f_DS_inclusiveDecays      /ST_tW_top_5f_DS_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1/jkarancs-B2G_edm_Jun03-2d795eb3afab936a7f2a1ff83e30a90b/USER
+ST_tW_antitop_5f_DS_inclusiveDecays  /ST_tW_antitop_5f_DS_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1/jkarancs-B2G_edm_Jun03-2d795eb3afab936a7f2a1ff83e30a90b/USER

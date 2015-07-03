@@ -37,6 +37,12 @@ options.register('globalTag',
                  opts.VarParsing.varType.string,
                  'GlobalTag (empty = auto)')
 
+options.register('weight',
+                 1,# default value: 1
+                 opts.VarParsing.multiplicity.singleton,
+                 opts.VarParsing.varType.float,
+                 'Event weight')
+
 options.parseArguments()
 
 process = cms.Process("b2gAnalysisTTrees")
@@ -76,19 +82,20 @@ process.TFileService = cms.Service("TFileService", fileName = cms.string(options
 from Analysis.B2GAnaFW.b2gedmntuples_cff import met, genPart, electrons, muons, jetsAK4, jetsAK8, subjetsAK8, subjetsCmsTopTag, eventInfo
 
 process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
+    gen_label = cms.untracked.string("genPart"),
+    gen_prefix = genPart.prefix,
     electrons_label = cms.untracked.string("electrons"),
     electrons_prefix = electrons.prefix,
     muons_label = cms.untracked.string("muons"),
     muons_prefix = muons.prefix,
     met_label = cms.untracked.string("met"),
     met_prefix = met.prefix,
+    AK4Jets_label = cms.untracked.string("jetsAK4"),
+    AK4Jets_prefix = jetsAK4.prefix,
     AK8Jets_label = cms.untracked.string("jetsAK8"),
     AK8Jets_prefix = jetsAK8.prefix,
+    event_weight = cms.untracked.double(options.weight),
     singleI = cms.untracked.vstring(
-        "NLep",
-        "NTopHad",
-        "NTopLep",
-        "NTop",
         # Add trigger names below (these are automatically picked up)
         # Hadronic
         "HLT_AK8PFJet360_TrimMass30",
@@ -136,33 +143,74 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "HLT_IsoMu27",
         "HLT_IsoTkMu24_eta2p1",
         "HLT_IsoTkMu27",
+        # event variables
+        "evt_NLep",
+        "evt_NTopHad",
+        "evt_NTopLep",
+        "evt_NTop",
         ),
     singleF = cms.untracked.vstring(
-        "HtLep",
-        "HtTop",
-        "Ht",
-        "HtAll",
-        "HtEx",
-        "HtExFr",
-        "HtTopFr",
-        "TTHadDR",
-        "TTHadDPhi",
-        "TTHadDEta",
-        "TTHadMass",
-        "TTHadPz",
-        "TTHadHz",
-        "TTHadDPz",
-        "TTHadMR",
-        "TTHadMTR",
-        "TTHadR",
-        "TTHadR2",
-        "MR",
-        "MTR",
-        "R",
-        "R2",
+        "evt_HtLep",
+        "evt_HtTop",
+        "evt_Ht",
+        "evt_HtAll",
+        "evt_HtEx",
+        "evt_HtExFr",
+        "evt_HtTopFr",
+        "evt_TTHadDR",
+        "evt_TTHadDPhi",
+        "evt_TTHadDEta",
+        "evt_TTHadMass",
+        "evt_TTHadPz",
+        "evt_TTHadHz",
+        "evt_TTHadDPz",
+        "evt_TTHadMR",
+        "evt_TTHadMTR",
+        "evt_TTHadR",
+        "evt_TTHadR2",
+        "evt_MR",
+        "evt_MTR",
+        "evt_R",
+        "evt_R2",
+        "evt_AK4_MR",
+        "evt_AK4_MTR",
+        "evt_AK4_R",
+        "evt_AK4_R2",
+        "evt_weight",
         ),
-    trigger_names = cms.untracked.vstring(
-        )
+    vectorI = cms.untracked.vstring(
+        "jetAK8_HasNearGenTop",
+        "jetAK8_NearGenTopIsHadronic",
+        "jetAK8_NearGenWIsHadronic",
+        "jetAK8_NearGenWToENu",
+        "jetAK8_NearGenWToMuNu",
+        "jetAK8_NearGenWToTauNu",
+        "jetAK8_PassTopTag",
+        "gen_ID",
+        "gen_MomID",
+        "gen_Status",
+        ),
+    vectorF = cms.untracked.vstring(
+        "gen_Pt",
+        "gen_Eta",
+        "gen_Phi",
+        "gen_E",
+        "gen_Charge",
+        "jetAK8_DRNearGenTop",
+        "jetAK8_DRNearGenWFromTop",
+        "jetAK8_DRNearGenBFromTop",
+        "jetAK8_DRNearGenLepFromSLTop",
+        "jetAK8_DRNearGenNuFromSLTop",
+        "jetAK8_PtNearGenTop",
+        "jetAK8_PtNearGenBFromTop",
+        "jetAK8_PtNearGenWFromTop",
+        "jetAK8_PtNearGenLepFromSLTop",
+        "jetAK8_PtNearGenNuFromSLTop",
+        "el_DRNearGenEleFromSLTop",
+        "el_PtNearGenEleFromSLTop",
+        "mu_DRNearGenMuFromSLTop",
+        "mu_PtNearGenMuFromSLTop",
+        ),
     )
 
 ### Filter - Select only events with at least 1 AK8 jet with pt>300
@@ -189,10 +237,11 @@ process.B2GTTreeMaker.physicsObjects.append(
     cms.PSet(
         label = cms.untracked.string("extraVar"),
         prefix_in = cms.untracked.string(""),
-        prefix_out = cms.untracked.string("evt_"),
-        maxInstances = cms.untracked.int32(1),
+        prefix_out = cms.untracked.string(""),
         singleI = process.extraVar.singleI,
         singleF = process.extraVar.singleF,
+        vectorI = process.extraVar.vectorI,
+        vectorF = process.extraVar.vectorF,
         ),
     )
 
@@ -205,8 +254,8 @@ process.edmNtuplesOut = cms.OutputModule("PoolOutputModule",
     )
 
 process.analysisPath = cms.Path(
-    process.extraVar *
     process.EdmNtupleCountFilter *
+    process.extraVar *
     process.B2GTTreeMaker
     )
 

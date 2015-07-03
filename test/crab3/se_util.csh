@@ -44,11 +44,13 @@ set SITE_INFO=( \
     "T2_DE_DESY"     "srm://dcache-se-cms.desy.de:8443/srm/managerv2"    "SFN=/pnfs/desy.de/cms/tier2/" \
     "T2_CH_CERN"     "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/" \
     "T2_HU_Budapest" "srm://grid143.kfki.hu:8446/srm/managerv2"          "SFN=/dpm/kfki.hu/home/cms/phedex/" \
+    "T3_HU_Debrecen" "srm://grid143.kfki.hu:8446"                        "/dpm/kfki.hu/home/cms/phedex/" \
     "desy"           "srm://dcache-se-cms.desy.de:8443/srm/managerv2"    "SFN=/pnfs/desy.de/cms/tier2/" \
     "cern"           "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/" \
     "pixel"          "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/store/group/dpg_tracker_pixel/comm_pixel/" \
     "caf"            "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/store/caf/user/$USERNAME/" \
     "kfki"           "srm://grid143.kfki.hu:8446/srm/managerv2"          "SFN=/dpm/kfki.hu/home/cms/phedex/store/user/$USERNAME/" \
+    "deb"            "srm://grid143.kfki.hu:8446"                        "/dpm/kfki.hu/home/cms/phedex/" \
 )
 
 # Modify PATHs for commands that don't use the srm:// protocol

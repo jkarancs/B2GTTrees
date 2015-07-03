@@ -1,0 +1,71 @@
+# ----------------------- Run II MC ------------------------------
+
+#ttbar: 
+https://twiki.cern.ch/twiki/bin/view/LHCPhysics/TtbarNNLO
+
+TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                        831.76
+TTJets_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                         831.76
+TT_TuneCUETP8M1_13TeV-powheg-pythia8                                  831.76
+TT_TuneZ2star_13TeV-powheg-pythia6-tauola                             831.76
+
+# single top:
+https://twiki.cern.ch/twiki/bin/viewauth/CMS/SingleTopSigma
+
+ST_s-channel_4f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1      11.36
+ST_t-channel_5f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1      216.99
+ST_tW_top_5f_DS_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1     35.6
+ST_tW_antitop_5f_DS_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1 35.6
+
+# WJets
+https://twiki.cern.ch/twiki/bin/viewauth/CMS/B2GPHYS14#13_TeV_cross_sections
+
+WJetsToLNu_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8         2234.9
+WJetsToLNu_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8	      580.1
+WJetsToLNu_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8	      68.4
+WJetsToLNu_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8	      23.14
+WW_TuneCUETP8M1_13TeV-pythia8                                         63.21
+WZ_TuneCUETP8M1_13TeV-pythia8					      22.82
+ZZ_TuneCUETP8M1_13TeV-pythia8					      10.32
+
+
+
+# ------------------- PHYS14 -------------------------------------
+
+#ttbar: 
+https://twiki.cern.ch/twiki/bin/view/LHCPhysics/TtbarNNLO
+
+TT_Tune4C_13TeV-pythia8-tauola                             831.76
+TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola	   831.76
+RelValTTbar_13_AVE20					   831.76
+
+# single top:
+https://twiki.cern.ch/twiki/bin/viewauth/CMS/SingleTopSigma
+
+T_tW-channel-DR_Tune4C_13TeV-CSA14-powheg-tauola	   35.6
+Tbar_tW-channel-DR_Tune4C_13TeV-CSA14-powheg-tauola	   35.6
+TToLeptons_s-channel-CSA14_Tune4C_13TeV-aMCatNLO-tauola	   2
+TBarToLeptons_s-channel-CSA14_Tune4C_13TeV-aMCatNLO-tauola 1
+TToLeptons_t-channel-CSA14_Tune4C_13TeV-aMCatNLO-tauola	   103.4
+TBarToLeptons_t-channel_Tune4C_CSA14_13TeV-aMCatNLO-tauola 61.6
+
+# WJets
+https://twiki.cern.ch/twiki/bin/viewauth/CMS/B2GPHYS14#13_TeV_cross_sections
+
+WJetsToLNu_HT-100to200_Tune4C_13TeV-madgraph-tauola	   2234.9
+WJetsToLNu_HT-200to400_Tune4C_13TeV-madgraph-tauola	   580.1
+WJetsToLNu_HT-400to600_Tune4C_13TeV-madgraph-tauola	   68.4
+WJetsToLNu_HT-600toInf_Tune4C_13TeV-madgraph-tauola	   23.14
+
+# Rest is LO (from generator)
+ZJetsToNuNu_HT-100to200_Tune4C_13TeV-madgraph-tauola	   372.6
+ZJetsToNuNu_HT-200to400_Tune4C_13TeV-madgraph-tauola	   100.8
+ZJetsToNuNu_HT-400to600_Tune4C_13TeV-madgraph-tauola	   11.99
+ZJetsToNuNu_HT-600toInf_Tune4C_13TeV-madgraph-tauola	   4.113
+DYJetsToLL_M-50_HT-100to200_Tune4C_13TeV-madgraph-tauola   194.3
+DYJetsToLL_M-50_HT-200to400_Tune4C_13TeV-madgraph-tauola   52.24
+DYJetsToLL_M-50_HT-400to600_Tune4C_13TeV-madgraph-tauola   6.546
+DYJetsToLL_M-50_HT-600toInf_Tune4C_13TeV-madgraph-tauola   2.179
+QCD_HT-100To250_13TeV-madgraph				   28730000
+QCD_HT_250To500_13TeV-madgraph				   670500
+QCD_HT-500To1000_13TeV-madgraph				   26740
+QCD_HT_1000ToInf_13TeV-madgraph                            769.7  
