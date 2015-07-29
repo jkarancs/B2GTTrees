@@ -267,6 +267,7 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
         # AK4 Jets
         cms.PSet(
             label = cms.untracked.string("jetsAK4"),
+            key_label = cms.untracked.string("jetKeysAK4"),
             prefix_in = jetsAK4.prefix,
             prefix_out = cms.untracked.string("jetAK4_"),
             vectorF = jetsAK4_var,
@@ -274,6 +275,7 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
         # AK8 Jets
         cms.PSet(
             label = cms.untracked.string("jetsAK8"),
+            key_label = cms.untracked.string("jetKeysAK8"),
             prefix_in = jetsAK8.prefix,
             prefix_out = cms.untracked.string("jetAK8_"),
             vectorF = jetsAK8_var,
@@ -281,6 +283,7 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
         # Subjets of AK8 Jets
         cms.PSet(
             label = cms.untracked.string("subjetsAK8"),
+            key_label = cms.untracked.string("subjetKeysAK8"),
             prefix_in = subjetsAK8.prefix,
             prefix_out = cms.untracked.string("subjetAK8_"),
             vectorF = subjetsAK8_var,
@@ -288,6 +291,7 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
         # Subjets of CMS Top-tag Jets
         cms.PSet(
             label = cms.untracked.string("subjetsCmsTopTag"),
+            key_label = cms.untracked.string("subjetsCmsTopTagKeys"),
             prefix_in = subjetsCmsTopTag.prefix,
             prefix_out = cms.untracked.string("subjetsCmsTopTag_"),
             vectorF = subjetsCmsTopTag_var,

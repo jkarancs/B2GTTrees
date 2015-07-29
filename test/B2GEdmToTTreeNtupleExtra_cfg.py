@@ -94,6 +94,13 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
     AK4Jets_prefix = jetsAK4.prefix,
     AK8Jets_label = cms.untracked.string("jetsAK8"),
     AK8Jets_prefix = jetsAK8.prefix,
+    AK8Subjets_label = cms.untracked.string("subjetsAK8"),
+    AK8Subjets_prefix = subjetsAK8.prefix,
+    CmsTTSubjets_label = cms.untracked.string("subjetsCmsTopTag"),
+    CmsTTSubjets_prefix = subjetsCmsTopTag.prefix,
+    AK8JetKeys_label = cms.untracked.string("jetKeysAK8"),
+    AK8SubjetKeys_label = cms.untracked.string("subjetKeysAK8"),
+    CmsTTSubjetKeys_label = cms.untracked.string("subjetsCmsTopTagKeys"),
     event_weight = cms.untracked.double(options.weight),
     singleI = cms.untracked.vstring(
         # Add trigger names below (these are automatically picked up)
@@ -226,7 +233,7 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
 process.EdmNtupleCountFilter = cms.EDFilter("EdmNtupleCountFilter", # This one works on EdmNtuple
     src = cms.InputTag("jetsAK8","jetAK8Pt"),
     filter = cms.bool(True), # False also filters for some reason (disable in Path instead)
-    min = cms.double(350),
+    min = cms.double(200),
     minNumber = cms.uint32(1)
     )
 

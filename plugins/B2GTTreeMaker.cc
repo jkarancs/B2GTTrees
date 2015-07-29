@@ -30,6 +30,7 @@ private:
   std::map<std::string, int > int_values;
   std::map<std::string, unsigned int > uint_values;
   std::map<std::string, unsigned long long > ullong_values;
+  std::map<std::string, std::vector<std::vector<int> > > keys;
   
   std::map<std::string, edm::Handle<std::vector<float> > > h_floats;
   std::map<std::string, edm::Handle<std::vector<int> > > h_ints;
@@ -38,7 +39,7 @@ private:
   std::map<std::string, edm::Handle<int> >h_int;
   std::map<std::string, edm::Handle<unsigned int> >h_uint;
   std::map<std::string, edm::Handle<unsigned long long> >h_ullong;
-
+  std::map<std::string, edm::Handle<std::vector<std::vector<int> > > > h_keys;
 };
 
 B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
@@ -48,6 +49,7 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
   physObjects = iConfig.getParameter<std::vector<edm::ParameterSet> >("physicsObjects");
   for (auto pset : physObjects) { 
     std::string label = pset.getUntrackedParameter<std::string >("label");
+    std::string key_label = pset.getUntrackedParameter<std::string >("key_label", "");
     std::string prefix_out = pset.getUntrackedParameter<std::string >("prefix_out");
     vectorInt = pset.getUntrackedParameter<std::vector<std::string > >("vectorI", std::vector<std::string >());
     vectorFloat = pset.getUntrackedParameter<std::vector<std::string > >("vectorF", std::vector<std::string >());
@@ -56,7 +58,7 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
     singleDouble = pset.getUntrackedParameter<std::vector<std::string > >("singleD", std::vector<std::string >());
     singleUInt = pset.getUntrackedParameter<std::vector<std::string > >("singleUI", std::vector<std::string >());
     singleULLong = pset.getUntrackedParameter<std::vector<std::string > >("singleULL", std::vector<std::string >());
-    
+
     std::string size_var;
     if (prefix_out!=""&&(vectorFloat.size() || vectorInt.size())) {
       std::stringstream obj_size;
@@ -65,6 +67,10 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
       tree->Branch(size_var.c_str(), &sizes[size_var], (size_var+"/i").c_str());
     }
     
+    // Adding keys
+    if (key_label.size()) tree->Branch((prefix_out+"Keys").c_str(), &keys[label]);
+    
+    // Adding variables
     for (size_t i=0; i<vectorInt.size(); ++i) {
       std::string varname_out = prefix_out + vectorInt[i].c_str();
       if (prefix_out=="") {
@@ -116,6 +122,7 @@ void B2GTTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   
   for (auto pset : physObjects) {
     std::string label = pset.getUntrackedParameter< std::string >("label");
+    std::string key_label = pset.getUntrackedParameter< std::string >("key_label", "");
     std::string prefix_in = pset.getUntrackedParameter<std::string >("prefix_in");
     std::string prefix_out = pset.getUntrackedParameter<std::string >("prefix_out");
     vectorInt = pset.getUntrackedParameter<std::vector<std::string > >("vectorI", std::vector<std::string >()); 
@@ -125,6 +132,12 @@ void B2GTTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     singleDouble = pset.getUntrackedParameter<std::vector<std::string > >("singleD", std::vector<std::string >()); 
     singleUInt = pset.getUntrackedParameter<std::vector<std::string > >("singleUI", std::vector<std::string >()); 
     singleULLong = pset.getUntrackedParameter<std::vector<std::string > >("singleULL", std::vector<std::string >()); 
+    
+    // Keys (strored in std::vector<std::vector<int> >)
+    if (key_label.size()) {
+      iEvent.getByLabel(edm::InputTag(key_label, ""), h_keys[label]);
+      keys[label] = *h_keys[label];
+    }
     
     //Vectors of ints
     for (size_t i=0; i<vectorInt.size(); ++i) {

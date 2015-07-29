@@ -92,10 +92,10 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
     endif
     echo "SE_SITE "$SE_SITE >! $TASKDIR/config.txt
     echo "SE_USERDIR "$SE_USERDIR >> $TASKDIR/config.txt
-    if ( !(-f $TXT_FILE) ) then
-	echo "$TXT_FILE doesn't exist"; exit
+    if ( !(-f $INPUT_FILE) ) then
+	echo "$INPUT_FILE doesn't exist"; exit
     endif
-    cp $TXT_FILE $TASKDIR/input_datasets.txt
+    cp $INPUT_FILE $TASKDIR/input_datasets.txt
     cp $XSEC_FILE $TASKDIR/xsec_datasets.txt
     sed "s;TASKDIR;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_ttreentuple_py.txt > $TASKDIR/crab_template_ttreentuple_py.txt
     set N=`grep "/" $TASKDIR/input_datasets.txt | wc -l`
@@ -111,7 +111,7 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	endif
 	set nevent=`das_client.py --query="dataset=$DATASET instance=prod/phys03 | grep dataset.nevents" | tail -1`
 	set WEIGHT=`echo | awk '{ printf "%lf", 1000*'$xsec'/'$nevent' }'`
-	sed "s;TASKNAME;$SHORT;;s;DATASET;$DATASET;;s;weight=1.0;weight=$nevent;" $TASKDIR/crab_template_ttreentuple_py.txt > $TASKDIR/crab_$SHORT.py
+	sed "s;TASKNAME;$SHORT;;s;DATASET;$DATASET;;s;weight=1.0;weight=$WEIGHT;" $TASKDIR/crab_template_ttreentuple_py.txt > $TASKDIR/crab_$SHORT.py
     end
     rm $TASKDIR/crab_template_ttreentuple_py.txt
     echo "Config files ready in directory: "$TASKDIR

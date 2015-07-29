@@ -26,9 +26,17 @@ private:
   std::string AK4Jets_prefix_;
   std::string AK8Jets_label_;
   std::string AK8Jets_prefix_;
+  std::string AK8Subjets_label_;
+  std::string AK8Subjets_prefix_;
+  std::string CmsTTSubjets_label_;
+  std::string CmsTTSubjets_prefix_;
+  std::string AK8JetKeys_label_;
+  std::string AK8SubjetKeys_label_;
+  std::string CmsTTSubjetKeys_label_;
   double event_weight_;
   std::map<std::string, edm::Handle<std::vector<int> > > h_ints_;
   std::map<std::string, edm::Handle<std::vector<float> > > h_floats_;
+  std::map<std::string, edm::Handle<std::vector<std::vector<int> > > > h_keys_;
   std::map<std::string, edm::Handle<std::vector<std::string> > > h_strings_;
   // Output
   std::vector<std::string> singleF_;
@@ -58,6 +66,13 @@ B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(const edm::ParameterSet& iConfig)
   AK4Jets_prefix_(iConfig.getUntrackedParameter<std::string>("AK4Jets_prefix")),
   AK8Jets_label_(iConfig.getUntrackedParameter<std::string>("AK8Jets_label")),
   AK8Jets_prefix_(iConfig.getUntrackedParameter<std::string>("AK8Jets_prefix")),
+  AK8Subjets_label_(iConfig.getUntrackedParameter<std::string>("AK8Subjets_label")),
+  AK8Subjets_prefix_(iConfig.getUntrackedParameter<std::string>("AK8Subjets_prefix")),
+  CmsTTSubjets_label_(iConfig.getUntrackedParameter<std::string>("CmsTTSubjets_label")),
+  CmsTTSubjets_prefix_(iConfig.getUntrackedParameter<std::string>("CmsTTSubjets_prefix")),
+  AK8JetKeys_label_(iConfig.getUntrackedParameter<std::string>("AK8JetKeys_label")),
+  AK8SubjetKeys_label_(iConfig.getUntrackedParameter<std::string>("AK8SubjetKeys_label")),
+  CmsTTSubjetKeys_label_(iConfig.getUntrackedParameter<std::string>("CmsTTSubjetKeys_label")),
   event_weight_(iConfig.getUntrackedParameter<double>("event_weight",1)),
   singleF_(iConfig.getUntrackedParameter<std::vector<std::string> >("singleF")),
   singleI_(iConfig.getUntrackedParameter<std::vector<std::string> >("singleI")),

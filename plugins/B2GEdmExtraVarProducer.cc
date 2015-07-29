@@ -11,19 +11,37 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   iEvent.getByLabel(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"Phi"),        h_floats_["AK4_Phi"]);
   iEvent.getByLabel(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"E"),          h_floats_["AK4_E"]);
   
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Pt"),         h_floats_["AK8_Pt"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Eta"),        h_floats_["AK8_Eta"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Phi"),        h_floats_["AK8_Phi"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"E"),          h_floats_["AK8_E"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"tau2"),       h_floats_["AK8_tau2"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"tau3"),       h_floats_["AK8_tau3"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"prunedMass"), h_floats_["AK8_prunedMass"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Pt"),              h_floats_["AK8_Pt"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Eta"),             h_floats_["AK8_Eta"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Phi"),             h_floats_["AK8_Phi"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"E"),               h_floats_["AK8_E"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"tau2"),            h_floats_["AK8_tau2"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"tau3"),            h_floats_["AK8_tau3"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"prunedMass"),      h_floats_["AK8_prunedMass"]);
+  /*
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"nSubJets"),        h_floats_["AK8_nSubJets"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex0"), h_floats_["AK8_topSubjetIndex0"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex1"), h_floats_["AK8_topSubjetIndex1"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex2"), h_floats_["AK8_topSubjetIndex2"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex3"), h_floats_["AK8_topSubjetIndex3"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"vSubjetIndex0"),   h_floats_["AK8_vSubjetIndex0"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"vSubjetIndex1"),   h_floats_["AK8_vSubjetIndex1"]);
+
+  iEvent.getByLabel(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"Pt"),    h_floats_["CmsTTSub_Pt"]);
+  iEvent.getByLabel(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"Eta"),   h_floats_["CmsTTSub_Eta"]);
+  iEvent.getByLabel(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"Phi"),   h_floats_["CmsTTSub_Phi"]);
+  iEvent.getByLabel(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"E"),     h_floats_["CmsTTSub_E"]);
   
+  iEvent.getByLabel(edm::InputTag(AK8JetKeys_label_),      h_keys_["AK8"]);
+  iEvent.getByLabel(edm::InputTag(AK8SubjetKeys_label_),   h_keys_["AK8Sub"]);
+  iEvent.getByLabel(edm::InputTag(CmsTTSubjetKeys_label_), h_keys_["CmsTTSub"]);
+  */
   iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"Pt"),     h_floats_["ele_Pt"]);
   iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"Eta"),    h_floats_["ele_Eta"]);
   iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"Phi"),    h_floats_["ele_Phi"]);
   iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"E"),      h_floats_["ele_E"]);
   iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"Charge"), h_floats_["ele_Charge"]);
+  iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"Key"),    h_floats_["ele_Key"]);
   
   iEvent.getByLabel(edm::InputTag(muons_label_, muons_prefix_+"Pt"),          h_floats_["mu_Pt"]);
   iEvent.getByLabel(edm::InputTag(muons_label_, muons_prefix_+"Eta"),         h_floats_["mu_Eta"]);
@@ -31,6 +49,7 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   iEvent.getByLabel(edm::InputTag(muons_label_, muons_prefix_+"E"),           h_floats_["mu_E"]);
   iEvent.getByLabel(edm::InputTag(muons_label_, muons_prefix_+"Charge"),      h_floats_["mu_Charge"]);
   iEvent.getByLabel(edm::InputTag(muons_label_, muons_prefix_+"IsTightMuon"), h_floats_["mu_IsTightMuon"]);
+  iEvent.getByLabel(edm::InputTag(muons_label_, muons_prefix_+"Key"),         h_floats_["mu_Key"]);
   
   iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Pt"),     h_floats_["gen_Pt"]);
   iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Eta"),    h_floats_["gen_Eta"]);
@@ -40,6 +59,7 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"ID"),     h_floats_["gen_ID"]);
   iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"MomID"),  h_floats_["gen_MomID"]);
   iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Status"), h_floats_["gen_Status"]);
+  
   
   // ---------------------
   // - Gen Particle Info -
@@ -371,6 +391,8 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   
   vector_float_["el_DRNearGenEleFromSLTop"].assign(nele,-9999);
   vector_float_["el_PtNearGenEleFromSLTop"].assign(nele,-9999);
+  vector_float_["el_AK8DeltaR"].assign(nele,-9999);
+  vector_float_["el_AK8SubJetFrac"].assign(nele,-9999);
   
   // Find good leptons (for letponic tops)
   single_int_["evt_NLep"] = 0;
@@ -414,6 +436,87 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
       goodleps.push_back(mu);
       single_float_["evt_HtLep"] += h_floats_["mu_Pt"]->at(i);                          /* evt_HtLep */
     }
+    // ------------------ Lepton-Jet Disambiguation ---------------------
+    /*
+    // Find closest jet
+    float min_DR = 9999; size_t imatch_jet = -1;
+    for (size_t ij=0; ij<njet; ++ij) {
+      TLorentzVector jet; jet.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(ij), h_floats_["AK8_Eta"]->at(ij),
+					   h_floats_["AK8_Phi"]->at(ij), h_floats_["AK8_E"]->at(ij));
+      float DR = mu.DeltaR(jet);
+      if (DR<min_DR) { 
+	min_DR = DR; imatch_jet = ij;
+      }
+    }
+    // Find closest subjet
+    float min_DR_sj = 9999; size_t imatch_sj = -1;
+    for (size_t isj=0, nsj=h_floats_["CmsTTSub_Pt"]->size(); isj<nsj; ++isj) {
+      TLorentzVector jet; jet.SetPtEtaPhiE(h_floats_["CmsTTSub_Pt"]->at(isj), h_floats_["CmsTTSub_Eta"]->at(isj),
+					   h_floats_["CmsTTSub_Phi"]->at(isj), h_floats_["CmsTTSub_E"]->at(isj));
+      float DR = mu.DeltaR(jet); if (DR<min_DR) { min_DR_sj = DR; imatch_sj = isj; }
+    }
+    if (imatch_jet == (size_t)-1 || min_DR>0.8) {
+      std::cout<<"No close jet"<<std::endl;
+    } else {
+      // Frist Make list of jet/subjets keys (only fill subjet is match is found)
+      bool SoftDrop = 0;
+      std::vector<int> AK8Keys;
+      // Add removed objects (cleaned by the SoftDrop algorithm)
+      if (SoftDrop) {
+        AK8Keys = h_keys_["AK8"]->at(imatch_jet);
+        AK8Keys.erase(AK8Keys.begin(), AK8Keys.begin()+2);
+      }
+      // Loop on subjets and check if a match found
+      // Also collect all subjet constituents
+      size_t imatch_sj_const = -1;
+      for (size_t iSub=0, nSub = SoftDrop? 2 : h_floats_["AK8_nSubJets"]->at(imatch_jet); iSub<nSub; ++iSub){
+	size_t subjet_index = 
+	  SoftDrop ? (iSub==0 ? h_floats_["AK8_vSubjetIndex0"]->at(imatch_jet) 
+		      : h_floats_["AK8_vSubjetIndex1"]->at(imatch_jet)) : 
+	  iSub==0 ? h_floats_["AK8_topSubjetIndex0"]->at(imatch_jet) : 
+	  iSub==1 ? h_floats_["AK8_topSubjetIndex1"]->at(imatch_jet) : 
+	  iSub==2 ? h_floats_["AK8_topSubjetIndex2"]->at(imatch_jet) : 
+	  h_floats_["AK8_topSubjetIndex3"]->at(imatch_jet);
+	std::vector<int> subjet_keys = h_keys_[SoftDrop? "AK8Sub" : "CmsTTSub"]->at(subjet_index);
+	AK8Keys.insert(AK8Keys.end(), subjet_keys.begin(), subjet_keys.end());
+	for (size_t itrk=0, ntrk=subjet_keys.size(); itrk<ntrk; ++itrk) 
+	  if (h_floats_["mu_Key"]->at(i)==subjet_keys[itrk]) imatch_sj_const = subjet_index;
+      }
+      if (imatch_sj_const!=(size_t)-1) std::cout<<"closest/matched subjet, index=: "<<imatch_sj<<", "<<imatch_sj_const<<" dR="<<min_DR_sj<<std::endl;
+      // Check if the lepton is a jet constituent
+
+      // If lepton is a jet constituent, remove it from the jet (for DeltaR, pt_rel)
+      
+      
+      //+ //bool keymatch = 0;
+      //+ std::cout<<"Mu-jet match found, i="<<imatch_jet<<" DR="<<min_DR<<" mu key: "<<h_floats_["mu_Key"]->at(i)<<std::endl;
+      //+ std::cout<<" Jet keys n="<<keys.size()<<" :"<<std::endl;
+      //+ for (size_t itrk=0, ntrk=keys.size(); itrk<ntrk; ++itrk) {
+      //+   //if (keys[itrk]==h_floats_["mu_Key"]->at(i)) keymatch = 1;
+      //+   std::cout<<" "<<keys[itrk];
+      //+ }
+      //+ std::cout<<std::endl;
+      //+ // Check subjets
+      //+ std::cout<<"  Nsubjet="<<h_floats_["AK8_nSubJets"]->at(imatch_jet)<<std::endl;;
+      //+ for (size_t n=0, nsub=h_floats_["AK8_nSubJets"]->at(imatch_jet); n<nsub; ++n) if (n<2) {
+      //+   size_t subjet_index = n==0 ? h_floats_["AK8_vSubjetIndex0"]->at(imatch_jet) : h_floats_["AK8_vSubjetIndex1"]->at(imatch_jet);
+      //+   if (subjet_index>h_keys_["AK8Sub"]->size()) std::cout<<"Error: Impossible subjet index "<<subjet_index<<std::endl;
+      //+   else {
+      //+     std::cout<<"  subjet keys, subjet index="<<subjet_index<<"/"<<h_keys_["AK8Sub"]->size();
+      //+     std::vector<int> subjet_keys = h_keys_["AK8Sub"]->at(subjet_index);
+      //+     std::cout<<" n="<<subjet_keys.size()<<std::endl;
+      //+     for (int key : subjet_keys) std::cout<<" "<<key;
+      //+     std::cout<<std::endl;
+      //+   }
+      //+ }
+      //+ std::cout<<std::endl;
+    }
+    // Subjet fraction
+    // pt_rel
+    
+    // Mini isolation
+    */
+
   }
   
   // ---------------------
