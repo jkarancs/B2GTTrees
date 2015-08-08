@@ -31,6 +31,12 @@ options.register('outputLabel',
                  opts.VarParsing.varType.string,
                  'Output label')
 
+options.register('isData',
+                 True,
+                 opts.VarParsing.multiplicity.singleton,
+                 opts.VarParsing.varType.bool,
+                 'Is data?')
+
 options.register('globalTag',
                  '',
                  opts.VarParsing.multiplicity.singleton,
@@ -49,7 +55,7 @@ process = cms.Process("b2gAnalysisTTrees")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.categories.append('HLTrigReport')
-process.MessageLogger.cerr.FwkReport.reportEvery = 100
+process.MessageLogger.cerr.FwkReport.reportEvery = 10000
 
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 if options.globalTag != '':
@@ -82,12 +88,16 @@ process.TFileService = cms.Service("TFileService", fileName = cms.string(options
 from Analysis.B2GAnaFW.b2gedmntuples_cff import met, genPart, electrons, muons, jetsAK4, jetsAK8, subjetsAK8, subjetsCmsTopTag, eventInfo
 
 process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
+    isData = cms.untracked.bool(options.isData),
+    JEC_location = cms.untracked.string("Analysis/B2GTTrees/JECs/"+options.globalTag),
     gen_label = cms.untracked.string("genPart"),
     gen_prefix = genPart.prefix,
     electrons_label = cms.untracked.string("electrons"),
     electrons_prefix = electrons.prefix,
     muons_label = cms.untracked.string("muons"),
     muons_prefix = muons.prefix,
+    evt_label = cms.untracked.string("eventUserData"),
+    evt_prefix = cms.untracked.string(""),
     met_label = cms.untracked.string("met"),
     met_prefix = met.prefix,
     AK4Jets_label = cms.untracked.string("jetsAK4"),
@@ -98,6 +108,7 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
     AK8Subjets_prefix = subjetsAK8.prefix,
     CmsTTSubjets_label = cms.untracked.string("subjetsCmsTopTag"),
     CmsTTSubjets_prefix = subjetsCmsTopTag.prefix,
+    AK4JetKeys_label = cms.untracked.string("jetKeysAK4"),
     AK8JetKeys_label = cms.untracked.string("jetKeysAK8"),
     AK8SubjetKeys_label = cms.untracked.string("subjetKeysAK8"),
     CmsTTSubjetKeys_label = cms.untracked.string("subjetsCmsTopTagKeys"),
@@ -196,6 +207,12 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "gen_ID",
         "gen_MomID",
         "gen_Status",
+        "mu_NearAK4JetIndex",
+        "mu_NearAK8JetIndex",
+        "mu_NearSubjetIndex",
+        "mu_IsPartOfNearAK4Jet",
+        "mu_IsPartOfNearAK8Jet",
+        "mu_IsPartOfNearSubjet",
         ),
     vectorF = cms.untracked.vstring(
         "gen_Pt",
@@ -217,6 +234,31 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "el_PtNearGenEleFromSLTop",
         "mu_DRNearGenMuFromSLTop",
         "mu_PtNearGenMuFromSLTop",
+        "mu_PtNearGenTop",
+        "mu_LepAK4JetFrac",
+        "mu_LepAK8JetFrac",
+        "mu_LepSubjetFrac",
+        "mu_LepAK4JetMassDrop",
+        "mu_LepAK8JetMassDrop",
+        "mu_LepSubjetMassDrop",
+        "mu_AK4JetV1DR",
+        "mu_AK4JetV2DR",
+        "mu_AK4JetV3DR",
+        "mu_AK8JetV1DR",
+        "mu_AK8JetV2DR",
+        "mu_AK8JetV3DR",
+        "mu_SubjetV1DR",
+        "mu_SubjetV2DR",
+        "mu_SubjetV3DR",
+        "mu_AK4JetV1PtRel",
+        "mu_AK4JetV2PtRel",
+        "mu_AK4JetV3PtRel",
+        "mu_AK8JetV1PtRel",
+        "mu_AK8JetV2PtRel",
+        "mu_AK8JetV3PtRel",
+        "mu_SubjetV1PtRel",
+        "mu_SubjetV2PtRel",
+        "mu_SubjetV3PtRel",
         ),
     )
 
@@ -251,6 +293,8 @@ process.B2GTTreeMaker.physicsObjects.append(
         vectorF = process.extraVar.vectorF,
         ),
     )
+process.B2GTTreeMaker.isData = options.isData
+
 
 process.edmNtuplesOut = cms.OutputModule("PoolOutputModule",
     fileName = cms.untracked.string(options.outputLabel),

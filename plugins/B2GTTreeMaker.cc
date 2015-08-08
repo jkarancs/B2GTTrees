@@ -17,6 +17,7 @@ public:
 private:
   virtual void analyze(const edm::Event &, const edm::EventSetup & );
   
+  bool isData;
   std::vector<edm::ParameterSet > physObjects;
   std::vector<std::string > vectorFloat, vectorInt, singleDouble, singleFloat, singleInt, singleUInt, singleULLong;
   
@@ -46,8 +47,9 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
   Service<TFileService> fs;
   tree = fs->make<TTree>("B2GTree", "B2G TTree Ntuple");
   
+  isData = iConfig.getUntrackedParameter<bool>("isData", false);
   physObjects = iConfig.getParameter<std::vector<edm::ParameterSet> >("physicsObjects");
-  for (auto pset : physObjects) { 
+  for (auto pset : physObjects) if (!(isData && pset.getUntrackedParameter<bool>("mc_only", false))) {
     std::string label = pset.getUntrackedParameter<std::string >("label");
     std::string key_label = pset.getUntrackedParameter<std::string >("key_label", "");
     std::string prefix_out = pset.getUntrackedParameter<std::string >("prefix_out");
@@ -58,7 +60,7 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
     singleDouble = pset.getUntrackedParameter<std::vector<std::string > >("singleD", std::vector<std::string >());
     singleUInt = pset.getUntrackedParameter<std::vector<std::string > >("singleUI", std::vector<std::string >());
     singleULLong = pset.getUntrackedParameter<std::vector<std::string > >("singleULL", std::vector<std::string >());
-
+    
     std::string size_var;
     if (prefix_out!=""&&(vectorFloat.size() || vectorInt.size())) {
       std::stringstream obj_size;
@@ -74,8 +76,8 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
     for (size_t i=0; i<vectorInt.size(); ++i) {
       std::string varname_out = prefix_out + vectorInt[i].c_str();
       if (prefix_out=="") {
-	size_var = vectorInt[i].substr(0,vectorInt[i].find("_"))+"_size";
-	if (sizes.count(size_var)==0) tree->Branch(size_var.c_str(), &sizes[size_var], (size_var+"/i").c_str());	  
+        size_var = vectorInt[i].substr(0,vectorInt[i].find("_"))+"_size";
+        if (sizes.count(size_var)==0) tree->Branch(size_var.c_str(), &sizes[size_var], (size_var+"/i").c_str());	  
       }
       tree->Branch(varname_out.c_str(), &vints_values[vectorInt[i]+"_"+label],(varname_out+"["+size_var+"]/I").c_str());
     }
@@ -83,8 +85,8 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
     for (size_t i=0; i<vectorFloat.size(); ++i) {
       std::string varname_out = prefix_out + vectorFloat[i].c_str();
       if (prefix_out=="") {
-	size_var = vectorFloat[i].substr(0,vectorFloat[i].find("_"))+"_size";
-	if (sizes.count(size_var)==0) tree->Branch(size_var.c_str(), &sizes[size_var], (size_var+"/i").c_str());
+        size_var = vectorFloat[i].substr(0,vectorFloat[i].find("_"))+"_size";
+        if (sizes.count(size_var)==0) tree->Branch(size_var.c_str(), &sizes[size_var], (size_var+"/i").c_str());
       }
       tree->Branch(varname_out.c_str(), &vfloats_values[vectorFloat[i]+"_"+label],(varname_out+"["+size_var+"]/F").c_str());
     }
@@ -120,7 +122,7 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
 void B2GTTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   for (auto& pair : sizes) pair.second = 0;
   
-  for (auto pset : physObjects) {
+  for (auto pset : physObjects) if (!(isData && pset.getUntrackedParameter<bool>("mc_only", false))) {
     std::string label = pset.getUntrackedParameter< std::string >("label");
     std::string key_label = pset.getUntrackedParameter< std::string >("key_label", "");
     std::string prefix_in = pset.getUntrackedParameter<std::string >("prefix_in");
@@ -149,10 +151,10 @@ void B2GTTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       std::string size_var = (prefix_out=="") ? vectorInt[i].substr(0,vectorInt[i].find("_")) + "_size" : prefix_out+"size";
       if (sizes[size_var]==0) sizes[size_var]=h_ints[varname_in]->size();
       else if (sizes[size_var] != h_ints[varname_in]->size()) throw cms::Exception("B2GTTreeMaker")
-	<<"B2GTTreeMaker: size variable "<<size_var<<"="<<sizes[size_var]<<" but size of vector "<<varname_in<<"="<<h_ints[varname_in]->size()
-	<<"\nCheck variable in B2GExtraVarProducer/config file"<<std::endl;
+        <<"B2GTTreeMaker: size variable "<<size_var<<"="<<sizes[size_var]<<" but size of vector for "<<varname_in<<"="<<h_ints[varname_in]->size()
+        <<"\nCheck variable in B2GExtraVarProducer/config file"<<std::endl;
       for (size_t j=0; j<sizes[size_var]; ++j)
-	vints_values[vectorInt[i]+"_"+label][j] = h_ints[varname_in]->at(j);
+        vints_values[vectorInt[i]+"_"+label][j] = h_ints[varname_in]->at(j);
     }
     
     //Vectors of floats
@@ -165,10 +167,10 @@ void B2GTTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       std::string size_var = (prefix_out=="") ? vectorFloat[i].substr(0,vectorFloat[i].find("_")) + "_size" : prefix_out+"size";
       if (sizes[size_var]==0) sizes[size_var]=h_floats[varname_in]->size();
       else if (sizes[size_var] != h_floats[varname_in]->size()) throw cms::Exception("B2GTTreeMaker")
-	<<"B2GTTreeMaker: size variable "<<size_var<<"="<<sizes[size_var]<<" but size of vector "<<varname_in<<"="<<h_floats[varname_in]->size()
-	<<"\nCheck variable in B2GExtraVarProducer/config file"<<std::endl;
+        <<"B2GTTreeMaker: size variable "<<size_var<<"="<<sizes[size_var]<<" but size of vector "<<varname_in<<"="<<h_floats[varname_in]->size()
+        <<"\nCheck variable in B2GExtraVarProducer/config file"<<std::endl;
       for (size_t j=0; j<sizes[size_var]; ++j) 
-	vfloats_values[vectorFloat[i]+"_"+label][j] = h_floats[varname_in]->at(j);
+        vfloats_values[vectorFloat[i]+"_"+label][j] = h_floats[varname_in]->at(j);
     }
     
     //Single ints

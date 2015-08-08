@@ -10,9 +10,11 @@ echo "  there is a default safety mechanism for each command"    >> Usage.txt
 echo "  add --run at the end to excecute them"                   >> Usage.txt
 echo ""                                                          >> Usage.txt
 echo "Commands:"                                                 >> Usage.txt
-echo "1) create <TASKNAME> <DATASETS.txt> <SE_SITE> <SE_USERDIR>">> Usage.txt
+echo "1) create <TASKNAME> <PUBLISH_NAME> <DATASETS.txt>"        >> Usage.txt
+echo "  <SE_SITE> <SE_USERDIR>"                                  >> Usage.txt
 echo "  The txt file should contain a short name and the"        >> Usage.txt
-echo "  MINIAODSIM dataset on each line"                         >> Usage.txt
+echo "  MINIAOD(SIM) dataset on each line"                       >> Usage.txt
+echo "  PUBLISH_NAME should specify the B2GAnaFW version tag"    >> Usage.txt
 echo "  SE_SITE and SE_USERDIR should be the location you want"  >> Usage.txt
 echo "  to send the output to, eg:"                              >> Usage.txt
 echo "  T2_HU_Budapest"                                          >> Usage.txt
@@ -83,27 +85,49 @@ endif
 
 
 if ( `echo $cmd | grep "create" | wc -l` ) then
-    if ( $#argv < 5 ) then
+    if ( $#argv < 6 ) then
 	cat Usage.txt; rm Usage.txt; exit
     endif
-    set TXT_FILE=$3
-    set SE_SITE=$4
-    set SE_USERDIR=$5
+    set PUBNAME=$3
+    set TXT_FILE=$4
+    set SE_SITE=$5
+    set SE_USERDIR=$6
     mkdir $TASKDIR
     echo "SE_SITE "$SE_SITE >! $TASKDIR/config.txt
     echo "SE_USERDIR "$SE_USERDIR >> $TASKDIR/config.txt
     if ( !(-f $TXT_FILE) ) then
 	echo "$TXT_FILE doesn't exist"; exit
     endif
-    grep "/" $TXT_FILE >! $TASKDIR/input_datasets.txt
-    sed "s;TASKDIR;$TASKDIR;;s;PUBNAME;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_edmntuple_py.txt > $TASKDIR/crab_template_edmntuple_py.txt
+    grep "/MINIAOD" $TXT_FILE >! $TASKDIR/input_datasets.txt
+    sed "s;TASKDIR;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_template_edmntuple_MC_py.txt
+    sed "s;TASKDIR;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_edmntuple_MC_py.txt > $TASKDIR/crab_template_edmntuple_Data_py.txt
     set N=`cat $TASKDIR/input_datasets.txt | wc -l`
     foreach i ( `seq 1 $N` )
-	set SHORT=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
-	set DATASET=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
-	sed "s;TASKNAME;$SHORT;;s;DATASET;$DATASET;" $TASKDIR/crab_template_edmntuple_py.txt > $TASKDIR/crab_$SHORT.py
+	set line=`sed -n "$i"p $TASKDIR/input_datasets.txt`
+	set SHORT=`echo $line | awk '{ print $1 }'`
+	set DATASET=`echo $line | awk '{ print $2 }'`
+	set isData=`echo $DATASET | grep 'MINIAOD$' | wc -l`
+	set PUBNAME2=`echo $DATASET | sed "s;/; ;g" | awk '{ print $2 }'`
+	if ( `echo $PUBNAME2 | grep "Run2015B-PromptReco" | wc -l ` ) then
+	    set GLOBALTAG="74X_dataRun2_Prompt_v0"
+	    set DATAPROC="PromptReco50ns"
+	else if ( `echo $PUBNAME2 | grep "Run2015B-PromptReco" | wc -l ` ) then
+	    set GLOBALTAG="74X_dataRun2_Prompt_v0"
+	    set DATAPROC="ReReco17Jul50ns"
+	else if ( `echo $PUBNAME2 | grep "Asympt50ns" | wc -l ` ) then
+	    set GLOBALTAG="MCRUN2_74_V9A"
+	    set DATAPROC="MC50ns"
+	else	    
+	    set GLOBALTAG="MCRUN2_74_V9"
+	    set DATAPROC="MC25ns"
+	endif
+	if ( $isData ) then
+	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME_$PUBNAME2;;s;DATASET;$DATASET;;s;GLOBALTAG;$GLOBALTAG;;s;DATAPROC;$DATAPROC;" $TASKDIR/crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_$SHORT.py
+	else
+	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME_$PUBNAME2;;s;DATASET;$DATASET;;s;GLOBALTAG;$GLOBALTAG;;s;DATAPROC;$DATAPROC;" $TASKDIR/crab_template_edmntuple_MC_py.txt > $TASKDIR/crab_$SHORT.py
+	endif
     end
-    rm $TASKDIR/crab_template_edmntuple_py.txt
+    rm $TASKDIR/crab_template_edmntuple_Data_py.txt $TASKDIR/crab_template_edmntuple_MC_py.txt
     echo "Config files ready in directory: "$TASKDIR
     ls -ltr $TASKDIR
 
@@ -184,12 +208,13 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
     echo 'alias se         "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/se_util.csh \\!*"\n' >> dl_$TASKNAME.csh
     foreach taskdir ( `ls -ltrd $TASKDIR/*/ | sed "s;/; ;g" | awk '{ print $NF }'`)
         set primary_dataset=`grep inputDataset $TASKDIR/$taskdir.py | sed "s;/; ;g" | awk '{ print $4 }'`
+        set pubname=`grep publishDataName $TASKDIR/$taskdir.py | sed "s;'; ;g" | awk '{ print $3 }'`
         set SAMPLEDIR=`echo $taskdir | sed "s;crab_;;"`
-        set time=`se ls "$SE_SITE":"$SE_USERDIR/$primary_dataset/$TASKDIR"`
+        set time=`se ls "$SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname"`
         eval_or_echo "mkdir -p $DLDIR/$SAMPLEDIR"
-        eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$TASKDIR/$time/0000 $DLDIR/$SAMPLEDIR --par 4 --run"
+        eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$time/0000 $DLDIR/$SAMPLEDIR --par 4 --run"
         echo "mkdir -p "'$1'"/$SAMPLEDIR" >> dl_$TASKNAME.csh
-        echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$TASKDIR/$time/0000 "'$1'"/$SAMPLEDIR --par 4 --run" >> dl_$TASKNAME.csh
+        echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$time/0000 "'$1'"/$SAMPLEDIR --par 4 --run" >> dl_$TASKNAME.csh
     end
     if ( ( `grep "EDM_NTUPLE" $TASKDIR/config.txt | wc -l` == 1 ) && ( $dry == "0" ) ) echo "EDM_NTUPLE $DLDIR" >> $TASKDIR/config.txt
 

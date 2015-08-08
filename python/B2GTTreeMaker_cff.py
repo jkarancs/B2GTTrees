@@ -5,7 +5,7 @@ import copy
 # Set to false, and define your own lists (eg. comment out unused vairables)
 getVariablesFromConfig = False
 
-from Analysis.B2GAnaFW.b2gedmntuples_cff import met, genPart, electrons, muons, jetsAK4, jetsAK8, subjetsAK8, subjetsCmsTopTag, genJetsAK8, genJetsAK8SoftDrop, eventInfo
+from Analysis.B2GAnaFW.b2gedmntuples_cff import met, genPart, electrons, muons, photons, photonjets, jetsAK4, jetsAK8, subjetsAK8, subjetsCmsTopTag, genJetsAK8, genJetsAK8SoftDrop, eventInfo
 
 if getVariablesFromConfig:
     
@@ -28,6 +28,16 @@ if getVariablesFromConfig:
     for pset in muons.variables:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
         muons_var.append(s)
+
+    photons_var = cms.untracked.vstring()
+    for pset in photons.variables:
+        s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
+        photons_var.append(s)
+    
+    photonjets_var = cms.untracked.vstring()
+    for pset in photonjets.variables:
+        s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
+        photonjets_var.append(s)
     
     jetsAK4_var = cms.untracked.vstring()
     for pset in jetsAK4.variables:
@@ -60,7 +70,7 @@ if getVariablesFromConfig:
         genJetsAK8SoftDrop_var.append(s)
 
 else:
-    # Currrent B2GAnaFW ver: 26 Jun (V2 ntuple version)
+    # Currrent B2GAnaFW ver: 20 Jul (74X V4.3 ntuple version + MiniIso added)
     met_var = cms.untracked.vstring(
         "Pt",
         "Px",
@@ -87,6 +97,14 @@ else:
     electronVars = cms.untracked.vstring(
         "Key",
         "Iso03",
+        "Iso03db",
+        "MiniIso",
+        "rho",
+        "EA",
+        "sumChargedHadronPt",
+        "sumNeutralHadronEt",
+        "sumPhotonEt",
+        "sumPUPt",
         "D0",
         "Dz",
         "dEtaIn",
@@ -107,15 +125,18 @@ else:
     muonVars = cms.untracked.vstring(
         "Key",
         "Iso04",
+        "MiniIso",
         "D0",
         "D0err",
         "Dxy",
         "Dxyerr",
         "Dz",
         "Dzerr",
-        "IsLooseMuon",
         "IsSoftMuon",
+        "IsLooseMuon",
+        "IsMediumMuon",
         "IsTightMuon",
+        "IsHighPtMuon",
         "IsPFMuon",
         "IsGlobalMuon",
         "IsTrackerMuon",
@@ -137,6 +158,46 @@ else:
         "GenMuonPt",
         "GenMuonE",
         "GenMuonCharge",
+        )
+    
+    photonVars = cms.untracked.vstring(
+        "SClusterEta",
+        "SClusterPhi",
+        "Eta",
+        "Phi",
+        "Pt",
+        "Energy",
+        "HasPixelSeed",
+        "SigmaIEtaIEta",
+        "HoverE",
+        "R9",
+        "ChargedHadronIso",
+        "PhotonIso",
+        "NeutralHadronIso",
+        "ChargedHadronIsoEAcorrected",
+        "PhotonIsoEAcorrected",
+        "NeutralHadronIsoEAcorrected",
+        "PassLooseID",
+        "PassMediumID",
+        "PassTightID",
+        )
+    
+    photonjetVars = cms.untracked.vstring(
+        "JetIndex",
+        "PhotonIndex",
+        "PhotonSubjetFrac",
+        "SubjetPt0",
+        "SubjetPt1",
+        "SubjetPt2",
+        "SubjetEta0",
+        "SubjetEta1",
+        "SubjetEta2",
+        "SubjetPhi0",
+        "SubjetPhi1",
+        "SubjetPhi2",
+        "SubjetEne0",
+        "SubjetEne1",
+        "SubjetEne2",
         )
     
     jetVars = cms.untracked.vstring(
@@ -214,7 +275,11 @@ else:
     
     muons_var      = copy.deepcopy(basicVars)
     muons_var     += muonVars
-    
+
+    photons_var    = copy.deepcopy(photonVars)
+
+    photonjets_var = copy.deepcopy(photonjetVars)
+
     jetsAK4_var  = copy.deepcopy(basicVars)
     jetsAK4_var += jetVars
     
@@ -234,6 +299,7 @@ else:
     
 
 B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
+    isData = cms.untracked.bool(False),
     physicsObjects = cms.VPSet(
         # MET
         #template.clone(
@@ -249,6 +315,7 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
         #    prefix_in = genPart.prefix,
         #    prefix_out = cms.untracked.string("gen_"),
         #    vectorF = genPart_var,
+        #    mc_only = cms.untracked.bool(True),
         #    ),
         # Electrons
         cms.PSet(
@@ -264,6 +331,20 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
             prefix_out = cms.untracked.string("mu_"),
             vectorF = muons_var,
             ),
+        # Photons
+        #cms.PSet(
+        #    label = cms.untracked.string("photons"),
+        #    prefix_in = photons.prefix,
+        #    prefix_out = cms.untracked.string("pho_"),
+        #    vectorF = photons_var,
+        #    ),
+        # Photon jets
+        #cms.PSet(
+        #    label = cms.untracked.string("photonjets"),
+        #    prefix_in = photonjets.prefix,
+        #    prefix_out = cms.untracked.string("phojet_"),
+        #    vectorF = photonjets_var,
+        #    ),
         # AK4 Jets
         cms.PSet(
             label = cms.untracked.string("jetsAK4"),
@@ -302,6 +383,7 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
         #    prefix_in = genJetsAK8.prefix,
         #    prefix_out = cms.untracked.string("genjetAK8_"),
         #    vectorF = genJetsAK8_var,
+        #    mc_only = cms.untracked.bool(True),
         #    ),
         # AK8 Gen jets (with SoftDrop grooming)
         cms.PSet(
@@ -309,6 +391,7 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
             prefix_in = genJetsAK8SoftDrop.prefix,
             prefix_out = cms.untracked.string("genjetAK8SD_"),
             vectorF = genJetsAK8SoftDrop_var,
+            mc_only = cms.untracked.bool(True),
             ),
         # Trigger data
         #cms.PSet(
@@ -339,7 +422,12 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
             prefix_out = cms.untracked.string("evt_"),
             singleUI = cms.untracked.vstring("RunNumber", "LumiBlock"),
             singleULL = cms.untracked.vstring("EventNumber"),
-            )
+            ),
+        cms.PSet(
+            label = cms.untracked.string("fixedGridRhoFastjetAll"),
+            prefix_in = cms.untracked.string(""),
+            prefix_out = cms.untracked.string("evt_rho"),
+            singleD = cms.untracked.vstring(""),
+            ),
         )
     )
-
