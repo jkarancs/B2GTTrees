@@ -301,8 +301,64 @@ else:
 B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
     isData = cms.untracked.bool(False),
     physicsObjects = cms.VPSet(
+        # Event infos
+        cms.PSet(
+            label = cms.untracked.string("eventUserData"),
+            prefix_in = cms.untracked.string(""),
+            prefix_out = cms.untracked.string("evt_"),
+            singleI = cms.untracked.vstring("npv"),
+            singleD = cms.untracked.vstring("vx", "vy", "vz"),
+            ),
+        cms.PSet(
+            label = cms.untracked.string("eventInfo"),
+            prefix_in = eventInfo.prefix,
+            prefix_out = cms.untracked.string("evt_"),
+            singleUI = cms.untracked.vstring("RunNumber", "LumiBlock"),
+            singleULL = cms.untracked.vstring("EventNumber"),
+            ),
+        cms.PSet(
+            label = cms.untracked.string("HBHENoiseFilterResultProducer"),
+            prefix_in = cms.untracked.string(""),
+            prefix_out = cms.untracked.string("evt_"),
+            singleB = cms.untracked.vstring(
+                "HBHEIsoNoiseFilterResult",
+                "HBHENoiseFilterResult",
+                "HBHENoiseFilterResultRun1",
+                "HBHENoiseFilterResultRun2Loose",
+                "HBHENoiseFilterResultRun2Tight"),
+            ),
+        cms.PSet(
+            label = cms.untracked.string("fixedGridRhoFastjetAll"),
+            prefix_in = cms.untracked.string(""),
+            prefix_out = cms.untracked.string("evt_rho"),
+            singleD = cms.untracked.vstring(""),
+            ),
+        # Pileup
+        cms.PSet(
+            label = cms.untracked.string("eventUserData"),
+            prefix_in = cms.untracked.string("pu"),
+            prefix_out = cms.untracked.string("pu_"),
+            vectorI = cms.untracked.vstring("BX","NInt"),
+            singleI = cms.untracked.vstring("NtrueInt"),
+            ),
+        # Trigger data
+        #cms.PSet(
+        #    label = cms.untracked.string("TriggerUserData"),
+        #    prefix_in = cms.untracked.string("trigger"),
+        #    prefix_out = cms.untracked.string("trig_"),
+        #    vectorF = cms.untracked.vstring("BitTree"),
+        #    vectorI = cms.untracked.vstring("PrescaleTree"),
+        #    ),
+        )
+        # Vertices
+        cms.PSet(
+            label = cms.untracked.string("vertexInfo"),
+            prefix_in = cms.untracked.string(""),
+            prefix_out = cms.untracked.string("vtx_"),
+            vectorF = cms.untracked.vstring("z","rho","chi"),
+            vectorI = cms.untracked.vstring("ndof"),
+            ),
         # MET
-        #template.clone(
         cms.PSet(
             label = cms.untracked.string("met"),
             prefix_in = met.prefix,
@@ -393,41 +449,5 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
             vectorF = genJetsAK8SoftDrop_var,
             mc_only = cms.untracked.bool(True),
             ),
-        # Trigger data
-        #cms.PSet(
-        #    label = cms.untracked.string("TriggerUserData"),
-        #    prefix_in = cms.untracked.string("trigger"),
-        #    prefix_out = cms.untracked.string("trigger_"),
-        #    vectorF = cms.untracked.vstring("BitTree"),
-        #    vectorI = cms.untracked.vstring("PrescaleTree"),
-        #    ),
-        # Event data
-        cms.PSet(
-            label = cms.untracked.string("eventUserData"),
-            prefix_in = cms.untracked.string("pu"),
-            prefix_out = cms.untracked.string("pu_"),
-            vectorI = cms.untracked.vstring("BX","NInt"),
-            singleI = cms.untracked.vstring("NtrueInt"),
-            ),
-        cms.PSet(
-            label = cms.untracked.string("eventUserData"),
-            prefix_in = cms.untracked.string(""),
-            prefix_out = cms.untracked.string("evt_"),
-            singleI = cms.untracked.vstring("npv"),
-            singleD = cms.untracked.vstring("vx", "vy", "vz"),
-            ),
-        cms.PSet(
-            label = cms.untracked.string("eventInfo"),
-            prefix_in = eventInfo.prefix,
-            prefix_out = cms.untracked.string("evt_"),
-            singleUI = cms.untracked.vstring("RunNumber", "LumiBlock"),
-            singleULL = cms.untracked.vstring("EventNumber"),
-            ),
-        cms.PSet(
-            label = cms.untracked.string("fixedGridRhoFastjetAll"),
-            prefix_in = cms.untracked.string(""),
-            prefix_out = cms.untracked.string("evt_rho"),
-            singleD = cms.untracked.vstring(""),
-            ),
-        )
     )
+

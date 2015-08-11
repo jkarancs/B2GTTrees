@@ -360,11 +360,11 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   vector_int_["jetAK8_NearGenWToENu"].assign(njet,-9999);
   vector_int_["jetAK8_NearGenWToMuNu"].assign(njet,-9999);
   vector_int_["jetAK8_NearGenWToTauNu"].assign(njet,-9999);
-  vector_float_["jetAK8_DRNearGenTop"].assign(njet,-9999);
-  vector_float_["jetAK8_DRNearGenWFromTop"].assign(njet,-9999);
-  vector_float_["jetAK8_DRNearGenBFromTop"].assign(njet,-9999);
-  vector_float_["jetAK8_DRNearGenLepFromSLTop"].assign(njet,-9999);
-  vector_float_["jetAK8_DRNearGenNuFromSLTop"].assign(njet,-9999);
+  vector_float_["jetAK8_DRNearGenTop"].assign(njet,9999);
+  vector_float_["jetAK8_DRNearGenWFromTop"].assign(njet,9999);
+  vector_float_["jetAK8_DRNearGenBFromTop"].assign(njet,9999);
+  vector_float_["jetAK8_DRNearGenLepFromSLTop"].assign(njet,9999);
+  vector_float_["jetAK8_DRNearGenNuFromSLTop"].assign(njet,9999);
   vector_float_["jetAK8_PtNearGenTop"].assign(njet,-9999);
   vector_float_["jetAK8_PtNearGenBFromTop"].assign(njet,-9999);
   vector_float_["jetAK8_PtNearGenWFromTop"].assign(njet,-9999);
@@ -408,34 +408,255 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   // - Lepton Selection  -
   // ---------------------
   
-  vector_float_["el_DRNearGenEleFromSLTop"].assign(nele,-9999);
+  vector_float_["el_DRNearGenEleFromSLTop"].assign(nele,9999);
   vector_float_["el_PtNearGenEleFromSLTop"].assign(nele,-9999);
-  vector_float_["el_AK8DeltaR"].assign(nele,-9999);
-  vector_float_["el_AK8SubJetFrac"].assign(nele,-9999);
+  vector_float_["el_PtNearGenTop"].assign(nele,-9999);
+  vector_int_["el_NearAK4JetIndex"].assign(nele,-9999);
+  vector_int_["el_NearAK8JetIndex"].assign(nele,-9999);
+  vector_int_["el_NearSubjetIndex"].assign(nele,-9999);
+  vector_int_["el_IsPartOfNearAK4Jet"].assign(nele,-9999);
+  vector_int_["el_IsPartOfNearAK8Jet"].assign(nele,-9999);
+  vector_int_["el_IsPartOfNearSubjet"].assign(nele,-9999);
+  vector_float_["el_LepAK4JetFrac"].assign(nele,-9999);
+  vector_float_["el_LepAK8JetFrac"].assign(nele,-9999);
+  vector_float_["el_LepSubjetFrac"].assign(nele,-9999);
+  vector_float_["el_LepAK4JetMassDrop"].assign(nele,-9999);
+  vector_float_["el_LepAK8JetMassDrop"].assign(nele,-9999);
+  vector_float_["el_LepSubjetMassDrop"].assign(nele,-9999);
+  vector_float_["el_AK4JetV1DR"].assign(nele,9999);
+  vector_float_["el_AK4JetV2DR"].assign(nele,9999);
+  vector_float_["el_AK4JetV3DR"].assign(nele,9999);
+  vector_float_["el_AK8JetV1DR"].assign(nele,9999);
+  vector_float_["el_AK8JetV2DR"].assign(nele,9999);
+  vector_float_["el_AK8JetV3DR"].assign(nele,9999);
+  vector_float_["el_SubjetV1DR"].assign(nele,9999);
+  vector_float_["el_SubjetV2DR"].assign(nele,9999);
+  vector_float_["el_SubjetV3DR"].assign(nele,9999);
+  vector_float_["el_AK4JetV1PtRel"].assign(nele,9999);
+  vector_float_["el_AK4JetV2PtRel"].assign(nele,9999);
+  vector_float_["el_AK4JetV3PtRel"].assign(nele,9999);
+  vector_float_["el_AK8JetV1PtRel"].assign(nele,9999);
+  vector_float_["el_AK8JetV2PtRel"].assign(nele,9999);
+  vector_float_["el_AK8JetV3PtRel"].assign(nele,9999);
+  vector_float_["el_SubjetV1PtRel"].assign(nele,9999);
+  vector_float_["el_SubjetV2PtRel"].assign(nele,9999);
+  vector_float_["el_SubjetV3PtRel"].assign(nele,9999);
   
   // Find good leptons (for letponic tops)
   single_int_["evt_NLep"] = 0;
   single_float_["evt_HtLep"] = 0;
   std::vector<TLorentzVector> goodleps;
-  for (size_t i=0; i<nele; ++i) {
-    TLorentzVector ele; ele.SetPtEtaPhiE(h_floats_["ele_Pt"]->at(i), h_floats_["ele_Eta"]->at(i),
-					 h_floats_["ele_Phi"]->at(i), h_floats_["ele_E"]->at(i));
-    if (!isData_) if (ele_genlep_index.count(i)) {
-      size_t genlep_index = ele_genlep_index[i];
-      vector_float_["el_DRNearGenEleFromSLTop"][i] =                                    /* el_DRNearGenEleFromSLTop */
-	gen_top_matched_W_matched_lep[genlep_index].DeltaR(ele);
-      vector_float_["el_PtNearGenEleFromSLTop"][i] =                                    /* el_PtNearGenEleFromSLTop */
+  for (size_t iEle=0; iEle<nele; ++iEle) {
+    TLorentzVector ele; ele.SetPtEtaPhiE(h_floats_["ele_Pt"]->at(iEle), h_floats_["ele_Eta"]->at(iEle),
+					 h_floats_["ele_Phi"]->at(iEle), h_floats_["ele_E"]->at(iEle));
+    if (!isData_) if (ele_genlep_index.count(iEle)) {
+      size_t genlep_index = ele_genlep_index[iEle];
+      vector_float_["el_DRNearGenEleFromSLTop"][iEle] =                                     /* el_DRNearGenEleFromSLTop */
+	gen_top_matched_W_matched_lep[genlep_index].DeltaR(ele); 
+      vector_float_["el_PtNearGenEleFromSLTop"][iEle] =                                     /* el_PtNearGenEleFromSLTop */
 	gen_top_matched_W_matched_lep[genlep_index].Pt();
+      vector_float_["el_PtNearGenTop"][iEle] = gen_top[genlep_index].Pt();                 /* el_PtNearGenTop */
     }
-    if (h_floats_["ele_Pt"]->at(i) > 35 && 
-       fabs(h_floats_["ele_Eta"]->at(i)) < 2.5) {
+    if (h_floats_["ele_Pt"]->at(iEle) > 35 && 
+       fabs(h_floats_["ele_Eta"]->at(iEle)) < 2.5) {
       ++single_int_["evt_NLep"];                                                        /* evt_NLep */
       goodleps.push_back(ele);
-      single_float_["evt_HtLep"] += h_floats_["ele_Pt"]->at(i);                         /* evt_HtLep */
+      single_float_["evt_HtLep"] += h_floats_["ele_Pt"]->at(iEle);                          /* evt_HtLep */
+    }
+    
+    // ------------------------------------------------------------------------
+    //                       Lepton-Jet Disambiguation
+    
+    const bool SoftDrop = 0; // 1: use W-like SoftDrop subjets (max 2 subjet) or 0: top-like subjets (2-4)
+    const bool print_keys = 0;
+    TLorentzVector closest_jet[3], prev_jet[3];
+    float closest_jet_Area[3], closest_jet_jecFactor0[3];
+    bool closest_jet_R08Cone[3];
+    
+    for (size_t iJet=0, nAK4jet=h_floats_["AK4_Pt"]->size(); iJet<nAK4jet; ++iJet) {
+      
+      // ----------------- AK4 jet ----------------------
+    
+      // Check if the lepton exists inside the closest jet
+      TLorentzVector jet;
+      jet.SetPtEtaPhiE(h_floats_["AK4_Pt"]->at(iJet), h_floats_["AK4_Eta"]->at(iJet),
+		       h_floats_["AK4_Phi"]->at(iJet), h_floats_["AK4_E"]->at(iJet));
+      float DR_jet = ele.DeltaR(jet);
+      if (DR_jet<vector_float_["el_AK4JetV1DR"][iEle]) {
+	prev_jet[0] = closest_jet[0];
+	closest_jet[0] = jet;
+	closest_jet_Area[0] = h_floats_["AK4_jetArea"]->at(iJet);
+	closest_jet_jecFactor0[0] = h_floats_["AK4_jecFactor0"]->at(iJet);
+	closest_jet_R08Cone[0] = 0;
+	vector_int_["el_NearAK4JetIndex"][iEle] = iJet;
+	vector_float_["el_AK4JetV1DR"][iEle] = DR_jet;
+	// Loop on all keys and check if we need to remove lepton from the jet if the lepton is part of it
+	vector_int_["el_IsPartOfNearAK4Jet"][iEle] = 0;
+	for (size_t iKey=0, nKey=h_keys_["AK4"]->at(iJet).size(); iKey<nKey; ++iKey)
+	  if (h_floats_["ele_Key"]->at(iEle)==h_keys_["AK4"]->at(iJet)[iKey]) 
+	    vector_int_["el_IsPartOfNearAK4Jet"][iEle] = 1;
+      }
+    }
+    
+    for (size_t iJet=0; iJet<njet; ++iJet) {
+      
+      // ----------------- AK8 jet ----------------------
+      
+      // Check if the lepton exists inside the closest fatjet
+      size_t nSubjet_SD = 0, nSubjetKeys_SD = 0;
+      TLorentzVector fatjet;
+      fatjet.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(iJet), h_floats_["AK8_Eta"]->at(iJet),
+		       h_floats_["AK8_Phi"]->at(iJet), h_floats_["AK8_E"]->at(iJet));
+      float DR_fatjet = ele.DeltaR(fatjet);
+      // Part of the keys for the fatjet are inside SoftDrop subjets
+      std::vector<int> AK8Keys;
+      for (size_t isub=0; isub<2; ++isub) {
+	size_t iSubjet = isub==0 ? h_floats_["AK8_vSubjetIndex0"]->at(iJet) 
+	    : h_floats_["AK8_vSubjetIndex1"]->at(iJet);
+	if (iSubjet != (size_t)-1) {
+	  ++nSubjet_SD;
+	  std::vector<int> subjet_keys = h_keys_["AK8Sub"]->at(iSubjet);
+	  AK8Keys.insert(AK8Keys.end(), subjet_keys.begin(), subjet_keys.end());
+	  nSubjetKeys_SD += subjet_keys.size();
+	}
+      }
+      // Add rest of the keys, but skip first N subjet keys
+      AK8Keys.insert(AK8Keys.end(), h_keys_["AK8"]->at(iJet).begin()+nSubjet_SD, h_keys_["AK8"]->at(iJet).end());
+      if (DR_fatjet<vector_float_["el_AK8JetV1DR"][iEle]) {
+	prev_jet[1] = closest_jet[1];
+	closest_jet[1] = fatjet;
+	closest_jet_Area[1] = h_floats_["AK8_jetArea"]->at(iJet);
+	closest_jet_jecFactor0[1] = h_floats_["AK8_jecFactor0"]->at(iJet);
+	closest_jet_R08Cone[1] = 1;
+	vector_int_["el_NearAK8JetIndex"][iEle] = iJet;
+	vector_float_["el_AK8JetV1DR"][iEle] = DR_fatjet;
+	// Now loop on all keys and check if we need
+	// to remove lepton from the fatjet if the lepton is part of it
+	vector_int_["el_IsPartOfNearAK8Jet"][iEle] = 0;
+	for (size_t iKey=0, nKey=AK8Keys.size(); iKey<nKey; ++iKey)
+	  if (h_floats_["ele_Key"]->at(iEle)==AK8Keys[iKey]) vector_int_["el_IsPartOfNearAK8Jet"][iEle] = 1;
+      }
+      
+      // --------------- AK8 Subjets --------------------
+      
+      // First Loop on and count subjets and check if lepton is part of it
+      // In case lepton is found, substract it's 4vec from the jet
+      size_t nSubjet = 0, nSubjetKeys = 0;
+      for (size_t isub=0, nSub = SoftDrop ? 2 : 4; isub<nSub; ++isub) {
+	size_t iSubjet = 
+	  SoftDrop ? (isub==0 ? h_floats_["AK8_vSubjetIndex0"]->at(iJet) 
+		      : h_floats_["AK8_vSubjetIndex1"]->at(iJet)) : 
+	  isub==0 ? h_floats_["AK8_topSubjetIndex0"]->at(iJet) : 
+	  isub==1 ? h_floats_["AK8_topSubjetIndex1"]->at(iJet) : 
+	  isub==2 ? h_floats_["AK8_topSubjetIndex2"]->at(iJet) : 
+	  h_floats_["AK8_topSubjetIndex3"]->at(iJet);
+	// If subjet exist calc MinDR and for the closest check if we need
+	// to remove lepton from the subjet if the lepton is part of it
+	if (isub==0 || iSubjet != (size_t)-1) {
+	  ++nSubjet;
+	  TLorentzVector subjet;
+	  // If SubJet doesn't exist, treat AK8 jet as a subjet
+	  std::string prefix = iSubjet!=(size_t)-1 ? "CmsTTSub_" : "AK8_";
+	  size_t index = iSubjet!=(size_t)-1 ? iSubjet : iJet;
+	  subjet.SetPtEtaPhiE(h_floats_[prefix+"Pt"]->at(index), h_floats_[prefix+"Eta"]->at(index),
+			      h_floats_[prefix+"Phi"]->at(index), h_floats_[prefix+"E"]->at(index));
+	  float DR_subjet = ele.DeltaR(subjet);
+	  if (DR_subjet<vector_float_["el_SubjetV1DR"][iEle]) {
+	    prev_jet[2] = closest_jet[2];
+	    closest_jet[2] = subjet;
+	    closest_jet_Area[2] = h_floats_[prefix+"jetArea"]->at(index);
+	    closest_jet_jecFactor0[2] = h_floats_[prefix+"jecFactor0"]->at(index);
+	    closest_jet_R08Cone[2] = iSubjet==(size_t)-1;
+	    vector_int_["el_NearSubjetIndex"][iEle] = iSubjet;
+	    vector_float_["el_SubjetV1DR"][iEle] = DR_subjet;
+	    // Check if lepton is part of the subjet
+	    vector_int_["el_IsPartOfNearSubjet"][iEle] = 0;
+	    std::vector<int> subjet_keys = iSubjet!=(size_t)-1 ? h_keys_[SoftDrop? "AK8Sub" : "CmsTTSub"]->at(iSubjet) : AK8Keys;
+	    nSubjetKeys += subjet_keys.size();
+	    for (size_t iKey=0, nKey=subjet_keys.size(); iKey<nKey; ++iKey)
+	      if (h_floats_["ele_Key"]->at(iEle)==subjet_keys[iKey])
+		vector_int_["el_IsPartOfNearSubjet"][iEle] = 1;
+	  }
+	}
+      }
+      
+      if (print_keys) {
+        std::cout<<iJet<<" nSubjet="<<nSubjet<<" nSubjet_SD="<<nSubjet_SD<<" nSubjetKeys="<<nSubjetKeys
+        	 <<" nSubjetKeys_SD="<<nSubjetKeys_SD<<" RestKeys="<<h_keys_["AK8"]->at(iJet).size()-nSubjet_SD<<"\n";
+        std::vector<int> jet_keys = h_keys_["AK8"]->at(iJet);
+        std::cout<<"   rest:";
+        for (size_t iKey=nSubjet_SD, nKey=jet_keys.size(); iKey<nKey; ++iKey) if (nSubjet_SD==1) std::cout<<" "<<jet_keys[iKey];
+        std::cout<<"\n\n";
+      }
+      
+    } // End of AK8 Jet loop
+    //std::cout<<"--> Mu["<<iEle<<"] "<<"jet/subjet-match="<<vector_int_["el_IsPartOfNearAK8Jet"][iEle]<<" "<<vector_int_["el_IsPartOfNearSubjet"][iEle]<<", MinDR="<<vector_float_["el_AK8JetV1DR"][iEle]<<" "<<vector_float_["el_SubjetV1DR"][iEle]<<std::endl;
+    
+    // Calculate Jet/SubJet pt fraction, Jet mass drop
+    for (int iType=0; iType<3; ++iType) {
+      std::string JetType = iType==0 ? "AK4Jet" : iType==1 ? "AK8Jet" : "Subjet";
+      if (vector_int_["el_Near"+JetType+"Index"][iEle]!=-9999) {
+        // LSF/LMD
+	bool isNear = closest_jet_R08Cone[0] ? ele.DeltaR(closest_jet[iType])<0.8 : ele.DeltaR(closest_jet[iType])<0.4;
+        vector_float_["el_Lep"+JetType+"Frac"][iEle] = isNear ? ele.Pt()/closest_jet[iType].Pt() : -9999;
+        vector_float_["el_Lep"+JetType+"MassDrop"][iEle] = isNear ? (closest_jet[iType]-ele).M()/closest_jet[iType].M() : -9999;
+        // 1) Revert JEC
+        // 2) Remove eleon from jet if it is part of it
+	// 3) Reapply JEC
+        // 4) If the remaining jet has pt<20 or rem_pt/orig_pt<0.1,
+        //    then consider instead the 2nd nearest jet
+        TLorentzVector cleaned1_jet = closest_jet[iType], cleaned2_jet = closest_jet[iType], cleaned3_jet = closest_jet[iType];
+        if (vector_int_["el_IsPartOfNear"+JetType+""][iEle]) {
+	  // Step 1:
+	  if (!isData_) cleaned1_jet *= closest_jet_jecFactor0[iType];
+	  // Step 2:
+	  cleaned1_jet -= ele;
+	  // Step 3:
+	  if (closest_jet_R08Cone[iType]) {
+	    AK8_JetCorrector_->setJetEta(cleaned1_jet.Eta());
+	    AK8_JetCorrector_->setJetPt(cleaned1_jet.Perp());
+	    AK8_JetCorrector_->setJetE(cleaned1_jet.E());
+	    AK8_JetCorrector_->setJetA(closest_jet_Area[iType]);
+	    AK8_JetCorrector_->setRho(*h_double_["evt_rho"]);
+	    AK8_JetCorrector_->setNPV(*h_int_["evt_npv"]);
+	    cleaned1_jet *= AK8_JetCorrector_->getCorrection();
+  	    } else {
+	    AK4_JetCorrector_->setJetEta(cleaned1_jet.Eta());
+	    AK4_JetCorrector_->setJetPt(cleaned1_jet.Perp());
+	    AK4_JetCorrector_->setJetE(cleaned1_jet.E());
+	    AK4_JetCorrector_->setJetA(closest_jet_Area[iType]);
+	    AK4_JetCorrector_->setRho(*h_double_["evt_rho"]);
+	    AK4_JetCorrector_->setNPV(*h_int_["evt_npv"]);
+	    cleaned1_jet *= AK4_JetCorrector_->getCorrection();
+	  }
+          cleaned3_jet = cleaned2_jet = cleaned1_jet;
+	  // Step 4:
+          if (cleaned1_jet.Pt()<20) {
+            cleaned2_jet = prev_jet[iType];
+          }
+          if (cleaned1_jet.Pt()<20 || cleaned1_jet.Pt()/closest_jet[iType].Pt()<0.1) {
+            cleaned3_jet = prev_jet[iType];
+          }
+        }
+        // PtRel, DR
+        vector_float_["el_"+JetType+"V1DR"][iEle] = cleaned1_jet.E()>0 ? ele.DeltaR(cleaned1_jet) : 9999;
+        vector_float_["el_"+JetType+"V2DR"][iEle] = cleaned2_jet.E()>0 ? ele.DeltaR(cleaned2_jet) : 9999;
+        vector_float_["el_"+JetType+"V3DR"][iEle] = cleaned3_jet.E()>0 ? ele.DeltaR(cleaned3_jet) : 9999;
+        vector_float_["el_"+JetType+"V1PtRel"][iEle] = cleaned1_jet.E()>0 ? ele.Perp(cleaned1_jet.Vect()) : 9999;
+        vector_float_["el_"+JetType+"V2PtRel"][iEle] = cleaned2_jet.E()>0 ? ele.Perp(cleaned2_jet.Vect()) : 9999;
+        vector_float_["el_"+JetType+"V3PtRel"][iEle] = cleaned3_jet.E()>0 ? ele.Perp(cleaned3_jet.Vect()) : 9999;
+        //if (vector_float_["el_DRNearGenEleFromSLTop"][iEle]<0.05&&h_floats_["ele_Pt"]->at(iEle)>45&&vector_float_["el_PtNearGenTop"][iEle]>400) {
+        //  std::cout<<"Orig Pt="<<closest_jet[iType].Pt()<<" Remain. Pt="<<cleaned1_jet.Pt()<<" IsPartOfJet="<<vector_int_["el_IsPartOfNear"+JetType][iEle];
+        //  std::cout<<" LepFrac="<<vector_float_["el_Lep"+JetType+"Frac"][iEle]<<" MassDrop="<<vector_float_["el_Lep"+JetType+"MassDrop"][iEle]<<std::endl;
+        //  std::cout<<"Mu["<<iEle<<"] Jet["<<vector_int_["el_Near"+JetType+"Index"][iEle]<<"] DR="<<vector_float_["el_"+JetType+"V3DR"][iEle]<<" PtRel="<<vector_float_["el_"+JetType+"V3PtRel"][iEle]<<std::endl;
+	//  //std::cout<<((vector_float_["el_"+JetType+"V3DR"][iEle]>0.4||vector_float_["el_"+JetType+"V3PtRel"][iEle]>20)?"1":" ");
+	//  //if (iType==2) std::cout<<"\n";
+        //}
+      }
     }
   }
-  
-  vector_float_["mu_DRNearGenMuFromSLTop"].assign(nmu,-9999);
+
+  vector_float_["mu_DRNearGenMuFromSLTop"].assign(nmu,9999);
   vector_float_["mu_PtNearGenMuFromSLTop"].assign(nmu,-9999);
   vector_float_["mu_PtNearGenTop"].assign(nmu,-9999);
   vector_int_["mu_NearAK4JetIndex"].assign(nmu,-9999);
@@ -620,9 +841,10 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
       std::string JetType = iType==0 ? "AK4Jet" : iType==1 ? "AK8Jet" : "Subjet";
       if (vector_int_["mu_Near"+JetType+"Index"][iMu]!=-9999) {
         // LSF/LMD
-        vector_float_["mu_Lep"+JetType+"Frac"][iMu] = mu.Pt()/closest_jet[iType].Pt();
-        vector_float_["mu_Lep"+JetType+"MassDrop"][iMu] = (closest_jet[iType]-mu).M()/closest_jet[iType].M();
-        // 1) Revert JEC
+	bool isNear = closest_jet_R08Cone[0] ? mu.DeltaR(closest_jet[iType])<0.8 : mu.DeltaR(closest_jet[iType])<0.4;
+        vector_float_["mu_Lep"+JetType+"Frac"][iMu] = isNear ? mu.Pt()/closest_jet[iType].Pt() : -9999;
+        vector_float_["mu_Lep"+JetType+"MassDrop"][iMu] = isNear ? (closest_jet[iType]-mu).M()/closest_jet[iType].M() : -9999;
+	// 1) Revert JEC
         // 2) Remove muon from jet if it is part of it
 	// 3) Reapply JEC
         // 4) If the remaining jet has pt<20 or rem_pt/orig_pt<0.1,

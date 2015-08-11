@@ -19,7 +19,7 @@ private:
   
   bool isData;
   std::vector<edm::ParameterSet > physObjects;
-  std::vector<std::string > vectorFloat, vectorInt, singleDouble, singleFloat, singleInt, singleUInt, singleULLong;
+  std::vector<std::string > vectorFloat, vectorInt, singleDouble, singleFloat, singleInt, singleUInt, singleULLong, singleBool;
   
   TTree* tree;
   
@@ -31,6 +31,7 @@ private:
   std::map<std::string, int > int_values;
   std::map<std::string, unsigned int > uint_values;
   std::map<std::string, unsigned long long > ullong_values;
+  std::map<std::string, bool > bool_values;
   std::map<std::string, std::vector<std::vector<int> > > keys;
   
   std::map<std::string, edm::Handle<std::vector<float> > > h_floats;
@@ -40,6 +41,7 @@ private:
   std::map<std::string, edm::Handle<int> >h_int;
   std::map<std::string, edm::Handle<unsigned int> >h_uint;
   std::map<std::string, edm::Handle<unsigned long long> >h_ullong;
+  std::map<std::string, edm::Handle<bool> >h_bool;
   std::map<std::string, edm::Handle<std::vector<std::vector<int> > > > h_keys;
 };
 
@@ -60,6 +62,7 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
     singleDouble = pset.getUntrackedParameter<std::vector<std::string > >("singleD", std::vector<std::string >());
     singleUInt = pset.getUntrackedParameter<std::vector<std::string > >("singleUI", std::vector<std::string >());
     singleULLong = pset.getUntrackedParameter<std::vector<std::string > >("singleULL", std::vector<std::string >());
+    singleBool = pset.getUntrackedParameter<std::vector<std::string > >("singleB", std::vector<std::string >());
     
     std::string size_var;
     if (prefix_out!=""&&(vectorFloat.size() || vectorInt.size())) {
@@ -116,6 +119,11 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
       std::string varname_out = prefix_out + singleULLong[i].c_str();
       tree->Branch(varname_out.c_str(), &ullong_values[singleULLong[i]+"_"+label]);
     }
+    
+    for (size_t i=0; i<singleBool.size(); ++i) {
+      std::string varname_out = prefix_out + singleBool[i].c_str();
+      tree->Branch(varname_out.c_str(), &bool_values[singleBool[i]+"_"+label]);
+    }
   }
 }
 
@@ -134,6 +142,7 @@ void B2GTTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     singleDouble = pset.getUntrackedParameter<std::vector<std::string > >("singleD", std::vector<std::string >()); 
     singleUInt = pset.getUntrackedParameter<std::vector<std::string > >("singleUI", std::vector<std::string >()); 
     singleULLong = pset.getUntrackedParameter<std::vector<std::string > >("singleULL", std::vector<std::string >()); 
+    singleBool = pset.getUntrackedParameter<std::vector<std::string > >("singleB", std::vector<std::string >());
     
     // Keys (strored in std::vector<std::vector<int> >)
     if (key_label.size()) {
@@ -215,6 +224,16 @@ void B2GTTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       edm::InputTag tag(label, varname_in);
       iEvent.getByLabel(tag, h_ullong[varname_in]);
       ullong_values[singleULLong[i]+"_"+label]=*h_ullong[varname_in];
+    }
+    
+    //Single bools
+    for (size_t i=0; i<singleBool.size(); ++i) {
+      std::string varname_in=prefix_in+singleBool[i];
+      std::string varname_in_nodash = varname_in; // Remove "_" from var name
+      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
+      edm::InputTag tag(label, varname_in_nodash);
+      iEvent.getByLabel(tag, h_bool[varname_in]);
+      bool_values[singleBool[i]+"_"+label]=*h_bool[varname_in];
     }
   }
   

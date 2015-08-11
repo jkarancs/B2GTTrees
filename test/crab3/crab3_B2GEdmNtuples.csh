@@ -108,12 +108,16 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	set DATASET=`echo $line | awk '{ print $2 }'`
 	set isData=`echo $DATASET | grep 'MINIAOD$' | wc -l`
 	set PUBNAME2=`echo $DATASET | sed "s;/; ;g" | awk '{ print $2 }'`
-	if ( `echo $PUBNAME2 | grep "Run2015B-PromptReco" | wc -l ` ) then
-	    set GLOBALTAG="74X_dataRun2_Prompt_v0"
-	    set DATAPROC="PromptReco50ns"
-	else if ( `echo $PUBNAME2 | grep "Run2015B-PromptReco" | wc -l ` ) then
+	if ( `echo $PUBNAME2 | grep "Run2015B-17Jul2015" | wc -l ` ) then
 	    set GLOBALTAG="74X_dataRun2_Prompt_v0"
 	    set DATAPROC="ReReco17Jul50ns"
+	    set JSON="/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Cert_246908-251883_13TeV_PromptReco_Collisions15_JSON_v2.txt"
+	    set RUNS="251162-251562"
+	else if ( `echo $PUBNAME2 | grep "Run2015B-PromptReco" | wc -l ` ) then
+	    set GLOBALTAG="74X_dataRun2_Prompt_v0"
+	    set DATAPROC="PromptReco50ns"
+	    set JSON="/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Cert_246908-251883_13TeV_PromptReco_Collisions15_JSON_v2.txt"
+	    set RUNS="251585-252501"
 	else if ( `echo $PUBNAME2 | grep "Asympt50ns" | wc -l ` ) then
 	    set GLOBALTAG="MCRUN2_74_V9A"
 	    set DATAPROC="MC50ns"
@@ -122,9 +126,9 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	    set DATAPROC="MC25ns"
 	endif
 	if ( $isData ) then
-	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME_$PUBNAME2;;s;DATASET;$DATASET;;s;GLOBALTAG;$GLOBALTAG;;s;DATAPROC;$DATAPROC;" $TASKDIR/crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_$SHORT.py
+	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME"_"$PUBNAME2;;s;DATASET;$DATASET;;s;GLOBALTAG;$GLOBALTAG;;s;DATAPROC;$DATAPROC;;s;JSON;$JSON;" $TASKDIR/crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_$SHORT.py
 	else
-	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME_$PUBNAME2;;s;DATASET;$DATASET;;s;GLOBALTAG;$GLOBALTAG;;s;DATAPROC;$DATAPROC;" $TASKDIR/crab_template_edmntuple_MC_py.txt > $TASKDIR/crab_$SHORT.py
+	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME"_"$PUBNAME2;;s;DATASET;$DATASET;;s;GLOBALTAG;$GLOBALTAG;;s;DATAPROC;$DATAPROC;" $TASKDIR/crab_template_edmntuple_MC_py.txt > $TASKDIR/crab_$SHORT.py
 	endif
     end
     rm $TASKDIR/crab_template_edmntuple_Data_py.txt $TASKDIR/crab_template_edmntuple_MC_py.txt
