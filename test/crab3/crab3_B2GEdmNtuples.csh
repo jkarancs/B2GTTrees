@@ -24,7 +24,7 @@ echo "2) submit <TASKNAME>"                                      >> Usage.txt
 echo "  Submit tasks to the grid (check cfg files first)"        >> Usage.txt
 echo ""                                                          >> Usage.txt
 echo "3) status <TASKNAME>"                                      >> Usage.txt
-echo "  Check status of tasks"		                         >> Usage.txt
+echo "  Check status of tasks and resubmit jobs if needed"	 >> Usage.txt
 echo "" 						         >> Usage.txt
 echo "4) report <TASKNAME>"                                      >> Usage.txt
 echo "  Show commands to get report of tasks"		         >> Usage.txt
@@ -99,8 +99,8 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	echo "$TXT_FILE doesn't exist"; exit
     endif
     grep "/MINIAOD" $TXT_FILE >! $TASKDIR/input_datasets.txt
-    sed "s;TASKDIR;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_template_edmntuple_MC_py.txt
-    sed "s;TASKDIR;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_edmntuple_MC_py.txt > $TASKDIR/crab_template_edmntuple_Data_py.txt
+    sed "s;TASKDIR;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_template_edmntuple_Data_py.txt
+    sed "s;TASKDIR;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_edmntuple_MC_py.txt > $TASKDIR/crab_template_edmntuple_MC_py.txt
     set N=`cat $TASKDIR/input_datasets.txt | wc -l`
     foreach i ( `seq 1 $N` )
 	set line=`sed -n "$i"p $TASKDIR/input_datasets.txt`
@@ -142,15 +142,18 @@ else if ( `echo $cmd | grep "submit" | wc -l` ) then
     end
 
 else if ( `echo $cmd | grep "status" | wc -l` ) then
-    if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
     foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
-        eval_or_echo "crab status -d $dir"
-    end
-
-else if ( `echo $cmd | grep "finished" | wc -l` ) then
-    if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
-    foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
-        eval_or_echo "crab status -d $dir | grep finished"
+	crab status -d $dir >! Status.txt
+	set Status=`grep "Task status:" Status.txt | awk '{ print $3 }'`
+	printf "%-60s %s\n" $dir $Status
+	if ( `echo $Status | grep COMPLETED | wc -l` == 0 ) then
+	    grep "%.*\(.*\)" Status.txt
+	    if ( `grep "%.*failed" Status.txt ` == 1 ) then
+		crab resubmit -d $dir >> Status.txt
+		echo "Failed jobs resubmitted"
+	    endif
+	endif
+	rm Status.txt
     end
 
 else if ( `echo $cmd | grep "report" | wc -l` ) then

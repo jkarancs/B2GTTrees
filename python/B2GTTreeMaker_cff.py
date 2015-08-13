@@ -5,7 +5,7 @@ import copy
 # Set to false, and define your own lists (eg. comment out unused vairables)
 getVariablesFromConfig = False
 
-from Analysis.B2GAnaFW.b2gedmntuples_cff import met, genPart, electrons, muons, photons, photonjets, jetsAK4, jetsAK8, subjetsAK8, subjetsCmsTopTag, genJetsAK8, genJetsAK8SoftDrop, eventInfo
+from Analysis.B2GAnaFW.b2gedmntuples_cff import met, metFull, genPart, electrons, muons, photons, photonjets, jetsAK4, jetsAK8, subjetsAK8, subjetsCmsTopTag, genJetsAK8, genJetsAK8SoftDrop, eventInfo
 
 if getVariablesFromConfig:
     
@@ -13,6 +13,11 @@ if getVariablesFromConfig:
     for pset in met.variables:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
         met_var.append(s)
+    
+    metFull_var = cms.untracked.vstring()
+    for pset in metFull.variables:
+        s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
+        metFull_var.append(s)
     
     genPart_var = cms.untracked.vstring()
     for pset in genPart.variables:
@@ -70,13 +75,14 @@ if getVariablesFromConfig:
         genJetsAK8SoftDrop_var.append(s)
 
 else:
-    # Currrent B2GAnaFW ver: 20 Jul (74X V4.3 ntuple version + MiniIso added)
+    # Currrent B2GAnaFW ver: 11 Aug (74X V5.1 ntuple version + MiniIso PR16 added)
     met_var = cms.untracked.vstring(
         "Pt",
         "Px",
         "Py",
         "Phi",
-        )
+    )
+    metFull_var    = copy.deepcopy(met_var)
     
     basicVars = cms.untracked.vstring(
         #"Mass",
@@ -86,7 +92,7 @@ else:
         "Phi",
         "E",
         "Charge",
-        )
+    )
     
     genPartVars = cms.untracked.vstring(
         "ID",
@@ -120,7 +126,7 @@ else:
         "isTight",
         "isMedium",
         "scEta",
-        )
+    )
     
     muonVars = cms.untracked.vstring(
         "Key",
@@ -158,7 +164,7 @@ else:
         "GenMuonPt",
         "GenMuonE",
         "GenMuonCharge",
-        )
+    )
     
     photonVars = cms.untracked.vstring(
         "SClusterEta",
@@ -180,11 +186,12 @@ else:
         "PassLooseID",
         "PassMediumID",
         "PassTightID",
-        )
+    )
     
     photonjetVars = cms.untracked.vstring(
         "JetIndex",
         "PhotonIndex",
+        "SubwGammatIndex",
         "PhotonSubjetFrac",
         "SubjetPt0",
         "SubjetPt1",
@@ -198,7 +205,7 @@ else:
         "SubjetEne0",
         "SubjetEne1",
         "SubjetEne2",
-        )
+    )
     
     jetVars = cms.untracked.vstring(
         "CSV",
@@ -225,7 +232,6 @@ else:
         "HFEMEnergy",
         "ChargedHadronMultiplicity",
         "numberOfDaughters",
-        "chargedMultiplicity",
         "neutralHadronMultiplicity",
         "neutralHadronEnergy",
         "neutralEmEnergy",
@@ -237,6 +243,13 @@ else:
         "HFEMMultiplicity",
         "ChargeMuEnergy",
         "neutralMultiplicity",
+        "neutralHadronEnergyFrac",
+        "neutralEmEnergyFrac",
+        "chargedHadronEnergyFrac",
+        "muonEnergyFrac",
+        "chargedEmEnergyFrac",
+        "chargedMultiplicity",
+        "NumConstituents",
         "jecFactor0",
         "jetArea",
         "SmearedPt",
@@ -245,7 +258,7 @@ else:
         "SmearedE",
         "JERup",
         "JERdown",
-        )
+    )
     
     jetAK8Vars = cms.untracked.vstring(
         "vSubjetIndex0",
@@ -265,7 +278,7 @@ else:
         "wMass",
         "nSubJets",
         "minmass",
-        )
+    )
     
     genPart_var    = copy.deepcopy(basicVars)
     genPart_var   += genPartVars
@@ -308,63 +321,57 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
             prefix_out = cms.untracked.string("evt_"),
             singleI = cms.untracked.vstring("npv"),
             singleD = cms.untracked.vstring("vx", "vy", "vz"),
-            ),
+        ),
         cms.PSet(
             label = cms.untracked.string("eventInfo"),
             prefix_in = eventInfo.prefix,
             prefix_out = cms.untracked.string("evt_"),
             singleUI = cms.untracked.vstring("RunNumber", "LumiBlock"),
             singleULL = cms.untracked.vstring("EventNumber"),
-            ),
-        cms.PSet(
-            label = cms.untracked.string("HBHENoiseFilterResultProducer"),
-            prefix_in = cms.untracked.string(""),
-            prefix_out = cms.untracked.string("evt_"),
-            singleB = cms.untracked.vstring(
-                "HBHEIsoNoiseFilterResult",
-                "HBHENoiseFilterResult",
-                "HBHENoiseFilterResultRun1",
-                "HBHENoiseFilterResultRun2Loose",
-                "HBHENoiseFilterResultRun2Tight"),
-            ),
+        ),
         cms.PSet(
             label = cms.untracked.string("fixedGridRhoFastjetAll"),
             prefix_in = cms.untracked.string(""),
             prefix_out = cms.untracked.string("evt_rho"),
             singleD = cms.untracked.vstring(""),
-            ),
+        ),
         # Pileup
         cms.PSet(
             label = cms.untracked.string("eventUserData"),
             prefix_in = cms.untracked.string("pu"),
             prefix_out = cms.untracked.string("pu_"),
-            vectorI = cms.untracked.vstring("BX","NInt"),
             singleI = cms.untracked.vstring("NtrueInt"),
-            ),
+            vectorI = cms.untracked.vstring("BX","NInt"),
+        ),
         # Trigger data
         #cms.PSet(
         #    label = cms.untracked.string("TriggerUserData"),
         #    prefix_in = cms.untracked.string("trigger"),
         #    prefix_out = cms.untracked.string("trig_"),
-        #    vectorF = cms.untracked.vstring("BitTree"),
         #    vectorI = cms.untracked.vstring("PrescaleTree"),
-        #    ),
-        )
+        #    vectorF = cms.untracked.vstring("BitTree"),
+        #),
         # Vertices
         cms.PSet(
             label = cms.untracked.string("vertexInfo"),
             prefix_in = cms.untracked.string(""),
             prefix_out = cms.untracked.string("vtx_"),
-            vectorF = cms.untracked.vstring("z","rho","chi"),
             vectorI = cms.untracked.vstring("ndof"),
-            ),
+            vectorF = cms.untracked.vstring("z","rho","chi"),
+        ),
         # MET
         cms.PSet(
             label = cms.untracked.string("met"),
             prefix_in = met.prefix,
-            prefix_out = cms.untracked.string("met_"),
+            prefix_out = cms.untracked.string("met_NoHF_"),
             vectorF = met_var,
-            ),
+        ),
+        cms.PSet(
+            label = cms.untracked.string("metFull"),
+            prefix_in = metFull.prefix,
+            prefix_out = cms.untracked.string("met_"),
+            vectorF = metFull_var,
+        ),
         # GenParticles
         #cms.PSet(
         #    label = cms.untracked.string("genPart"),
@@ -372,35 +379,35 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
         #    prefix_out = cms.untracked.string("gen_"),
         #    vectorF = genPart_var,
         #    mc_only = cms.untracked.bool(True),
-        #    ),
+        #),
         # Electrons
         cms.PSet(
             label = cms.untracked.string("electrons"),
             prefix_in = electrons.prefix,
             prefix_out = cms.untracked.string("el_"),
             vectorF = electrons_var,
-            ),
+        ),
         # Muons
         cms.PSet(
             label = cms.untracked.string("muons"),
             prefix_in = muons.prefix,
             prefix_out = cms.untracked.string("mu_"),
             vectorF = muons_var,
-            ),
+        ),
         # Photons
         #cms.PSet(
         #    label = cms.untracked.string("photons"),
         #    prefix_in = photons.prefix,
         #    prefix_out = cms.untracked.string("pho_"),
         #    vectorF = photons_var,
-        #    ),
+        #),
         # Photon jets
         #cms.PSet(
         #    label = cms.untracked.string("photonjets"),
         #    prefix_in = photonjets.prefix,
         #    prefix_out = cms.untracked.string("phojet_"),
         #    vectorF = photonjets_var,
-        #    ),
+        #),
         # AK4 Jets
         cms.PSet(
             label = cms.untracked.string("jetsAK4"),
@@ -408,7 +415,7 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
             prefix_in = jetsAK4.prefix,
             prefix_out = cms.untracked.string("jetAK4_"),
             vectorF = jetsAK4_var,
-            ),
+        ),
         # AK8 Jets
         cms.PSet(
             label = cms.untracked.string("jetsAK8"),
@@ -416,7 +423,7 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
             prefix_in = jetsAK8.prefix,
             prefix_out = cms.untracked.string("jetAK8_"),
             vectorF = jetsAK8_var,
-            ),
+        ),
         # Subjets of AK8 Jets
         cms.PSet(
             label = cms.untracked.string("subjetsAK8"),
@@ -424,7 +431,7 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
             prefix_in = subjetsAK8.prefix,
             prefix_out = cms.untracked.string("subjetAK8_"),
             vectorF = subjetsAK8_var,
-            ),
+        ),
         # Subjets of CMS Top-tag Jets
         cms.PSet(
             label = cms.untracked.string("subjetsCmsTopTag"),
@@ -432,7 +439,7 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
             prefix_in = subjetsCmsTopTag.prefix,
             prefix_out = cms.untracked.string("subjetsCmsTopTag_"),
             vectorF = subjetsCmsTopTag_var,
-            ),
+        ),
         # AK8 Gen jets
         #cms.PSet(
         #    label = cms.untracked.string("genJetsAK8"),
@@ -440,7 +447,7 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
         #    prefix_out = cms.untracked.string("genjetAK8_"),
         #    vectorF = genJetsAK8_var,
         #    mc_only = cms.untracked.bool(True),
-        #    ),
+        #),
         # AK8 Gen jets (with SoftDrop grooming)
         cms.PSet(
             label = cms.untracked.string("genJetsAK8SoftDrop"),
@@ -448,6 +455,18 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
             prefix_out = cms.untracked.string("genjetAK8SD_"),
             vectorF = genJetsAK8SoftDrop_var,
             mc_only = cms.untracked.bool(True),
-            ),
+        ),
+        # HBHE Noise (MET) filter
+        cms.PSet(
+            label = cms.untracked.string("HBHENoiseFilterResultProducer"),
+            prefix_in = cms.untracked.string(""),
+            prefix_out = cms.untracked.string("Flag_"),
+            singleB = cms.untracked.vstring(
+                "HBHEIsoNoiseFilterResult",
+                "HBHENoiseFilterResult",
+                "HBHENoiseFilterResultRun1",
+                "HBHENoiseFilterResultRun2Loose",
+                "HBHENoiseFilterResultRun2Tight"),
+        ),
     )
-
+)

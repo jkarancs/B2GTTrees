@@ -10,6 +10,7 @@
 ### *****************************************************************************************
 import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as opts
+import os
 
 options = opts.VarParsing('analysis')
 
@@ -49,29 +50,27 @@ options.register('weight',
                  opts.VarParsing.varType.float,
                  'Event weight')
 
+options.register('JECdir',
+                 os.environ['CMSSW_BASE']+'/src/Analysis/B2GTTrees/JECs/',
+                 opts.VarParsing.multiplicity.singleton,
+                 opts.VarParsing.varType.string,
+                 'Directory, where the JEC text files are lcoated')
+
 options.parseArguments()
 
 process = cms.Process("b2gAnalysisTTrees")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.categories.append('HLTrigReport')
-process.MessageLogger.cerr.FwkReport.reportEvery = 10000
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
+process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 if options.globalTag != '':
     process.GlobalTag.globaltag = options.globalTag
 else:
     from Configuration.AlCa.GlobalTag import GlobalTag as customiseGlobalTag
     process.GlobalTag = customiseGlobalTag(process.GlobalTag, globaltag = 'auto:run2_mc')
-    process.GlobalTag.connect   = 'frontier://FrontierProd/CMS_COND_31X_GLOBALTAG'
-    process.GlobalTag.pfnPrefix = cms.untracked.string('frontier://FrontierProd/')
     print "Automatically selected GlobalTag: "+str(process.GlobalTag.globaltag)
-
-for pset in process.GlobalTag.toGet.value():
-    pset.connect = pset.connect.value().replace('frontier://FrontierProd/', 'frontier://FrontierProd/')
-    #   Fix for multi-run processing:
-    process.GlobalTag.RefreshEachRun = cms.untracked.bool( False )
-    process.GlobalTag.ReconnectEachRun = cms.untracked.bool( False )
 
 ### Output Report
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(False) )
@@ -89,17 +88,20 @@ from Analysis.B2GAnaFW.b2gedmntuples_cff import met, genPart, electrons, muons, 
 
 process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
     isData = cms.untracked.bool(options.isData),
-    JEC_location = cms.untracked.string("Analysis/B2GTTrees/JECs/"+options.globalTag),
+    JEC_location = cms.untracked.string(options.JECdir+options.globalTag),
+    event_weight = cms.untracked.double(options.weight),
+    filter_label = cms.untracked.string("METUserData"),
+    trigger_label = cms.untracked.string("TriggerUserData"),
+    evt_label = cms.untracked.string("eventUserData"),
+    evt_prefix = cms.untracked.string(""),
+    met_label = cms.untracked.string("met"), # This now excludes HF (07 Aug 2015 recommendation)
+    met_prefix = met.prefix,
     gen_label = cms.untracked.string("genPart"),
     gen_prefix = genPart.prefix,
     electrons_label = cms.untracked.string("electrons"),
     electrons_prefix = electrons.prefix,
     muons_label = cms.untracked.string("muons"),
     muons_prefix = muons.prefix,
-    evt_label = cms.untracked.string("eventUserData"),
-    evt_prefix = cms.untracked.string(""),
-    met_label = cms.untracked.string("met"),
-    met_prefix = met.prefix,
     AK4Jets_label = cms.untracked.string("jetsAK4"),
     AK4Jets_prefix = jetsAK4.prefix,
     AK8Jets_label = cms.untracked.string("jetsAK8"),
@@ -112,8 +114,21 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
     AK8JetKeys_label = cms.untracked.string("jetKeysAK8"),
     AK8SubjetKeys_label = cms.untracked.string("subjetKeysAK8"),
     CmsTTSubjetKeys_label = cms.untracked.string("subjetsCmsTopTagKeys"),
-    event_weight = cms.untracked.double(options.weight),
-    singleI = cms.untracked.vstring(
+    singleB = cms.untracked.vstring(
+        # Event filters (these are automatically picked up)
+        "Flag_trackingFailureFilter",
+        "Flag_goodVertices",
+        "Flag_CSCTightHaloFilter",
+        "Flag_trkPOGFilters",
+        "Flag_trkPOG_logErrorTooManyClusters",
+        "Flag_EcalDeadCellTriggerPrimitiveFilter",
+        "Flag_ecalLaserCorrFilter",
+        "Flag_trkPOG_manystripclus53X",
+        "Flag_eeBadScFilter",
+        "Flag_METFilters",
+        "Flag_HBHENoiseFilter",
+        "Flag_trkPOG_toomanystripclus53X",
+        "Flag_hcalLaserEventFilter",
         # Add trigger names below (these are automatically picked up)
         # Hadronic
         "HLT_AK8PFJet360_TrimMass30",
@@ -161,12 +176,14 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "HLT_IsoMu27",
         "HLT_IsoTkMu24_eta2p1",
         "HLT_IsoTkMu27",
+    ),
+    singleI = cms.untracked.vstring(
         # event variables
         "evt_NLep",
         "evt_NTopHad",
         "evt_NTopLep",
         "evt_NTop",
-        ),
+    ),
     singleF = cms.untracked.vstring(
         "evt_HtLep",
         "evt_HtTop",
@@ -195,8 +212,11 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "evt_AK4_R",
         "evt_AK4_R2",
         "evt_weight",
-        ),
+    ),
     vectorI = cms.untracked.vstring(
+        "gen_ID",
+        "gen_MomID",
+        "gen_Status",
         "jetAK8_HasNearGenTop",
         "jetAK8_NearGenTopIsHadronic",
         "jetAK8_NearGenWIsHadronic",
@@ -204,16 +224,13 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "jetAK8_NearGenWToMuNu",
         "jetAK8_NearGenWToTauNu",
         "jetAK8_PassTopTag",
-        "gen_ID",
-        "gen_MomID",
-        "gen_Status",
         "el_IsPartOfNearAK4Jet",
         "el_IsPartOfNearAK8Jet",
         "el_IsPartOfNearSubjet",
         "mu_IsPartOfNearAK4Jet",
         "mu_IsPartOfNearAK8Jet",
         "mu_IsPartOfNearSubjet",
-        ),
+    ),
     vectorF = cms.untracked.vstring(
         "gen_Pt",
         "gen_Eta",
@@ -284,8 +301,8 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "mu_SubjetV1PtRel",
         "mu_SubjetV2PtRel",
         "mu_SubjetV3PtRel",
-        ),
-    )
+    ),
+)
 
 ### Filter - Select only events with at least 1 AK8 jet with pt>300
 # Filter for MiniAOD Jet collections
@@ -293,8 +310,8 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
 #    src = cms.InputTag("slimmedJetsAK8"),
 #    filter = cms.bool(True),
 #    cut = cms.string("pt>300"),
-#    minNumber = cms.uint32(1)
-#    )
+#    minNumber = cms.uint32(1)g
+#)
 
 # Filter For Edm ntuple - Use this here
 process.EdmNtupleCountFilter = cms.EDFilter("EdmNtupleCountFilter", # This one works on EdmNtuple
@@ -302,7 +319,7 @@ process.EdmNtupleCountFilter = cms.EDFilter("EdmNtupleCountFilter", # This one w
     filter = cms.bool(True), # False also filters for some reason (disable in Path instead)
     min = cms.double(200),
     minNumber = cms.uint32(1)
-    )
+)
 
 ### B2GTTreeMaker
 process.load("Analysis.B2GTTrees.B2GTTreeMaker_cff")
@@ -312,12 +329,13 @@ process.B2GTTreeMaker.physicsObjects.append(
         label = cms.untracked.string("extraVar"),
         prefix_in = cms.untracked.string(""),
         prefix_out = cms.untracked.string(""),
+        singleB = process.extraVar.singleB,
         singleI = process.extraVar.singleI,
         singleF = process.extraVar.singleF,
         vectorI = process.extraVar.vectorI,
         vectorF = process.extraVar.vectorF,
-        ),
-    )
+    ),
+)
 process.B2GTTreeMaker.isData = options.isData
 
 
@@ -325,15 +343,15 @@ process.edmNtuplesOut = cms.OutputModule("PoolOutputModule",
     fileName = cms.untracked.string(options.outputLabel),
     outputCommands = cms.untracked.vstring(
         "keep *",
-        ),
+    ),
     dropMetaData = cms.untracked.string('ALL'),
-    )
+)
 
 process.analysisPath = cms.Path(
     process.EdmNtupleCountFilter *
     process.extraVar *
     process.B2GTTreeMaker
-    )
+)
 
 #process.endPath = cms.EndPath( process.edmNtuplesOut )
 

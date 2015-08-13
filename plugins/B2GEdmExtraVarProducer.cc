@@ -3,6 +3,14 @@
 
 void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   // Read variables from EdmNtuple
+  if (first_event_) {
+    iEvent.getByLabel(edm::InputTag(trigger_label_, "triggerNameTree"),    h_strings_["trigger_names"]);
+    iEvent.getByLabel(edm::InputTag(filter_label_, "triggerNameTree"),     h_strings_["filter_names"]);
+  }
+  iEvent.getByLabel(edm::InputTag(trigger_label_, "triggerBitTree"),       h_floats_["trigger_bits"]);
+  //iEvent.getByLabel(edm::InputTag(trigger_label_, "triggerPrescaleTree"),  h_ints_["trigger_prescales"]);
+  iEvent.getByLabel(edm::InputTag(filter_label_, "triggerBitTree"),        h_floats_["filter_bits"]);
+  
   iEvent.getByLabel(edm::InputTag(evt_label_, evt_prefix_+"npv"), h_int_["evt_npv"]);
   iEvent.getByLabel(edm::InputTag("fixedGridRhoFastjetAll", ""), h_double_["evt_rho"]);
   
@@ -72,6 +80,25 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
     iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Status"), h_floats_["gen_Status"]);
   }
   
+  // Event weight (xsec/nevent in units of fb), 
+  // Usage: Multiply this number by the total int luminosity in units of fb^-1
+  single_float_["evt_weight"] = isData_ ? 1 : event_weight_;                            /* evt_weight */
+  
+  // ----------------------------
+  // - Trigger/Filter variables -
+  // ----------------------------
+  
+  if (first_event_) {
+    first_event_=0;
+    for ( auto filter : filter_names_ ) for (size_t i=0, n=h_strings_["filter_names"]->size(); i<n; ++i) 
+      if (h_strings_["filter_names"]->at(i).find(filter)==0) filters_[filter] = i;
+    for ( auto trig : trigger_names_ ) for (size_t i=0, n=h_strings_["trigger_names"]->size(); i<n; ++i) 
+      if (h_strings_["trigger_names"]->at(i).find(trig+"_v")==0) triggers_[trig] = i;
+  }
+  for ( auto filter : filters_ ) single_bool_[filter.first]                             /* Flag_* */
+    = h_floats_["filter_bits"]->at(filter.second);
+  for ( auto trigger : triggers_ ) single_bool_[trigger.first]                          /* HLT_* */
+    = h_floats_["trigger_bits"]->at(trigger.second);
   
   // ---------------------
   // - Gen Particle Info -
@@ -1054,26 +1081,6 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
     single_float_["evt_AK4_R"]   = single_float_["evt_AK4_MTR"] / single_float_["evt_AK4_MR"]; /* evt_AK4_R */
     single_float_["evt_AK4_R2"]  = std::pow(single_float_["evt_AK4_R"], 2);            /* evt_AK4_R2 */
   }
-  
-  // ---------------------
-  // - Trigger variables -
-  // ---------------------
-  
-  if (first_event_) {
-    first_event_=0;
-    iEvent.getByLabel(edm::InputTag("TriggerUserData", "triggerNameTree"),      h_strings_["trigger_names"]);
-    for ( auto trig : trigger_names_ ) for (size_t i=0, n=h_strings_["trigger_names"]->size(); i<n; ++i)
-      if (h_strings_["trigger_names"]->at(i).find(trig+"_v")==0) triggers_[trig] = i;
-  }
-  iEvent.getByLabel(edm::InputTag("TriggerUserData", "triggerBitTree"),       h_floats_["trigger_bits"]);
-  //iEvent.getByLabel(edm::InputTag("TriggerUserData", "triggerPrescaleTree"),  h_ints_["trigger_prescales"]);
-  for ( auto trigger : triggers_ ) single_int_[trigger.first]                          /* HLT_* */
-    = h_floats_["trigger_bits"]->at(trigger.second);
-  
-  // ---------------------
-  // -  Event variables  -
-  // ---------------------
-  single_float_["evt_weight"] = isData_ ? 1 : event_weight_;                            /* evt_weight */
 
 }
 

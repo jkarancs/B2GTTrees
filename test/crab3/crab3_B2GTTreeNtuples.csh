@@ -25,7 +25,7 @@ echo "2) submit <TASKNAME>"                                      >> Usage.txt
 echo "  Submit tasks to the grid (check cfg files first)"        >> Usage.txt
 echo ""                                                          >> Usage.txt
 echo "3) status <TASKNAME>"                                      >> Usage.txt
-echo "  Check status of tasks"		                         >> Usage.txt
+echo "  Check status of tasks and resubmit jobs if needed"	 >> Usage.txt
 echo "" 						         >> Usage.txt
 echo "4) report <TASKNAME>"                                      >> Usage.txt
 echo "  Show commands to get report of tasks"		         >> Usage.txt
@@ -103,15 +103,34 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	set SHORT=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
 	set DATASET=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
 	set primary=`echo $DATASET | sed "s;/; ;g" | awk '{ print $1 }'`
+	set isData=`echo $DATASET | grep 'Run2015' | wc -l`
 	set xsec=`grep $primary $TASKDIR/xsec_datasets.txt | awk '{ print $2 }'`
-	if ( $xsec == "" ) then
+	if ( ! $isData && $xsec == "" ) then
 	    echo "Error: Cross-section is missing for $primary, exiting..."
 	    rm -r $TASKDIR
 	    exit
 	endif
-	set nevent=`das_client.py --query="dataset=$DATASET instance=prod/phys03 | grep dataset.nevents" | tail -1`
-	set WEIGHT=`echo | awk '{ printf "%lf", 1000*'$xsec'/'$nevent' }'`
-	sed "s;TASKNAME;$SHORT;;s;DATASET;$DATASET;;s;weight=1.0;weight=$WEIGHT;" $TASKDIR/crab_template_ttreentuple_py.txt > $TASKDIR/crab_$SHORT.py
+	if ( $isData ) then
+	    set WEIGHT=1
+	else 
+	    set nevent=`das_client.py --query="dataset=$DATASET instance=prod/phys03 | grep dataset.nevents" | tail -1`
+	    set WEIGHT=`echo | awk '{ printf "%lf", 1000*'$xsec'/'$nevent' }'`
+	endif
+	set MIDNAME=`echo $DATASET | sed "s;/; ;g" | awk '{ print $2 }'`
+	if ( `echo $MIDNAME | grep "Run2015B-17Jul2015" | wc -l ` ) then
+	    set GLOBALTAG="74X_dataRun2_Prompt_v0"
+	    set ISDATA="True"
+	else if ( `echo $MIDNAME | grep "Run2015B-PromptReco" | wc -l ` ) then
+	    set GLOBALTAG="74X_dataRun2_Prompt_v0"
+	    set ISDATA="True"
+	else if ( `echo $MIDNAME | grep "Asympt50ns" | wc -l ` ) then
+	    set GLOBALTAG="MCRUN2_74_V9A"
+	    set ISDATA="False"
+	else	    
+	    set GLOBALTAG="MCRUN2_74_V9"
+	    set ISDATA="False"
+	endif
+	sed "s;TASKNAME;$SHORT;;s;DATASET;$DATASET;;s;weight=1.0;weight=$WEIGHT;;s;GLOBALTAG;$GLOBALTAG;;s;ISDATA;$ISDATA;" $TASKDIR/crab_template_ttreentuple_py.txt > $TASKDIR/crab_$SHORT.py
     end
     rm $TASKDIR/crab_template_ttreentuple_py.txt
     echo "Config files ready in directory: "$TASKDIR
@@ -124,15 +143,18 @@ else if ( `echo $cmd | grep "submit" | wc -l` ) then
     end
 
 else if ( `echo $cmd | grep "status" | wc -l` ) then
-    if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
     foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
-        eval_or_echo "crab status -d $dir"
-    end
-
-else if ( `echo $cmd | grep "finished" | wc -l` ) then
-    if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
-    foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
-        eval_or_echo "crab status -d $dir | grep finished"
+	crab status -d $dir >! Status.txt
+	set Status=`grep "Task status:" Status.txt | awk '{ print $3 }'`
+	printf "%-60s %s\n" $dir $Status
+	if ( `echo $Status | grep COMPLETED | wc -l` == 0 ) then
+	    grep "%.*\(.*\)" Status.txt
+	    if ( `grep "failed.*%" Status.txt | wc -l` == 1 ) then
+		crab resubmit -d $dir >> Status.txt
+		echo "Failed jobs resubmitted"
+	    endif
+	endif
+	rm Status.txt
     end
 
 else if ( `echo $cmd | grep "report" | wc -l` ) then

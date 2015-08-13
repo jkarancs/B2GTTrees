@@ -19,29 +19,29 @@ private:
   
   bool isData;
   std::vector<edm::ParameterSet > physObjects;
-  std::vector<std::string > vectorFloat, vectorInt, singleDouble, singleFloat, singleInt, singleUInt, singleULLong, singleBool;
+  std::vector<std::string > singleBool, singleInt, singleUInt, singleULLong, singleFloat, singleDouble, vectorInt, vectorFloat;
   
   TTree* tree;
   
   std::map<std::string, size_t > sizes;
-  std::map<std::string, float[500] > vfloats_values;
-  std::map<std::string, int[500] > vints_values;
-  std::map<std::string, double > double_values;
-  std::map<std::string, float > float_values;
+  std::map<std::string, bool > bool_values;
   std::map<std::string, int > int_values;
   std::map<std::string, unsigned int > uint_values;
   std::map<std::string, unsigned long long > ullong_values;
-  std::map<std::string, bool > bool_values;
+  std::map<std::string, float > float_values;
+  std::map<std::string, double > double_values;
+  std::map<std::string, int[500] > vints_values;
+  std::map<std::string, float[500] > vfloats_values;
   std::map<std::string, std::vector<std::vector<int> > > keys;
   
-  std::map<std::string, edm::Handle<std::vector<float> > > h_floats;
-  std::map<std::string, edm::Handle<std::vector<int> > > h_ints;
-  std::map<std::string, edm::Handle<double> > h_double;
-  std::map<std::string, edm::Handle<float> > h_float;
+  std::map<std::string, edm::Handle<bool> >h_bool;
   std::map<std::string, edm::Handle<int> >h_int;
   std::map<std::string, edm::Handle<unsigned int> >h_uint;
   std::map<std::string, edm::Handle<unsigned long long> >h_ullong;
-  std::map<std::string, edm::Handle<bool> >h_bool;
+  std::map<std::string, edm::Handle<float> > h_float;
+  std::map<std::string, edm::Handle<double> > h_double;
+  std::map<std::string, edm::Handle<std::vector<int> > > h_ints;
+  std::map<std::string, edm::Handle<std::vector<float> > > h_floats;
   std::map<std::string, edm::Handle<std::vector<std::vector<int> > > > h_keys;
 };
 
@@ -53,29 +53,57 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
   physObjects = iConfig.getParameter<std::vector<edm::ParameterSet> >("physicsObjects");
   for (auto pset : physObjects) if (!(isData && pset.getUntrackedParameter<bool>("mc_only", false))) {
     std::string label = pset.getUntrackedParameter<std::string >("label");
-    std::string key_label = pset.getUntrackedParameter<std::string >("key_label", "");
     std::string prefix_out = pset.getUntrackedParameter<std::string >("prefix_out");
-    vectorInt = pset.getUntrackedParameter<std::vector<std::string > >("vectorI", std::vector<std::string >());
-    vectorFloat = pset.getUntrackedParameter<std::vector<std::string > >("vectorF", std::vector<std::string >());
+    singleBool = pset.getUntrackedParameter<std::vector<std::string > >("singleB", std::vector<std::string >());
     singleInt = pset.getUntrackedParameter<std::vector<std::string > >("singleI", std::vector<std::string >());
-    singleFloat = pset.getUntrackedParameter<std::vector<std::string > >("singleF", std::vector<std::string >());
-    singleDouble = pset.getUntrackedParameter<std::vector<std::string > >("singleD", std::vector<std::string >());
     singleUInt = pset.getUntrackedParameter<std::vector<std::string > >("singleUI", std::vector<std::string >());
     singleULLong = pset.getUntrackedParameter<std::vector<std::string > >("singleULL", std::vector<std::string >());
-    singleBool = pset.getUntrackedParameter<std::vector<std::string > >("singleB", std::vector<std::string >());
+    singleFloat = pset.getUntrackedParameter<std::vector<std::string > >("singleF", std::vector<std::string >());
+    singleDouble = pset.getUntrackedParameter<std::vector<std::string > >("singleD", std::vector<std::string >());
+    vectorInt = pset.getUntrackedParameter<std::vector<std::string > >("vectorI", std::vector<std::string >());
+    vectorFloat = pset.getUntrackedParameter<std::vector<std::string > >("vectorF", std::vector<std::string >());
+    std::string key_label = pset.getUntrackedParameter<std::string >("key_label", "");
     
+    // Initialize single pset objects
+    for (size_t i=0; i<singleBool.size(); ++i) {
+      std::string varname_out = prefix_out + singleBool[i].c_str();
+      tree->Branch(varname_out.c_str(), &bool_values[singleBool[i]+"_"+label]);
+    }
+    
+    for (size_t i=0; i<singleInt.size(); ++i) {
+      std::string varname_out = prefix_out + singleInt[i].c_str();
+      tree->Branch(varname_out.c_str(), &int_values[singleInt[i]+"_"+label]);
+    }
+    
+    for (size_t i=0; i<singleUInt.size(); ++i) {
+      std::string varname_out = prefix_out + singleUInt[i].c_str();
+      tree->Branch(varname_out.c_str(), &uint_values[singleUInt[i]+"_"+label]);
+    }
+    
+    for (size_t i=0; i<singleULLong.size(); ++i) {
+      std::string varname_out = prefix_out + singleULLong[i].c_str();
+      tree->Branch(varname_out.c_str(), &ullong_values[singleULLong[i]+"_"+label]);
+    }
+    
+    for (size_t i=0; i<singleFloat.size(); ++i) {
+      std::string varname_out = prefix_out + singleFloat[i].c_str();
+      tree->Branch(varname_out.c_str(), &float_values[singleFloat[i]+"_"+label]);
+    }
+    
+    for (size_t i=0; i<singleDouble.size(); ++i) {
+      std::string varname_out = prefix_out + singleDouble[i].c_str();
+      tree->Branch(varname_out.c_str(), &double_values[singleDouble[i]+"_"+label]);
+    }
+    
+    // Adding vector variables
     std::string size_var;
-    if (prefix_out!=""&&(vectorFloat.size() || vectorInt.size())) {
+    if (prefix_out!=""&&(vectorInt.size() || vectorFloat.size())) {
       std::stringstream obj_size;
       obj_size<<prefix_out<<"size";
       size_var = obj_size.str();
       tree->Branch(size_var.c_str(), &sizes[size_var], (size_var+"/i").c_str());
     }
     
-    // Adding keys
-    if (key_label.size()) tree->Branch((prefix_out+"Keys").c_str(), &keys[label]);
-    
-    // Adding variables
     for (size_t i=0; i<vectorInt.size(); ++i) {
       std::string varname_out = prefix_out + vectorInt[i].c_str();
       if (prefix_out=="") {
@@ -94,36 +122,8 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
       tree->Branch(varname_out.c_str(), &vfloats_values[vectorFloat[i]+"_"+label],(varname_out+"["+size_var+"]/F").c_str());
     }
     
-    //Initialize single pset objects
-    for (size_t i=0; i<singleInt.size(); ++i) {
-      std::string varname_out = prefix_out + singleInt[i].c_str();
-      tree->Branch(varname_out.c_str(), &int_values[singleInt[i]+"_"+label]);
-    }
-    
-    for (size_t i=0; i<singleFloat.size(); ++i) {
-      std::string varname_out = prefix_out + singleFloat[i].c_str();
-      tree->Branch(varname_out.c_str(), &float_values[singleFloat[i]+"_"+label]);
-    }
-    
-    for (size_t i=0; i<singleDouble.size(); ++i) {
-      std::string varname_out = prefix_out + singleDouble[i].c_str();
-      tree->Branch(varname_out.c_str(), &double_values[singleDouble[i]+"_"+label]);
-    }
-    
-    for (size_t i=0; i<singleUInt.size(); ++i) {
-      std::string varname_out = prefix_out + singleUInt[i].c_str();
-      tree->Branch(varname_out.c_str(), &uint_values[singleUInt[i]+"_"+label]);
-    }
-    
-    for (size_t i=0; i<singleULLong.size(); ++i) {
-      std::string varname_out = prefix_out + singleULLong[i].c_str();
-      tree->Branch(varname_out.c_str(), &ullong_values[singleULLong[i]+"_"+label]);
-    }
-    
-    for (size_t i=0; i<singleBool.size(); ++i) {
-      std::string varname_out = prefix_out + singleBool[i].c_str();
-      tree->Branch(varname_out.c_str(), &bool_values[singleBool[i]+"_"+label]);
-    }
+    // Adding keys
+    if (key_label.size()) tree->Branch((prefix_out+"Keys").c_str(), &keys[label]);
   }
 }
 
@@ -132,22 +132,76 @@ void B2GTTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   
   for (auto pset : physObjects) if (!(isData && pset.getUntrackedParameter<bool>("mc_only", false))) {
     std::string label = pset.getUntrackedParameter< std::string >("label");
-    std::string key_label = pset.getUntrackedParameter< std::string >("key_label", "");
     std::string prefix_in = pset.getUntrackedParameter<std::string >("prefix_in");
     std::string prefix_out = pset.getUntrackedParameter<std::string >("prefix_out");
-    vectorInt = pset.getUntrackedParameter<std::vector<std::string > >("vectorI", std::vector<std::string >()); 
-    vectorFloat = pset.getUntrackedParameter<std::vector<std::string > >("vectorF", std::vector<std::string >()); 
+    singleBool = pset.getUntrackedParameter<std::vector<std::string > >("singleB", std::vector<std::string >());
     singleInt = pset.getUntrackedParameter<std::vector<std::string > >("singleI", std::vector<std::string >()); 
-    singleFloat = pset.getUntrackedParameter<std::vector<std::string > >("singleF", std::vector<std::string >()); 
-    singleDouble = pset.getUntrackedParameter<std::vector<std::string > >("singleD", std::vector<std::string >()); 
     singleUInt = pset.getUntrackedParameter<std::vector<std::string > >("singleUI", std::vector<std::string >()); 
     singleULLong = pset.getUntrackedParameter<std::vector<std::string > >("singleULL", std::vector<std::string >()); 
-    singleBool = pset.getUntrackedParameter<std::vector<std::string > >("singleB", std::vector<std::string >());
+    singleFloat = pset.getUntrackedParameter<std::vector<std::string > >("singleF", std::vector<std::string >()); 
+    singleDouble = pset.getUntrackedParameter<std::vector<std::string > >("singleD", std::vector<std::string >()); 
+    vectorInt = pset.getUntrackedParameter<std::vector<std::string > >("vectorI", std::vector<std::string >()); 
+    vectorFloat = pset.getUntrackedParameter<std::vector<std::string > >("vectorF", std::vector<std::string >()); 
+    std::string key_label = pset.getUntrackedParameter< std::string >("key_label", "");
     
-    // Keys (strored in std::vector<std::vector<int> >)
-    if (key_label.size()) {
-      iEvent.getByLabel(edm::InputTag(key_label, ""), h_keys[label]);
-      keys[label] = *h_keys[label];
+    //Single bools
+    for (size_t i=0; i<singleBool.size(); ++i) {
+      std::string varname_in=prefix_in+singleBool[i];
+      std::string varname_in_nodash = varname_in; // Remove "_" from var name
+      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
+      edm::InputTag tag(label, varname_in_nodash);
+      iEvent.getByLabel(tag, h_bool[varname_in]);
+      bool_values[singleBool[i]+"_"+label]=*h_bool[varname_in];
+    }
+    
+    //Single ints
+    for (size_t i=0; i<singleInt.size(); ++i) {
+      std::string varname_in=prefix_in+singleInt[i];
+      std::string varname_in_nodash = varname_in; // Remove "_" from var name
+      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
+      edm::InputTag tag(label, varname_in_nodash);
+      iEvent.getByLabel(tag, h_int[varname_in]);
+      int_values[singleInt[i]+"_"+label]=*h_int[varname_in];
+    }
+    
+    //Single unsigned ints
+    for (size_t i=0; i<singleUInt.size(); ++i) {
+      std::string varname_in=prefix_in+singleUInt[i];
+      std::string varname_in_nodash = varname_in; // Remove "_" from var name
+      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
+      edm::InputTag tag(label, varname_in_nodash);
+      iEvent.getByLabel(tag, h_uint[varname_in]);
+      uint_values[singleUInt[i]+"_"+label]=*h_uint[varname_in];
+    }
+    
+    //Single unsigned longs
+    for (size_t i=0; i<singleULLong.size(); ++i) {
+      std::string varname_in=prefix_in+singleULLong[i];
+      std::string varname_in_nodash = varname_in; // Remove "_" from var name
+      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
+      edm::InputTag tag(label, varname_in_nodash);
+      iEvent.getByLabel(tag, h_ullong[varname_in]);
+      ullong_values[singleULLong[i]+"_"+label]=*h_ullong[varname_in];
+    }
+    
+    //Single floats
+    for (size_t i=0; i<singleFloat.size(); ++i) {
+      std::string varname_in=prefix_in+singleFloat[i];
+      std::string varname_in_nodash = varname_in; // Remove "_" from var name
+      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
+      edm::InputTag tag(label, varname_in_nodash);
+      iEvent.getByLabel(tag, h_float[varname_in]);
+      float_values[singleFloat[i]+"_"+label]=*h_float[varname_in];
+    }
+    
+    //Single doubles
+    for (size_t i=0; i<singleDouble.size(); ++i) {
+      std::string varname_in=prefix_in+singleDouble[i];
+      std::string varname_in_nodash = varname_in; // Remove "_" from var name
+      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
+      edm::InputTag tag(label, varname_in_nodash);
+      iEvent.getByLabel(tag, h_double[varname_in]);
+      double_values[singleDouble[i]+"_"+label]=*h_double[varname_in];
     }
     
     //Vectors of ints
@@ -182,58 +236,10 @@ void B2GTTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
         vfloats_values[vectorFloat[i]+"_"+label][j] = h_floats[varname_in]->at(j);
     }
     
-    //Single ints
-    for (size_t i=0; i<singleInt.size(); ++i) {
-      std::string varname_in=prefix_in+singleInt[i];
-      std::string varname_in_nodash = varname_in; // Remove "_" from var name
-      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
-      edm::InputTag tag(label, varname_in_nodash);
-      iEvent.getByLabel(tag, h_int[varname_in]);
-      int_values[singleInt[i]+"_"+label]=*h_int[varname_in];
-    }
-    
-    //Single floats
-    for (size_t i=0; i<singleFloat.size(); ++i) {
-      std::string varname_in=prefix_in+singleFloat[i];
-      std::string varname_in_nodash = varname_in; // Remove "_" from var name
-      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
-      edm::InputTag tag(label, varname_in_nodash);
-      iEvent.getByLabel(tag, h_float[varname_in]);
-      float_values[singleFloat[i]+"_"+label]=*h_float[varname_in];
-    }
-    
-    //Single doubles
-    for (size_t i=0; i<singleDouble.size(); ++i) {
-      std::string varname_in=prefix_in+singleDouble[i];
-      edm::InputTag tag(label, varname_in);
-      iEvent.getByLabel(tag, h_double[varname_in]);
-      double_values[singleDouble[i]+"_"+label]=*h_double[varname_in];
-    }
-    
-    //Single unsigned ints
-    for (size_t i=0; i<singleUInt.size(); ++i) {
-      std::string varname_in=prefix_in+singleUInt[i];
-      edm::InputTag tag(label, varname_in);
-      iEvent.getByLabel(tag, h_uint[varname_in]);
-      uint_values[singleUInt[i]+"_"+label]=*h_uint[varname_in];
-    }
-    
-    //Single unsigned longs
-    for (size_t i=0; i<singleULLong.size(); ++i) {
-      std::string varname_in=prefix_in+singleULLong[i];
-      edm::InputTag tag(label, varname_in);
-      iEvent.getByLabel(tag, h_ullong[varname_in]);
-      ullong_values[singleULLong[i]+"_"+label]=*h_ullong[varname_in];
-    }
-    
-    //Single bools
-    for (size_t i=0; i<singleBool.size(); ++i) {
-      std::string varname_in=prefix_in+singleBool[i];
-      std::string varname_in_nodash = varname_in; // Remove "_" from var name
-      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
-      edm::InputTag tag(label, varname_in_nodash);
-      iEvent.getByLabel(tag, h_bool[varname_in]);
-      bool_values[singleBool[i]+"_"+label]=*h_bool[varname_in];
+    // Keys (strored in std::vector<std::vector<int> >)
+    if (key_label.size()) {
+      iEvent.getByLabel(edm::InputTag(key_label, ""), h_keys[label]);
+      keys[label] = *h_keys[label];
     }
   }
   

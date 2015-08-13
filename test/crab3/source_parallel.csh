@@ -16,6 +16,10 @@ if ( $npar > 10 ) then
     set npar=10
 endif
 if ( `cat $script | wc -l` < $npar) set npar=`cat $script | wc -l`
+if ( $npar == 1 ) then
+    source $1
+    exit
+endif
 
 set username=`whoami`
 set time=`date | sed "s;:;;g" | awk '{ printf "%d_%s_%d_%d\n",$6,$2,$3,$4 }'`
