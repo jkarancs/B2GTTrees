@@ -146,11 +146,11 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
     foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
 	crab status -d $dir >! Status.txt
 	set Status=`grep "Task status:" Status.txt | awk '{ print $3 }'`
-	printf "%-60s %s\n" $dir $Status
+	printf "%-70s %s\n" $dir $Status
 	if ( `echo $Status | grep COMPLETED | wc -l` == 0 ) then
 	    grep "%.*\(.*\)" Status.txt
 	    if ( `grep "failed.*%" Status.txt | wc -l` == 1 ) then
-		crab resubmit -d $dir >> Status.txt
+		#crab resubmit -d $dir >> Status.txt
 		echo "Failed jobs resubmitted"
 	    endif
 	endif

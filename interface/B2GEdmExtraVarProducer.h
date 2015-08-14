@@ -67,8 +67,8 @@ private:
   std::vector<std::string> filter_names_, trigger_names_;
   std::map<std::string, size_t > filters_, triggers_;
   
-  bool first_event_;
-
+  size_t nfilt_, ntrig_;
+  
   // JEC
   FactorizedJetCorrector *AK4_JetCorrector_, *AK8_JetCorrector_;
 };
@@ -130,7 +130,6 @@ B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(const edm::ParameterSet& iConfig)
     size_t f; while ((f=nameVF.find("_"))!=std::string::npos) nameVF.erase(f,1); // Remove "_" from var name
     produces<std::vector<float> >(nameVF);
   }
-  first_event_=1;
   
   // https://twiki.cern.ch/twiki/bin/view/CMS/JECDataMC#Jet_Energy_Corrections
   // Load the JetCorrectorParameter objects into a vector, IMPORTANT: THE ORDER MATTERS HERE !!!! 
@@ -149,6 +148,8 @@ B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(const edm::ParameterSet& iConfig)
   
   AK4_JetCorrector_ = new FactorizedJetCorrector(AK4_vPar);
   AK8_JetCorrector_ = new FactorizedJetCorrector(AK8_vPar);
+
+  nfilt_=ntrig_=0;
 }
 
 void B2GEdmExtraVarProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {

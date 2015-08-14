@@ -3,12 +3,10 @@
 
 void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   // Read variables from EdmNtuple
-  if (first_event_) {
-    iEvent.getByLabel(edm::InputTag(trigger_label_, "triggerNameTree"),    h_strings_["trigger_names"]);
-    iEvent.getByLabel(edm::InputTag(filter_label_, "triggerNameTree"),     h_strings_["filter_names"]);
-  }
+  iEvent.getByLabel(edm::InputTag(trigger_label_, "triggerNameTree"),      h_strings_["trigger_names"]);
   iEvent.getByLabel(edm::InputTag(trigger_label_, "triggerBitTree"),       h_floats_["trigger_bits"]);
   //iEvent.getByLabel(edm::InputTag(trigger_label_, "triggerPrescaleTree"),  h_ints_["trigger_prescales"]);
+  iEvent.getByLabel(edm::InputTag(filter_label_,  "triggerNameTree"),      h_strings_["filter_names"]);
   iEvent.getByLabel(edm::InputTag(filter_label_, "triggerBitTree"),        h_floats_["filter_bits"]);
   
   iEvent.getByLabel(edm::InputTag(evt_label_, evt_prefix_+"npv"), h_int_["evt_npv"]);
@@ -88,15 +86,24 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   // - Trigger/Filter variables -
   // ----------------------------
   
-  if (first_event_) {
-    first_event_=0;
-    for ( auto filter : filter_names_ ) for (size_t i=0, n=h_strings_["filter_names"]->size(); i<n; ++i) 
+  if (nfilt_!=h_strings_["filter_names"]->size()) {
+    nfilt_=h_strings_["filter_names"]->size();
+    filters_.clear();
+    for ( auto filter : filter_names_ ) for (size_t i=0; i<nfilt_; ++i) 
       if (h_strings_["filter_names"]->at(i).find(filter)==0) filters_[filter] = i;
-    for ( auto trig : trigger_names_ ) for (size_t i=0, n=h_strings_["trigger_names"]->size(); i<n; ++i) 
+    std::cout<<"Filters found: "<<std::endl;
+    for ( auto filter : filters_ ) std::cout<<filter.first<<std::endl;
+  }
+  if (ntrig_!=h_strings_["trigger_names"]->size()) {
+    ntrig_=h_strings_["trigger_names"]->size();
+    triggers_.clear();
+    for ( auto trig : trigger_names_ ) for (size_t i=0; i<ntrig_; ++i) 
       if (h_strings_["trigger_names"]->at(i).find(trig+"_v")==0) triggers_[trig] = i;
+    std::cout<<"Triggers found: "<<std::endl;
+    for ( auto trigger : triggers_ ) std::cout<<trigger.first<<std::endl;
   }
   for ( auto filter : filters_ ) single_bool_[filter.first]                             /* Flag_* */
-    = h_floats_["filter_bits"]->at(filter.second);
+      = h_floats_["filter_bits"]->at(filter.second);
   for ( auto trigger : triggers_ ) single_bool_[trigger.first]                          /* HLT_* */
     = h_floats_["trigger_bits"]->at(trigger.second);
   
