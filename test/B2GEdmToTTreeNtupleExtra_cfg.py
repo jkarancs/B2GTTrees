@@ -317,7 +317,7 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
 process.EdmNtupleCountFilter = cms.EDFilter("EdmNtupleCountFilter", # This one works on EdmNtuple
     src = cms.InputTag("jetsAK8","jetAK8Pt"),
     filter = cms.bool(True), # False also filters for some reason (disable in Path instead)
-    min = cms.double(200),
+    min = cms.double(350),
     minNumber = cms.uint32(1)
 )
 

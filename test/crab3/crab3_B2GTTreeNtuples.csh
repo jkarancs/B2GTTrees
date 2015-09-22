@@ -36,7 +36,8 @@ echo "  element to a local directory DLDIR"                      >> Usage.txt
 echo "  Check that the SRM site name and url is defined for"     >> Usage.txt
 echo "  SE_SITE in the se_util.csh script (look for SITE_INFO)"  >> Usage.txt
 echo "" 						         >> Usage.txt
-echo "6) make_ttrees <TASKNAME> <INDIR> <OUTDIR> <NPARALLEL>"    >> Usage.txt
+echo "6) make_ttrees <TASKNAME> <XSEC.txt> <INDIR> <OUTDIR>"     >> Usage.txt
+echo "               <NPARALLEL>"                                >> Usage.txt
 echo "  Produce locally TTreeNtuples from EdmNtuples"            >> Usage.txt
 echo "  Multiple background cmsRuns can be run in parallel"      >> Usage.txt
 echo "  Useful if you have small samples (Few GB)"               >> Usage.txt
@@ -148,9 +149,10 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	set Status=`grep "Task status:" Status.txt | awk '{ print $3 }'`
 	printf "%-70s %s\n" $dir $Status
 	if ( `echo $Status | grep COMPLETED | wc -l` == 0 ) then
-	    grep "%.*\(.*\)" Status.txt
+	    cat Status.txt
+	    #grep "%.*\(.*\)" Status.txt
 	    if ( `grep "failed.*%" Status.txt | wc -l` == 1 ) then
-		#crab resubmit -d $dir >> Status.txt
+		crab resubmit -d $dir >> Status.txt
 		echo "Failed jobs resubmitted"
 	    endif
 	endif
@@ -206,19 +208,28 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
     end
 
 else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
-    if ( $#argv < 5 ) then
+    if ( $#argv < 6 ) then
 	cat Usage.txt; rm Usage.txt; exit
     endif
     if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
-    set EDM_NTUPLE=$3
-    set TTREEDIR=$4
-    set Nparallel=$5
+    set XSEC_FILE=$3
+    set EDM_NTUPLE=$4
+    set TTREEDIR=$5
+    set Nparallel=$6
     foreach dir ( `ls -ltrd $EDM_NTUPLE/* | grep "^d" | sed "s;/; ;g" | awk '{ print $NF }'` )
         eval_or_echo "mkdir -p $TTREEDIR/$dir"
         if ( -f $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh ) rm $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh
+	# calculate event weight (xsec/nevent) for tot int lumi = 1 fb^-1
+	set totevt=0
+        foreach file ( `ls $EDM_NTUPLE/$dir | grep ".root"` )
+	    set nevt=`edmFileUtil $EDM_NTUPLE/$dir/$file | grep events | awk '{ print $6 }'`
+	    set totevt=`expr $totevt + $nevt`
+        end
+	set XSEC=`grep $dir $XSEC_FILE | awk '{ print $2 }'`
+	set WEIGHT=`echo | awk '{ printf "%lf", 1000*'$XSEC'/'$totevt' }'`
         foreach file ( `ls $EDM_NTUPLE/$dir | grep ".root"` )
             set outfile=`echo "$file" | sed "s;B2GEDMNtuple;B2GTTreeNtupleExtra;"`
-            echo "nice cmsRun $CMSSW_BASE/src/Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py sample=file:$EDM_NTUPLE/$dir/$file outputLabel=$TTREEDIR/$dir/$outfile" >>! $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh
+            echo "nice cmsRun $CMSSW_BASE/src/Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py sample=file:$EDM_NTUPLE/$dir/$file outputLabel=$TTREEDIR/$dir/$outfile isData=False globalTag=MCRUN2_74_V9 weight=$WEIGHT" >>! $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh
         end
         eval_or_echo "source source_parallel.csh $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh $Nparallel"
     end

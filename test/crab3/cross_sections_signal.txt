@@ -1,0 +1,7 @@
+#Source: https://twiki.cern.ch/twiki/bin/view/LHCPhysics/SUSYCrossSections
+T5ttttDeg_mGo1000_4bodydec       0.325388
+T5ttttDeg_mGo1000_23bodydec	 0.325388
+T2ttDeg				 37.9377
+T1tttt_mGo1500_mChi100		 0.0141903
+SMS-T1tttt_mGluino-1500_mLSP-100 0.0141903
+SMS-T1tttt_mGluino-1200_mLSP-800 0.325388
