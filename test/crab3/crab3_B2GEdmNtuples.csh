@@ -32,10 +32,12 @@ echo "" 						         >> Usage.txt
 echo "5) get_datasets <TASKNAME>"                                >> Usage.txt
 echo "  Get a list of produced datasets"		         >> Usage.txt
 echo "" 						         >> Usage.txt
-echo "6) make_ttrees <TASKNAME>"                                 >> Usage.txt
+echo "6) make_twiki <TASKNAME>"                                  >> Usage.txt
 echo "  Generate a table in general cern twiki format that"      >> Usage.txt
-echo "  contains useful infos for the produced datasets. Try it:">> Usage.txt
-echo "  https://twiki.cern.ch/twiki/bin/view/Main/<username>"    >> Usage.txt
+echo "  contains useful infos for the produced datasets."        >> Usage.txt
+echo "  Just copy-paste this to the B2G Ntuple twiki"            >> Usage.txt
+echo -n "  https://twiki.cern.ch/twiki/bin/view/CMS/"            >> Usage.txt
+echo      "B2GAnaFilesRunIISpring15DR74Asympt25ns"               >> Usage.txt
 echo "" 						         >> Usage.txt
 echo "7) download <TASKNAME> <DLDIR>"                            >> Usage.txt
 echo "  Download all root output files from the Storage"         >> Usage.txt
@@ -255,10 +257,29 @@ else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
         set Nparallel=$4
         foreach dir ( `ls -ltrd $EDM_NTUPLE/* | grep "^d" | sed "s;/; ;g" | awk '{ print $NF }'` )
             eval_or_echo "mkdir -p $TTREEDIR/$dir"
+	    # 50ns
+	    if ( `echo $dir | grep "Run2015B-17Jul2015" | wc -l` ) then
+	        set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_50nsV5_DATA"
+		set isData="True"
+	    else if ( `echo $dir | grep "Run2015B-PromptReco" | wc -l` ) then
+	        set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_50nsV5_DATA"
+		set isData="True"
+	    # 25 ns
+	    else if ( `echo $dir | grep "Run2015C" | wc -l`) then
+	        set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_25nsV2_DATA"
+		set isData="True"
+	    else if ( `echo $dir | grep "Run2015D" | wc -l`) then
+	        set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_25nsV2_DATA"
+		set isData="True"
+	    else
+		# This version only handles 25ns MC
+	        set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_25nsV2_MC"
+		set isData="False"
+	    endif
             if ( -f $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh ) rm $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh
             foreach file ( `ls $EDM_NTUPLE/$dir | grep ".root"` )
                 set outfile=`echo "$file" | sed "s;B2GEDMNtuple;B2GTTreeNtupleExtra;"`
-                echo "nice cmsRun $CMSSW_BASE/src/Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py sample=file:$EDM_NTUPLE/$dir/$file outputLabel=$TTREEDIR/$dir/$outfile" >>! $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh
+                echo "nice cmsRun $CMSSW_BASE/src/Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py isData=$isData sample=file:$EDM_NTUPLE/$dir/$file outputLabel=$TTREEDIR/$dir/$outfile JECloc=$JEC_TXT_FILE" >>! $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh
             end
             eval_or_echo "source source_parallel.csh $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh $Nparallel"
         end
