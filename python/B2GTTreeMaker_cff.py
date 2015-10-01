@@ -5,7 +5,7 @@ import copy
 # Set to false, and define your own lists (eg. comment out unused vairables)
 getVariablesFromConfig = False
 
-from Analysis.B2GAnaFW.b2gedmntuples_cff import met, metFull, genPart, electrons, muons, photons, photonjets, jetsAK4, jetsAK8, subjetsAK8, subjetsCmsTopTag, genJetsAK8, genJetsAK8SoftDrop, eventInfo
+from Analysis.B2GAnaFW.b2gedmntuples_cff import met, metFull, genPart, electrons, muons, photons, photonjets, jetsAK4, jetsAK4NoHF, jetsAK8, subjetsAK8, subjetsCmsTopTag, genJetsAK8, genJetsAK8SoftDrop, eventInfo
 
 if getVariablesFromConfig:
     
@@ -49,6 +49,11 @@ if getVariablesFromConfig:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
         jetsAK4_var.append(s)
     
+    jetsAK4NoHF_var = cms.untracked.vstring()
+    for pset in jetsAK4NoHF.variables:
+        s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
+        jetsAK4NoHF_var.append(s)
+    
     jetsAK8_var = cms.untracked.vstring()
     for pset in jetsAK8.variables:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
@@ -75,12 +80,16 @@ if getVariablesFromConfig:
         genJetsAK8SoftDrop_var.append(s)
 
 else:
-    # Currrent B2GAnaFW ver: 11 Aug (74X V5.1 ntuple version + MiniIso PR16 added)
+    # Currrent B2GAnaFW ver: 26 Sep (v7.4.x_v6.1_25ns ntuple version)
     met_var = cms.untracked.vstring(
         "Pt",
         "Px",
         "Py",
         "Phi",
+        # Uncomment these 3 to make it compatible with v7.4.x_v7.1_25ns
+        #"UncorrPt",
+        #"UncorrPhi",
+        #"UncorrSumEt",
     )
     metFull_var    = copy.deepcopy(met_var)
     
@@ -97,7 +106,14 @@ else:
     genPartVars = cms.untracked.vstring(
         "ID",
         "Status",
-        "MomID",
+        "Mom0ID",
+        "Mom0Status",
+        "Mom1ID",
+        "Mom1Status",
+        "Dau0ID",
+        "Dau0Status",
+        "Dau1ID",
+        "Dau1Status",
     )
     
     electronVars = cms.untracked.vstring(
@@ -251,6 +267,7 @@ else:
         "chargedMultiplicity",
         "NumConstituents",
         "jecFactor0",
+        "jecFactorL3Absolute",
         "jetArea",
         "SmearedPt",
         "SmearedPEta",
@@ -258,6 +275,17 @@ else:
         "SmearedE",
         "JERup",
         "JERdown",
+    )
+
+    jetVarsJEC = cms.untracked.vstring(
+        "jecFactor0",
+        "jecFactorL1FastJet",
+        "jecFactorL3Absolute",
+        "jetArea",
+    )
+    
+    qglVars = cms.untracked.vstring(
+        "QGL",
     )
     
     jetAK8Vars = cms.untracked.vstring(
@@ -288,13 +316,18 @@ else:
     
     muons_var      = copy.deepcopy(basicVars)
     muons_var     += muonVars
-
+    
     photons_var    = copy.deepcopy(photonVars)
-
+    
     photonjets_var = copy.deepcopy(photonjetVars)
-
-    jetsAK4_var  = copy.deepcopy(basicVars)
-    jetsAK4_var += jetVars
+    
+    jetsAK4_var      = copy.deepcopy(basicVars)
+    jetsAK4_var     += jetVars
+    jetsAK4_var     += qglVars
+    
+    jetsAK4NoHF_var  = copy.deepcopy(basicVars)
+    jetsAK4NoHF_var += jetVarsJEC
+    jetsAK4NoHF_var += qglVars
     
     jetsAK8_var  = copy.deepcopy(basicVars)
     jetsAK8_var += jetVars
@@ -305,11 +338,10 @@ else:
     
     subjetsCmsTopTag_var  = copy.deepcopy(basicVars)
     subjetsCmsTopTag_var += jetVars
-
+    
     genJetsAK8_var = copy.deepcopy(basicVars)
     
     genJetsAK8SoftDrop_var = copy.deepcopy(basicVars)
-    
 
 B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
     isData = cms.untracked.bool(False),
@@ -416,6 +448,14 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
             prefix_out = cms.untracked.string("jetAK4_"),
             vectorF = jetsAK4_var,
         ),
+        # AK4 Jets (No HF) - Currently not saved in V6.1
+        #cms.PSet(
+        #    label = cms.untracked.string("jetsAK4NoHF"),
+        #    key_label = cms.untracked.string("jetKeysAK4NoHF"),
+        #    prefix_in = jetsAK4.prefix,
+        #    prefix_out = cms.untracked.string("jetAK4_NoHF_"),
+        #    vectorF = jetsAK4_var,
+        #),
         # AK8 Jets
         cms.PSet(
             label = cms.untracked.string("jetsAK8"),

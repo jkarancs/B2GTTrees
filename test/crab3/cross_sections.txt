@@ -7,6 +7,8 @@ TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                        831.76
 TTJets_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                         831.76
 TT_TuneCUETP8M1_13TeV-powheg-pythia8                                  831.76
 TT_TuneZ2star_13TeV-powheg-pythia6-tauola                             831.76
+TT_TuneEE5C_13TeV-amcatnlo-herwigpp                                   831.76
+TT_TuneCUETP8M1_13TeV-amcatnlo-pythia8                                831.76
 
 # Same HT Binned
 # k factor applied = 1.6562 (= 831.76 / 502.2)
@@ -20,19 +22,30 @@ TTJets_HT-2500toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8            0.0023684
 # T - NLO/NNLO
 # https://twiki.cern.ch/twiki/bin/viewauth/CMS/SingleTopSigma
 # https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=73
-# For s-channel, NNLO xsec was multiplied by BR=0.324 (W --> lv)
+# For s and t split channels, NNLO xsec was multiplied by BR=0.324 (W --> lv)
 
-ST_s-channel_4f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1      3.68
-ST_t-channel_5f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1      70.69
-ST_tW_top_5f_DS_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1     35.6
-ST_tW_antitop_5f_DS_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1 35.6
+ST_s-channel_4f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1       3.68
+ST_t-channel_5f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1       70.69
+ST_t-channel_top_4f_leptonDecays_13TeV-powheg-pythia8_TuneCUETP8M1     44.07
+ST_t-channel_antitop_4f_leptonDecays_13TeV-powheg-pythia8_TuneCUETP8M1 26.23
+ST_tW_top_5f_DS_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1      35.6
+ST_tW_top_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1         35.6
+ST_tW_antitop_5f_DS_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1  35.6
+ST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1     35.6
 
-# TTV - NLO
+# TTV - L/NLO
 # https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=73
 
 TTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8                           0.5297
 TTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8                  0.2529
+TTWJetsToQQ_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8           0.4062
 TTWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8          0.2043
+
+# TV - NLO
+# https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns#TTbar
+
+tZq_ll_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1                         0.0758
+tZq_nunu_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1                       0.1379
 
 # Z - LO
 # https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=73
@@ -44,8 +57,8 @@ ZJetsToNuNu_HT-600ToInf_13TeV-madgraph                                4.203
 ZJetsToQQ_HT600toInf_13TeV-madgraph                                   5.67
 
 # W - NLO scale factor
-# k factor NOT applied = 1.23, same as for the PHYS14
-# Reason: HT-600ToInf LO xsec is very similar, and we only care about HT>600
+# k factor NOT applied, but k = 1.23 (same as for the PHYS14) could be applied
+# Reason to apply: HT-600ToInf RunII LO xsec is very similar, and we only care about HT>600
 # https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=73
 
 WJetsToLNu_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8         1347
@@ -89,16 +102,16 @@ ZZ_TuneCUETP8M1_13TeV-pythia8					      10.32
 WWTo4Q_13TeV-powheg                                                   45.20
 WWToLNuQQ_13TeV-powheg			                              43.53
 WWTo2L2Nu_13TeV-powheg			                              10.481
-WZTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8                        10.96
+WZTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8                        10.71
 WZTo1L3Nu_13TeV_amcatnloFXFX_madspin_pythia8                          3.05
-WZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8                           5.52
-WZTo3LNu_TuneCUETP8M1_13TeV-powheg-pythia8                            4.42965
+WZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8                           5.6
+WZTo3LNu_TuneCUETP8M1_13TeV-powheg-pythia8                            4.102
 ZZTo4Q_13TeV_amcatnloFXFX_madspin_pythia8                             6.842
-ZZTo2Q2Nu_13TeV_amcatnloFXFX_madspin_pythia8                          4.072
-ZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8                           3.38
-ZZTo4L_13TeV-amcatnloFXFX-pythia8                                     1.191
-
-
+ZZTo2Q2Nu_13TeV_amcatnloFXFX_madspin_pythia8                          4.04
+ZZTo2L2Nu_13TeV_powheg_pythia8                                        0.564
+ZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8                           3.28
+ZZTo4L_13TeV-amcatnloFXFX-pythia8                                     1.212
+ZZTo4L_13TeV_powheg_pythia8                                           1.256
 
 # ------------------- PHYS14 -------------------------------------
 

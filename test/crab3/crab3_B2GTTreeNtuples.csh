@@ -118,20 +118,22 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	    set WEIGHT=`echo | awk '{ printf "%lf", 1000*'$xsec'/'$nevent' }'`
 	endif
 	set MIDNAME=`echo $DATASET | sed "s;/; ;g" | awk '{ print $2 }'`
-	if ( `echo $MIDNAME | grep "Run2015B-17Jul2015" | wc -l ` ) then
-	    set GLOBALTAG="74X_dataRun2_Prompt_v0"
+	# 50ns
+	if ( `echo $MIDNAME | grep "Run2015B" | wc -l` ) then
+	    set JECNAME="Summer15_50nsV5_DATA"
 	    set ISDATA="True"
-	else if ( `echo $MIDNAME | grep "Run2015B-PromptReco" | wc -l ` ) then
-	    set GLOBALTAG="74X_dataRun2_Prompt_v0"
-	    set ISDATA="True"
-	else if ( `echo $MIDNAME | grep "Asympt50ns" | wc -l ` ) then
-	    set GLOBALTAG="MCRUN2_74_V9A"
+	else if ( `echo $MIDNAME | grep "Asympt50ns" | wc -l` ) then
+	    set JECNAME="Summer15_50nsV5_MC"
 	    set ISDATA="False"
-	else	    
-	    set GLOBALTAG="MCRUN2_74_V9"
+	# 25ns
+	else if ( `echo $MIDNAME | grep "Run2015C" | wc -l` || `echo $MIDNAME | grep "Run2015D" | wc -l` ) then
+	    set JECNAME="Summer15_25nsV2_DATA"
+	    set ISDATA="True"
+	else if ( `echo $MIDNAME | grep "Asympt25ns" | wc -l` ) then	    
+	    set JECNAME="Summer15_25nsV2_MC"
 	    set ISDATA="False"
 	endif
-	sed "s;TASKNAME;$SHORT;;s;DATASET;$DATASET;;s;weight=1.0;weight=$WEIGHT;;s;GLOBALTAG;$GLOBALTAG;;s;ISDATA;$ISDATA;" $TASKDIR/crab_template_ttreentuple_py.txt > $TASKDIR/crab_$SHORT.py
+	sed "s;TASKNAME;$SHORT;;s;DATASET;$DATASET;;s;weight=1.0;weight=$WEIGHT;;s;JECNAME;$JECNAME;;s;ISDATA;$ISDATA;" $TASKDIR/crab_template_ttreentuple_py.txt > $TASKDIR/crab_$SHORT.py
     end
     rm $TASKDIR/crab_template_ttreentuple_py.txt
     echo "Config files ready in directory: "$TASKDIR

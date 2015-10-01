@@ -5,7 +5,7 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   // Read variables from EdmNtuple
   iEvent.getByLabel(edm::InputTag(trigger_label_, "triggerNameTree"),      h_strings_["trigger_names"]);
   iEvent.getByLabel(edm::InputTag(trigger_label_, "triggerBitTree"),       h_floats_["trigger_bits"]);
-  //iEvent.getByLabel(edm::InputTag(trigger_label_, "triggerPrescaleTree"),  h_ints_["trigger_prescales"]);
+  iEvent.getByLabel(edm::InputTag(trigger_label_, "triggerPrescaleTree"),  h_ints_["trigger_prescales"]);
   iEvent.getByLabel(edm::InputTag(filter_label_,  "triggerNameTree"),      h_strings_["filter_names"]);
   iEvent.getByLabel(edm::InputTag(filter_label_, "triggerBitTree"),        h_floats_["filter_bits"]);
   
@@ -28,7 +28,7 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"E"),               h_floats_["AK8_E"]);
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"tau2"),            h_floats_["AK8_tau2"]);
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"tau3"),            h_floats_["AK8_tau3"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"prunedMass"),      h_floats_["AK8_prunedMass"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"softDropMass"),      h_floats_["AK8_softDropMass"]);
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"jecFactor0"),      h_floats_["AK8_jecFactor0"]);
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"jetArea"),         h_floats_["AK8_jetArea"]);
   
@@ -68,14 +68,21 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   iEvent.getByLabel(edm::InputTag(muons_label_, muons_prefix_+"Key"),         h_floats_["mu_Key"]);
   
   if (!isData_) {
-    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Pt"),     h_floats_["gen_Pt"]);
-    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Eta"),    h_floats_["gen_Eta"]);
-    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Phi"),    h_floats_["gen_Phi"]);
-    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"E"),      h_floats_["gen_E"]);
-    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Charge"), h_floats_["gen_Charge"]);
-    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"ID"),     h_floats_["gen_ID"]);
-    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"MomID"),  h_floats_["gen_MomID"]);
-    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Status"), h_floats_["gen_Status"]);
+    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Pt"),          h_floats_["gen_Pt"]);
+    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Eta"),         h_floats_["gen_Eta"]);
+    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Phi"),         h_floats_["gen_Phi"]);
+    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"E"),           h_floats_["gen_E"]);
+    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Charge"),      h_floats_["gen_Charge"]);
+    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"ID"),          h_floats_["gen_ID"]);
+    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Status"),      h_floats_["gen_Status"]);
+    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Mom0ID"),      h_floats_["gen_Mom0ID"]);
+    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Mom0Status"),  h_floats_["gen_Mom0Status"]);
+    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Mom1ID"),      h_floats_["gen_Mom1ID"]);
+    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Mom1Status"),  h_floats_["gen_Mom1Status"]);
+    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Dau0ID"),      h_floats_["gen_Dau0ID"]);
+    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Dau0Status"),  h_floats_["gen_Dau0Status"]);
+    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Dau1ID"),      h_floats_["gen_Dau1ID"]);
+    iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Dau1Status"),  h_floats_["gen_Dau1Status"]);
   }
   
   // Event weight (xsec/nevent in units of fb), 
@@ -101,11 +108,15 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
       if (h_strings_["trigger_names"]->at(i).find(trig+"_v")==0) triggers_[trig] = i;
     std::cout<<"Triggers found: "<<std::endl;
     for ( auto trigger : triggers_ ) std::cout<<trigger.first<<std::endl;
+    //for (size_t i=0; i<ntrig_; ++i) std::cout<<h_strings_["trigger_names"]->at(i)<<std::endl;
   }
   for ( auto filter : filters_ ) single_bool_[filter.first]                             /* Flag_* */
       = h_floats_["filter_bits"]->at(filter.second);
-  for ( auto trigger : triggers_ ) single_bool_[trigger.first]                          /* HLT_* */
-    = h_floats_["trigger_bits"]->at(trigger.second);
+  for ( auto trigger : triggers_ ) {
+    single_bool_[trigger.first] = h_floats_["trigger_bits"]->at(trigger.second);        /* HLT_* */
+    single_int_[trigger.first+"_prescale"]                                              /* HLT_*_prescale */
+      = h_ints_["trigger_prescales"]->at(trigger.second);
+  }
   
   // ---------------------
   // - Gen Particle Info -
@@ -113,8 +124,15 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   
   // Make a list of Generator level objects and save them to vectors
   vector_int_["gen_ID"].clear();
-  vector_int_["gen_MomID"].clear();
   vector_int_["gen_Status"].clear();
+  vector_int_["gen_Mom0ID"].clear();
+  vector_int_["gen_Mom0Status"].clear();
+  vector_int_["gen_Mom1ID"].clear();
+  vector_int_["gen_Mom1Status"].clear();
+  vector_int_["gen_Dau0ID"].clear();
+  vector_int_["gen_Dau0Status"].clear();
+  vector_int_["gen_Dau1ID"].clear();
+  vector_int_["gen_Dau1Status"].clear();
   vector_float_["gen_Pt"].clear();
   vector_float_["gen_Phi"].clear();
   vector_float_["gen_Eta"].clear();
@@ -156,8 +174,15 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
           (abs(h_floats_["gen_ID"]->at(i))>=11&&abs(h_floats_["gen_ID"]->at(i))<=16)
           ||abs(h_floats_["gen_ID"]->at(i))==24) {
         vector_int_["gen_ID"].push_back(h_floats_["gen_ID"]->at(i));                                /* gen_ID  */
-        vector_int_["gen_MomID"].push_back(h_floats_["gen_MomID"]->at(i));			    /* gen_MomID */
         vector_int_["gen_Status"].push_back(h_floats_["gen_Status"]->at(i));			    /* gen_Status */
+        vector_int_["gen_Mom0ID"].push_back(h_floats_["gen_Mom0ID"]->at(i));			    /* gen_Mom0ID */
+        vector_int_["gen_Mom0Status"].push_back(h_floats_["gen_Mom0Status"]->at(i));		    /* gen_Mom0Status */
+        vector_int_["gen_Mom1ID"].push_back(h_floats_["gen_Mom1ID"]->at(i));			    /* gen_Mom1ID */
+        vector_int_["gen_Mom1Status"].push_back(h_floats_["gen_Mom1Status"]->at(i));		    /* gen_Mom1Status */
+        vector_int_["gen_Dau0ID"].push_back(h_floats_["gen_Dau0ID"]->at(i));			    /* gen_Dau0ID */
+        vector_int_["gen_Dau0Status"].push_back(h_floats_["gen_Dau0Status"]->at(i));		    /* gen_Dau0Status */
+        vector_int_["gen_Dau1ID"].push_back(h_floats_["gen_Dau0ID"]->at(i));			    /* gen_Dau1ID */
+        vector_int_["gen_Dau1Status"].push_back(h_floats_["gen_Dau0Status"]->at(i));		    /* gen_Dau1Status */
         vector_float_["gen_Pt"].push_back(h_floats_["gen_Pt"]->at(i));				    /* gen_Pt */
         vector_float_["gen_Eta"].push_back(h_floats_["gen_Eta"]->at(i));			    /* gen_Eta */
         vector_float_["gen_Phi"].push_back(h_floats_["gen_Phi"]->at(i));			    /* gen_Phi */
@@ -167,33 +192,33 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
       if (h_floats_["gen_Pt"]->at(i)>0) {
         TLorentzVector genp; genp.SetPtEtaPhiE(h_floats_["gen_Pt"]->at(i), h_floats_["gen_Eta"]->at(i),
           				     h_floats_["gen_Phi"]->at(i), h_floats_["gen_E"]->at(i));
-        if (h_floats_["gen_ID"]->at(i)!=h_floats_["gen_MomID"]->at(i)) {
+        if (h_floats_["gen_ID"]->at(i)!=h_floats_["gen_Mom0ID"]->at(i)) {
           if (abs(h_floats_["gen_ID"]->at(i))==6) { 
             gen_top.push_back(genp);
             gen_top_index.push_back(i);
             gen_top_ID.push_back(h_floats_["gen_ID"]->at(i));
           }
-          if (abs(h_floats_["gen_ID"]->at(i))==5&&abs(h_floats_["gen_MomID"]->at(i))==6) gen_b_from_top.push_back(genp);
-          if (abs(h_floats_["gen_ID"]->at(i))==24&&abs(h_floats_["gen_MomID"]->at(i))==6) {
+          if (abs(h_floats_["gen_ID"]->at(i))==5&&abs(h_floats_["gen_Mom0ID"]->at(i))==6) gen_b_from_top.push_back(genp);
+          if (abs(h_floats_["gen_ID"]->at(i))==24&&abs(h_floats_["gen_Mom0ID"]->at(i))==6) {
             gen_W_from_top.push_back(genp);
             gen_W_from_top_ID.push_back(h_floats_["gen_ID"]->at(i));
           }
           if ((abs(h_floats_["gen_ID"]->at(i))==11||abs(h_floats_["gen_ID"]->at(i))==13
-               ||abs(h_floats_["gen_ID"]->at(i))==15)&&(abs(h_floats_["gen_MomID"]->at(i))==24)) {
+               ||abs(h_floats_["gen_ID"]->at(i))==15)&&(abs(h_floats_["gen_Mom0ID"]->at(i))==24)) {
             gen_lep_from_W.push_back(genp);
             gen_lep_from_W_ID.push_back(h_floats_["gen_ID"]->at(i));
           }
           if ((abs(h_floats_["gen_ID"]->at(i))==12||abs(h_floats_["gen_ID"]->at(i))==14
-               ||abs(h_floats_["gen_ID"]->at(i))==16)&&(abs(h_floats_["gen_MomID"]->at(i))==24)) {
+               ||abs(h_floats_["gen_ID"]->at(i))==16)&&(abs(h_floats_["gen_Mom0ID"]->at(i))==24)) {
             gen_neu_from_W.push_back(genp);
             gen_neu_from_W_ID.push_back(h_floats_["gen_ID"]->at(i));
           }
-        } else if (h_floats_["gen_ID"]->at(i)==h_floats_["gen_MomID"]->at(i)&&abs(h_floats_["gen_ID"]->at(i))==6) {
+        } else if (h_floats_["gen_ID"]->at(i)==h_floats_["gen_Mom0ID"]->at(i)&&abs(h_floats_["gen_ID"]->at(i))==6) {
           // tops emit particles and we have to match consecutive tops to the original one
           size_t t=0, t_m_dR = -1, t_m_dE = -1;
           double min_dE = 9999, min_dR = 9999;
           while(t<gen_top.size()) {
-            if (gen_top_ID[t]==h_floats_["gen_MomID"]->at(i)) {
+            if (gen_top_ID[t]==h_floats_["gen_Mom0ID"]->at(i)) {
               double dE = gen_top[t].E()-genp.E();
               double dR = gen_top[t].DeltaR(genp);
               if (fabs(dE)<fabs(min_dE)) {
@@ -953,7 +978,8 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
     vector_int_["jetAK8_PassTopTag"][i] = 0;
     // Hadronic tops (Loose selection)
     if (h_floats_["AK8_Pt"]->at(i) > 400 &&
-        h_floats_["AK8_prunedMass"]->at(i) > 140 &&
+        h_floats_["AK8_softDropMass"]->at(i) > 110 &&
+        h_floats_["AK8_softDropMass"]->at(i) < 210 &&
         ( (h_floats_["AK8_tau2"]->at(i)>0 && h_floats_["AK8_tau3"]->at(i)>0) ?  
           (h_floats_["AK8_tau3"]->at(i)/h_floats_["AK8_tau2"]->at(i)) < 0.75 : 0 )) {
       vector_int_["jetAK8_PassTopTag"][i] = 1;

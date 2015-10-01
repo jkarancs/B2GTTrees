@@ -11,7 +11,8 @@ config.General.workArea = 'TASKDIR'
 config.section_('JobType')
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = os.environ['CMSSW_BASE']+'/src/Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py'
-config.JobType.pyCfgParams = ['isData=False', 'LHE=0', 'globalTag=GLOBALTAG', 'DataProcessing=DATAPROC']
+config.JobType.pyCfgParams = ['globalTag=GLOBALTAG', 'DataProcessing=DATAPROC']
+config.JobType.inputFiles = ['JEC_DB_FILE']
 
 config.section_('Data')
 config.Data.outLFNDirBase = 'SE_USERDIR'

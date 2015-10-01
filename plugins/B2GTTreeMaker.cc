@@ -19,7 +19,7 @@ private:
   
   bool isData;
   std::vector<edm::ParameterSet > physObjects;
-  std::vector<std::string > singleBool, singleInt, singleUInt, singleULLong, singleFloat, singleDouble, vectorInt, vectorFloat;
+  std::vector<std::string > singleBool, singleInt, singleUInt, singleULLong, singleFloat, singleDouble, vectorInt, vectorFloat, trigger_names;
   
   TTree* tree;
   
@@ -66,32 +66,38 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
     
     // Initialize single pset objects
     for (size_t i=0; i<singleBool.size(); ++i) {
+      if (singleBool[i].find("HLT_")==0) trigger_names.push_back(singleBool[i]);
       std::string varname_out = prefix_out + singleBool[i].c_str();
       tree->Branch(varname_out.c_str(), &bool_values[singleBool[i]+"_"+label]);
     }
     
+    for (size_t i=0; i<trigger_names.size(); ++i) {
+      std::string varname_out = prefix_out + trigger_names[i]+"_prescale";
+      tree->Branch(varname_out.c_str(), &int_values[trigger_names[i]+"_prescale_"+label]);
+    }
+    
     for (size_t i=0; i<singleInt.size(); ++i) {
-      std::string varname_out = prefix_out + singleInt[i].c_str();
+      std::string varname_out = prefix_out + singleInt[i];
       tree->Branch(varname_out.c_str(), &int_values[singleInt[i]+"_"+label]);
     }
     
     for (size_t i=0; i<singleUInt.size(); ++i) {
-      std::string varname_out = prefix_out + singleUInt[i].c_str();
+      std::string varname_out = prefix_out + singleUInt[i];
       tree->Branch(varname_out.c_str(), &uint_values[singleUInt[i]+"_"+label]);
     }
     
     for (size_t i=0; i<singleULLong.size(); ++i) {
-      std::string varname_out = prefix_out + singleULLong[i].c_str();
+      std::string varname_out = prefix_out + singleULLong[i];
       tree->Branch(varname_out.c_str(), &ullong_values[singleULLong[i]+"_"+label]);
     }
     
     for (size_t i=0; i<singleFloat.size(); ++i) {
-      std::string varname_out = prefix_out + singleFloat[i].c_str();
+      std::string varname_out = prefix_out + singleFloat[i];
       tree->Branch(varname_out.c_str(), &float_values[singleFloat[i]+"_"+label]);
     }
     
     for (size_t i=0; i<singleDouble.size(); ++i) {
-      std::string varname_out = prefix_out + singleDouble[i].c_str();
+      std::string varname_out = prefix_out + singleDouble[i];
       tree->Branch(varname_out.c_str(), &double_values[singleDouble[i]+"_"+label]);
     }
     
@@ -105,7 +111,7 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
     }
     
     for (size_t i=0; i<vectorInt.size(); ++i) {
-      std::string varname_out = prefix_out + vectorInt[i].c_str();
+      std::string varname_out = prefix_out + vectorInt[i];
       if (prefix_out=="") {
         size_var = vectorInt[i].substr(0,vectorInt[i].find("_"))+"_size";
         if (sizes.count(size_var)==0) tree->Branch(size_var.c_str(), &sizes[size_var], (size_var+"/i").c_str());	  
@@ -114,7 +120,7 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
     }
     
     for (size_t i=0; i<vectorFloat.size(); ++i) {
-      std::string varname_out = prefix_out + vectorFloat[i].c_str();
+      std::string varname_out = prefix_out + vectorFloat[i];
       if (prefix_out=="") {
         size_var = vectorFloat[i].substr(0,vectorFloat[i].find("_"))+"_size";
         if (sizes.count(size_var)==0) tree->Branch(size_var.c_str(), &sizes[size_var], (size_var+"/i").c_str());
@@ -152,6 +158,11 @@ void B2GTTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       edm::InputTag tag(label, varname_in_nodash);
       iEvent.getByLabel(tag, h_bool[varname_in]);
       bool_values[singleBool[i]+"_"+label]=*h_bool[varname_in];
+      if (varname_in.find("HLT")==0) {
+	edm::InputTag tag(label, varname_in_nodash+"prescale");
+	iEvent.getByLabel(tag, h_int[varname_in+"_prescale"]);
+	int_values[singleBool[i]+"_prescale_"+label]=*h_int[varname_in+"_prescale"];
+      }
     }
     
     //Single ints

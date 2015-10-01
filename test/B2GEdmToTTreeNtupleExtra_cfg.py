@@ -38,11 +38,11 @@ options.register('isData',
                  opts.VarParsing.varType.bool,
                  'Is data?')
 
-options.register('globalTag',
-                 '',
-                 opts.VarParsing.multiplicity.singleton,
-                 opts.VarParsing.varType.string,
-                 'GlobalTag (empty = auto)')
+#options.register('globalTag',
+#                 '',
+#                 opts.VarParsing.multiplicity.singleton,
+#                 opts.VarParsing.varType.string,
+#                 'GlobalTag (empty = auto)')
 
 options.register('weight',
                  1,# default value: 1
@@ -50,8 +50,8 @@ options.register('weight',
                  opts.VarParsing.varType.float,
                  'Event weight')
 
-options.register('JECdir',
-                 os.environ['CMSSW_BASE']+'/src/Analysis/B2GTTrees/JECs/',
+options.register('JECloc',
+                 os.environ['CMSSW_BASE']+'/src/Analysis/B2GTTrees/JECs/Summer15_25nsV2_DATA',
                  opts.VarParsing.multiplicity.singleton,
                  opts.VarParsing.varType.string,
                  'Directory, where the JEC text files are lcoated')
@@ -64,13 +64,13 @@ process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.categories.append('HLTrigReport')
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
-if options.globalTag != '':
-    process.GlobalTag.globaltag = options.globalTag
-else:
-    from Configuration.AlCa.GlobalTag import GlobalTag as customiseGlobalTag
-    process.GlobalTag = customiseGlobalTag(process.GlobalTag, globaltag = 'auto:run2_mc')
-    print "Automatically selected GlobalTag: "+str(process.GlobalTag.globaltag)
+#process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
+#if options.globalTag != '':
+#    process.GlobalTag.globaltag = options.globalTag
+#else:
+#    from Configuration.AlCa.GlobalTag import GlobalTag as customiseGlobalTag
+#    process.GlobalTag = customiseGlobalTag(process.GlobalTag, globaltag = 'auto:run2_mc')
+#    print "Automatically selected GlobalTag: "+str(process.GlobalTag.globaltag)
 
 ### Output Report
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(False) )
@@ -88,7 +88,7 @@ from Analysis.B2GAnaFW.b2gedmntuples_cff import met, genPart, electrons, muons, 
 
 process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
     isData = cms.untracked.bool(options.isData),
-    JEC_location = cms.untracked.string(options.JECdir+options.globalTag),
+    JEC_location = cms.untracked.string(options.JECloc),
     event_weight = cms.untracked.double(options.weight),
     filter_label = cms.untracked.string("METUserData"),
     trigger_label = cms.untracked.string("TriggerUserData"),
@@ -132,22 +132,48 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         # Add trigger names below (these are automatically picked up)
         # Hadronic
         "HLT_AK8PFJet360_TrimMass30",
+        "HLT_PFJet40",
+        "HLT_PFJet60",
+        "HLT_PFJet80",
+        "HLT_PFJet140",
+        "HLT_PFJet200",
+        "HLT_PFJet260",
+        "HLT_PFJet320",
+        "HLT_PFJet400",
         "HLT_PFJet450",
         "HLT_PFJet500",
+        "HLT_DiPFJetAve40",
+        "HLT_DiPFJetAve60",
+        "HLT_DiPFJetAve80",
+        "HLT_DiPFJetAve140",
+        "HLT_DiPFJetAve200",
+        "HLT_DiPFJetAve260",
+        "HLT_DiPFJetAve320",
+        "HLT_DiPFJetAve400",
+        "HLT_DiPFJetAve500",
+        "HLT_DiPFJetAve60_HFJEC",
+        "HLT_DiPFJetAve80_HFJEC",
+        "HLT_DiPFJetAve100_HFJEC",
+        "HLT_DiPFJetAve160_HFJEC",
+        "HLT_DiPFJetAve220_HFJEC",
+        "HLT_DiPFJetAve300_HFJEC",
+        "HLT_AK8DiPFJet280_200_TrimMass30_BTagCSV0p45",
         "HLT_AK8PFHT700_TrimR0p1PT0p03Mass50",
+        "HLT_PFHT550_4Jet",
+        "HLT_PFHT650_4Jet",
         "HLT_PFHT750_4Jet",
         "HLT_PFHT750_4JetPt50",
         "HLT_ECALHT800",
+        "HLT_PFHT600",
+        "HLT_PFHT650",
         "HLT_PFHT800",
         "HLT_PFHT900",
-        # Hadronic - Prescaled Auxilary
+        "HLT_PFHT200",
+        "HLT_PFHT250",
+        "HLT_PFHT300",
         "HLT_PFHT350",
         "HLT_PFHT400",
         "HLT_PFHT475",
-        "HLT_PFHT600",
-        "HLT_PFHT650",
-        "HLT_PFHT550_4Jet",
-        "HLT_PFHT650_4Jet",
         # Razor
         "HLT_Rsq0p25",
         "HLT_Rsq0p30",
@@ -155,27 +181,67 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "HLT_RsqMR240_Rsq0p09_MR200",
         "HLT_RsqMR270_Rsq0p09_MR200_4jet",
         "HLT_RsqMR270_Rsq0p09_MR200",
+        # Lepton + Jet
+        "HLT_Mu40_eta2p1_PFJet200_PFJet50",
+        "HLT_Ele45_CaloIdVT_GsfTrkIdT_PFJet200_PFJet50",
+        "HLT_Ele8_CaloIdM_TrackIdM_PFJet30",
+        "HLT_Ele12_CaloIdM_TrackIdM_PFJet30",
+        "HLT_Ele18_CaloIdM_TrackIdM_PFJet30",
+        "HLT_Ele23_CaloIdM_TrackIdM_PFJet30",
+        "HLT_Ele33_CaloIdM_TrackIdM_PFJet30",
+        "HLT_Ele27_eta2p1_WPLoose_Gsf_HT200_v1",
         # Lepton + B-tag
         "HLT_Mu10_CentralPFJet30_BTagCSV0p5PF",
+        "HLT_Mu10_CentralPFJet30_BTagCSV0p54PF",
         "HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p5PF",
+        "HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p54PF",
         "HLT_Ele15_IsoVVVL_BTagtop8CSV07_PFHT400",
+        "HLT_Ele15_IsoVVVL_BTagCSV0p72_PFHT400",
         "HLT_Ele15_IsoVVVL_PFHT600",
         "HLT_Ele15_PFHT300",
         "HLT_Mu15_IsoVVVL_BTagCSV07_PFHT400",
+        "HLT_Mu15_IsoVVVL_BTagCSV0p72_PFHT400",
         "HLT_Mu15_IsoVVVL_PFHT600",
         "HLT_Mu15_PFHT300",
         # Lepton - Non-isolated
-        "HLT_Ele45_CaloIdVT_GsfTrkIdT_PFJet200_PFJet50",
-        "HLT_Mu40_eta2p1_PFJet200_PFJet50",
+        "HLT_Mu8",
+        "HLT_Mu17",
+        "HLT_Mu20",
+        "HLT_Mu24",
+        "HLT_Mu24_eta2p1",
+        "HLT_Mu27",
+        "HLT_Mu34",
         "HLT_Mu45_eta2p1",
         "HLT_Mu50",
+        "HLT_Mu55",
+        "HLT_Mu300",
+        "HLT_Mu350",
+        "HLT_TkMu20",
+        "HLT_TkMu24_eta2p1",
+        "HLT_TkMu27",
+        "HLT_Ele105_CaloIdVT_GsfTrkIdT",
+        "HLT_Ele115_CaloIdVT_GsfTrkIdT",
         # Lepton - Isolated
-        "HLT_Ele32_eta2p1_WPLoose_Gsf",
-        "HLT_Ele32_eta2p1_WPTight_Gsf",
+        "HLT_IsoMu17_eta2p1",
+        "HLT_IsoMu20",
+        "HLT_IsoMu20_eta2p1",
         "HLT_IsoMu24_eta2p1",
         "HLT_IsoMu27",
         "HLT_IsoTkMu24_eta2p1",
         "HLT_IsoTkMu27",
+        "HLT_Mu8_TrkIsoVVL",
+        "HLT_Mu17_TrkIsoVVL",
+        "HLT_Mu24_TrkIsoVVL",
+        "HLT_Mu34_TrkIsoVVL",
+        "HLT_Ele22_eta2p1_WPLoose_Gsf",
+        "HLT_Ele22_eta2p1_WPTight_Gsf",
+        "HLT_Ele27_eta2p1_WPLoose_Gsf",
+        "HLT_Ele27_eta2p1_WPTight_Gsf",
+        "HLT_Ele32_eta2p1_WPLoose_Gsf",
+        "HLT_Ele32_eta2p1_WPTight_Gsf",
+        "HLT_Ele12_CaloIdL_TrackIdL_IsoVL",
+        "HLT_Ele17_CaloIdL_TrackIdL_IsoVL",
+        "HLT_Ele23_CaloIdL_TrackIdL_IsoVL",
     ),
     singleI = cms.untracked.vstring(
         # event variables
@@ -215,8 +281,15 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
     ),
     vectorI = cms.untracked.vstring(
         "gen_ID",
-        "gen_MomID",
         "gen_Status",
+        "gen_Mom0ID",
+        "gen_Mom0Status",
+        "gen_Mom1ID",
+        "gen_Mom1Status",
+        "gen_Dau0ID",
+        "gen_Dau0Status",
+        "gen_Dau1ID",
+        "gen_Dau1Status",
         "jetAK8_HasNearGenTop",
         "jetAK8_NearGenTopIsHadronic",
         "jetAK8_NearGenWIsHadronic",

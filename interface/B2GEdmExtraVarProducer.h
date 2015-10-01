@@ -114,6 +114,10 @@ B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(const edm::ParameterSet& iConfig)
     size_t f; while ((f=nameB.find("_"))!=std::string::npos) nameB.erase(f,1); // Remove "_" from var name
     produces<bool>(nameB);
   }
+  for ( auto nameI : trigger_names_ ) {
+    size_t f; while ((f=nameI.find("_"))!=std::string::npos) nameI.erase(f,1); // Remove "_" from var name
+    produces<int>(nameI+"prescale");
+  }
   for ( auto nameI : singleI_ ) {
     size_t f; while ((f=nameI.find("_"))!=std::string::npos) nameI.erase(f,1); // Remove "_" from var name
     produces<int>(nameI);
@@ -137,24 +141,25 @@ B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(const edm::ParameterSet& iConfig)
   AK4_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L1FastJet_AK4PFchs.txt")));
   AK4_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L2Relative_AK4PFchs.txt")));
   AK4_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L3Absolute_AK4PFchs.txt")));
-  if (isData_)
-    AK4_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L3Absolute_AK4PFchs.txt")));
+  //if (isData_)
+  //  AK4_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L2L3Residual_AK4PFchs.txt")));
   
   AK8_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L1FastJet_AK8PFchs.txt")));
   AK8_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L2Relative_AK8PFchs.txt")));
   AK8_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L3Absolute_AK8PFchs.txt")));
-  if (isData_)
-    AK8_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L3Absolute_AK8PFchs.txt")));
+  //if (isData_)
+  //  AK8_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L2L3Residual_AK8PFchs.txt")));
   
   AK4_JetCorrector_ = new FactorizedJetCorrector(AK4_vPar);
   AK8_JetCorrector_ = new FactorizedJetCorrector(AK8_vPar);
-
+  
   nfilt_=ntrig_=0;
 }
 
 void B2GEdmExtraVarProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   // Initialize containers for each variable
   for ( auto nameB : singleB_ ) single_bool_[nameB] = 0;
+  for ( auto nameI : trigger_names_ ) single_int_[nameI+"_prescale"] = -9999;
   for ( auto nameI : singleI_ ) single_int_[nameI] = -9999;
   for ( auto nameF : singleF_ ) single_float_[nameF] = -9999.0;
   /* size of vectors are not known, therefor they have to be initialized in calculate_varibles() */
@@ -167,6 +172,12 @@ void B2GEdmExtraVarProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     *newB = single_bool_[nameB];
     size_t f; while ((f=nameB.find("_"))!=std::string::npos) nameB.erase(f,1); // Remove "_" from var name
     iEvent.put(newB,nameB);
+  }
+  for ( auto nameI : trigger_names_ ) {
+    std::auto_ptr<int> newI(new int);
+    *newI = single_int_[nameI+"_prescale"];
+    size_t f; while ((f=nameI.find("_"))!=std::string::npos) nameI.erase(f,1); // Remove "_" from var name
+    iEvent.put(newI,nameI+"prescale");
   }
   for ( auto nameI : singleI_ ) {
     std::auto_ptr<int> newI(new int);

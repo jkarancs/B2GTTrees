@@ -62,7 +62,7 @@ set TASKDIR="B2G_edm_"$TASKNAME
 # Aliases
 if ( ! (-e $PWD/source_parallel.csh) || ! (-e $PWD/se_util.csh) ) then
     echo "Please run this script from the same directory where\nsource_parallel.csh and se_util.csh is or copy them here" 
-    exit
+    rm Usage.txt; exit
 endif
 # script that takes another script as argument and runs n lines in parallel
 # used by se_util.csh
@@ -83,7 +83,6 @@ else
     set dry="1"
 endif
 
-
 if ( `echo $cmd | grep "create" | wc -l` ) then
     if ( $#argv < 6 ) then
 	cat Usage.txt; rm Usage.txt; exit
@@ -96,7 +95,7 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
     echo "SE_SITE "$SE_SITE >! $TASKDIR/config.txt
     echo "SE_USERDIR "$SE_USERDIR >> $TASKDIR/config.txt
     if ( !(-f $TXT_FILE) ) then
-	echo "$TXT_FILE doesn't exist"; exit
+	echo "$TXT_FILE doesn't exist"; rm Usage.txt; exit
     endif
     grep "/MINIAOD" $TXT_FILE >! $TASKDIR/input_datasets.txt
     sed "s;TASKDIR;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_template_edmntuple_Data_py.txt
@@ -106,29 +105,47 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	set line=`sed -n "$i"p $TASKDIR/input_datasets.txt`
 	set SHORT=`echo $line | awk '{ print $1 }'`
 	set DATASET=`echo $line | awk '{ print $2 }'`
-	set isData=`echo $DATASET | grep 'MINIAOD$' | wc -l`
 	set PUBNAME2=`echo $DATASET | sed "s;/; ;g" | awk '{ print $2 }'`
-	if ( `echo $PUBNAME2 | grep "Run2015B-17Jul2015" | wc -l ` ) then
+	set isData=`echo $DATASET | grep 'MINIAOD$' | wc -l`
+	# 50ns
+	if ( `echo $PUBNAME2 | grep "Run2015B-17Jul2015" | wc -l` ) then
 	    set GLOBALTAG="74X_dataRun2_Prompt_v0"
-	    set DATAPROC="ReReco17Jul50ns"
-	    set JSON="/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Cert_246908-251883_13TeV_PromptReco_Collisions15_JSON_v2.txt"
+	    set DATAPROC="Data50ns"
+	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_50nsV5_DATA.db"
+	    set JSON="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/Cert_246908-255031_13TeV_PromptReco_Collisions15_50ns_JSON_v2.txt"
 	    set RUNS="251162-251562"
-	else if ( `echo $PUBNAME2 | grep "Run2015B-PromptReco" | wc -l ` ) then
+	else if ( `echo $PUBNAME2 | grep "Run2015B-PromptReco" | wc -l` ) then
 	    set GLOBALTAG="74X_dataRun2_Prompt_v0"
-	    set DATAPROC="PromptReco50ns"
-	    set JSON="/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Cert_246908-251883_13TeV_PromptReco_Collisions15_JSON_v2.txt"
+	    set DATAPROC="Data50ns"
+	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_50nsV5_DATA.db"
+	    set JSON="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/Cert_246908-255031_13TeV_PromptReco_Collisions15_50ns_JSON_v2.txt"
 	    set RUNS="251585-252501"
 	else if ( `echo $PUBNAME2 | grep "Asympt50ns" | wc -l ` ) then
+	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_50nsV5_MC.db"
 	    set GLOBALTAG="MCRUN2_74_V9A"
 	    set DATAPROC="MC50ns"
-	else	    
+	# 25 ns
+	else if ( `echo $PUBNAME2 | grep "Run2015C" | wc -l`) then
+	    set GLOBALTAG="74X_dataRun2_Prompt_v1"
+	    set DATAPROC="Data25ns"
+	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV2_DATA.db"
+	    set JSON="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/Cert_246908-256869_13TeV_PromptReco_Collisions15_25ns_JSON.txt"
+	    set RUNS="246908-256869"
+	else if ( `echo $PUBNAME2 | grep "Run2015D" | wc -l`) then
+	    set GLOBALTAG="74X_dataRun2_Prompt_v2"
+	    set DATAPROC="Data25nsv2"
+	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV2_DATA.db"
+	    set JSON="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/Cert_246908-256869_13TeV_PromptReco_Collisions15_25ns_JSON.txt"
+	    set RUNS="246908-256869"
+	else if ( `echo $PUBNAME2 | grep "Asympt25ns" | wc -l` ) then
 	    set GLOBALTAG="MCRUN2_74_V9"
 	    set DATAPROC="MC25ns"
+	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV2_MC.db"
 	endif
 	if ( $isData ) then
-	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME"_"$PUBNAME2;;s;DATASET;$DATASET;;s;GLOBALTAG;$GLOBALTAG;;s;DATAPROC;$DATAPROC;;s;JSON;$JSON;;s;RUNS;$RUNS;" $TASKDIR/crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_$SHORT.py
+	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME"_"$PUBNAME2;;s;DATASET;$DATASET;;s;GLOBALTAG;$GLOBALTAG;;s;DATAPROC;$DATAPROC;;s;JEC_DB_FILE;$JEC_DB_FILE;;s;JSON;$JSON;;s;RUNS;$RUNS;" $TASKDIR/crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_$SHORT.py
 	else
-	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME"_"$PUBNAME2;;s;DATASET;$DATASET;;s;GLOBALTAG;$GLOBALTAG;;s;DATAPROC;$DATAPROC;" $TASKDIR/crab_template_edmntuple_MC_py.txt > $TASKDIR/crab_$SHORT.py
+	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME"_"$PUBNAME2;;s;DATASET;$DATASET;;s;GLOBALTAG;$GLOBALTAG;;s;DATAPROC;$DATAPROC;;s;JEC_DB_FILE;$JEC_DB_FILE;" $TASKDIR/crab_template_edmntuple_MC_py.txt > $TASKDIR/crab_$SHORT.py
 	endif
     end
     rm $TASKDIR/crab_template_edmntuple_Data_py.txt $TASKDIR/crab_template_edmntuple_MC_py.txt
@@ -148,7 +165,7 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	printf "%-70s %s\n" $dir $Status
 	if ( `echo $Status | grep COMPLETED | wc -l` == 0 ) then
 	    grep "%.*\(.*\)" Status.txt
-	    if ( `grep "%.*failed" Status.txt ` == 1 ) then
+	    if ( `grep "failed.*\%.*\(" Status.txt | wc -l` == 1 ) then
 		crab resubmit -d $dir >> Status.txt
 		echo "Failed jobs resubmitted"
 	    endif
@@ -250,13 +267,44 @@ else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
 else if ( `echo $cmd | grep "make_twiki" | wc -l` ) then
     set infile=$TASKDIR/input_datasets.txt
     set outfile=$TASKDIR/output_datasets.txt
-    echo "|  *Dataset*  |  *B2GEdmNtuple*  |  *Nevents*  |  *Nfile*  |  *LO cross section (pb)*  |"
+    if ( ! -e $outfile ) then
+	"List of output datasets is not yet collected, please issue get_datasets command first"
+	cat Usage.txt; rm Usage.txt; exit
+    endif
+    echo "Please enter your name:"
+    set NAME=$<
+    echo "Please enter B2GAnaFW Version tag:"
+    set TAG=$<
+    
+    ### echo "|  *Dataset*  |  *B2GEdmNtuple*  |  *Nevents*  |  *Nfile*  |  *LO cross section (pb)*  |"
+    echo "Paste this to the B2G ntuple twiki: https://twiki.cern.ch/twiki/bin/view/CMS/B2GAnaFilesRunIISpring15DR74Asympt25ns"
+    set first_data="0"
+    set first_mc="0"
     foreach in_dataset (`awk '{ print $2 }' $infile`)
 	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
+	set isData=`echo $in_dataset | grep '/MINIAOD$' | wc -l`
+	if ( $first_data == 0 && $isData ) then
+	    set first_data=1
+	    if ( $?JSON ) then
+		set CERT=`echo $JSON | cut -d "/" -f9`
+	    else 
+		echo "Please enter Cert:"
+		set CERT=$<
+	    endif
+	    echo "Please enter Total Int. lumi [pb-1]:"
+	    set INTLUMI=$<
+	    echo
+	    echo "| *Parent Sample* | *Submitted* | *Status* | *Lumi mask* | *Int. lumi [pb-1]* | *Published dataset* | *B2GFWAna tag* |"
+	else if ( $first_mc == 0 && $isData == 0 ) then
+	    set first_mc=1
+	    echo
+	    echo "| *Parent Sample* | *Submitted* | *Status* | *N_events (orig. dataset)* | *N_events processed* | *Published dataset* | *B2GFWAna tag* |"
+	endif
 	set out_dataset=`grep "/$primary_dataset/" $outfile`
-	set nevents=`das_client.py --query="dataset=$in_dataset | grep dataset.nevents" | tail -1`
-	set nfiles=`das_client.py --query="dataset=$in_dataset | grep dataset.nfiles" | tail -1`
 	set parent=`das_client.py --query="parent dataset=$in_dataset" | tail -1`
+	set nevents=`das_client.py --query="dataset=$in_dataset | grep dataset.nevents" | tail -1`
+	set nevents_proc=`das_client.py --query="dataset=$out_dataset instance=prod/phys03 | grep dataset.nevents" | tail -1`
+	set nfiles=`das_client.py --query="dataset=$in_dataset | grep dataset.nfiles" | tail -1`
 	set ntry=0
 	while ( (`echo $parent | grep '/GEN-SIM$' | wc -l` == 0) && ( $ntry < 10 ) )
 	    set ntry=`expr $ntry + 1`
@@ -266,18 +314,37 @@ else if ( `echo $cmd | grep "make_twiki" | wc -l` ) then
 	    else 
 		set ntry=10
 	    endif
-
 	end
 	set prep_id=`das_client.py --query="dataset=$parent | grep dataset.prep_id" | tail -1`
 	#set LO_XSec=`das_client.py --query="mcm prepid=$prep_id | grep mcm.generator_parameters.cross_section" | tail -1`
 	set LO_XSec=`das_client.py --format=json --query="mcm prepid=$prep_id | grep mcm.generator_parameters.cross_section" | tr "," "\n" | grep '"cross_section"' | tail -1 | sed "s;};;g;s;];;g" | awk '{ print $NF }'`
-	echo -n "| [[https://cmsweb.cern.ch/das/request?input=$in_dataset&instance=prod%2Fglobal]["`echo $in_dataset | cut -d '/' -f-3`"]] "
-	echo -n "|  [[https://cmsweb.cern.ch/das/request?input=$out_dataset&instance=prod%2Fphys03][DAS link]]  "
-	echo -n "|  $nevents "
-	echo -n "|  $nfiles "
-	#echo -n "|  $LO_XSec [[https://cmsweb.cern.ch/das/request?view=list&limit=10&instance=prod%2Fglobal&input=mcm+prepid%3D$prep_id+|+grep+mcm.generator_parameters.cross_section][(Link)]] |\n"
-	echo -n "|  $LO_XSec [[https://cms-pdmv.cern.ch/mcm/requests?dataset_name=$primary_dataset&page=0&shown=262163][(Link)]] |\n"
+	### echo -n "| [[https://cmsweb.cern.ch/das/request?input=$in_dataset&instance=prod%2Fglobal]["`echo $in_dataset | cut -d '/' -f-3`"]] "
+	### echo -n "|  [[https://cmsweb.cern.ch/das/request?input=$out_dataset&instance=prod%2Fphys03][DAS link]]  "
+	### echo -n "|  $nevents "
+	### echo -n "|  $nfiles "
+	### #echo -n "|  $LO_XSec [[https://cmsweb.cern.ch/das/request?view=list&limit=10&instance=prod%2Fglobal&input=mcm+prepid%3D$prep_id+|+grep+mcm.generator_parameters.cross_section][(Link)]] |\n"
+	### echo -n "|  $LO_XSec [[https://cms-pdmv.cern.ch/mcm/requests?dataset_name=$primary_dataset&page=0&shown=262163][(Link)]] |\n"
+	
+	echo -n "| [[https://cmsweb.cern.ch/das/request?input=$in_dataset&instance=prod%2Fglobal][$in_dataset]] "
+	echo -n "| $NAME "
+	if ( $isData ) then
+	    echo -n "| Completed "
+	    echo -n "| [[https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/$CERT][$CERT]] "
+	    echo -n "| $INTLUMI  "
+	else
+	    if ( $nevents == $nevents_proc ) then
+		echo -n "| Completed "
+	    else
+		echo -n "| Submitted "
+	    endif
+	    echo -n "|  $nevents "
+	    echo -n "|  $nevents_proc "
+	endif
+	echo -n "| [[https://cmsweb.cern.ch/das/request?input=$out_dataset&instance=prod%2Fphys03][$out_dataset]] "
+	echo "| $TAG |"
     end
-
+    
 endif
 rm Usage.txt
+
+
