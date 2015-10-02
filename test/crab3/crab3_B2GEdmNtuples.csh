@@ -137,8 +137,8 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	    set GLOBALTAG="74X_dataRun2_Prompt_v2"
 	    set DATAPROC="Data25nsv2"
 	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV2_DATA.db"
-	    set JSON="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/Cert_246908-256869_13TeV_PromptReco_Collisions15_25ns_JSON.txt"
-	    set RUNS="246908-256869"
+	    set JSON="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/Cert_246908-257599_13TeV_PromptReco_Collisions15_25ns_JSON.txt"
+	    set RUNS="246908-257599"
 	else if ( `echo $PUBNAME2 | grep "Asympt25ns" | wc -l` ) then
 	    set GLOBALTAG="MCRUN2_74_V9"
 	    set DATAPROC="MC25ns"

@@ -1,0 +1,4 @@
+# 2012D Data (25ns)
+JetHT_Run2015D-PromptReco           /JetHT/Run2015D-PromptReco-v3/MINIAOD
+SingleElectron_Run2015D-PromptReco  /SingleElectron/Run2015D-PromptReco-v3/MINIAOD
+SingleMuon_Run2015D-PromptReco      /SingleMuon/Run2015D-PromptReco-v3/MINIAOD
