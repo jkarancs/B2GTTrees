@@ -151,9 +151,8 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	set Status=`grep "Task status:" Status.txt | awk '{ print $3 }'`
 	printf "%-70s %s\n" $dir $Status
 	if ( `echo $Status | grep COMPLETED | wc -l` == 0 ) then
-	    cat Status.txt
-	    #grep "%.*\(.*\)" Status.txt
-	    if ( `grep "failed.*%" Status.txt | wc -l` == 1 ) then
+	    grep "%.*\(.*\)" Status.txt	    grep "%.*\(.*\)" Status.txt
+	    if ( `grep "failed.*\%.*\(" Status.txt | wc -l` == 1 ) then
 		crab resubmit -d $dir >> Status.txt
 		echo "Failed jobs resubmitted"
 	    endif
