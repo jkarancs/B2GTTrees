@@ -10,11 +10,11 @@ TT_TuneZ2star_13TeV-powheg-pythia6-tauola                             831.76
 TT_TuneEE5C_13TeV-amcatnlo-herwigpp                                   831.76
 TT_TuneCUETP8M1_13TeV-amcatnlo-pythia8                                831.76
 
-# Same HT Binned
+# HT Binned TT (NN)LO scale factor
 # k factor applied = 1.6562 (= 831.76 / 502.2)
 # Figured out from above madgraph sample NNLO/LO
 
-TTJets_HT-600to800_TuneCUETP8M1_13TeV-madgraphMLM-pythia8             2.666
+TTJets_HT-600to800_TuneCUETP8M1_13TeV-madgraphMLM-pythia8             2.6665
 TTJets_HT-800to1200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8            1.098
 TTJets_HT-1200to2500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8           0.198748
 TTJets_HT-2500toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8            0.0023684
@@ -47,29 +47,36 @@ TTWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8          0.2043
 tZq_ll_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1                         0.0758
 tZq_nunu_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1                       0.1379
 
-# Z - LO
+# HT Binned ZToNuNu - (NN)LO scale factor
+# https://twiki.cern.ch/twiki/bin/viewauth/CMS/StandardModelCrossSectionsat13TeV
 # https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=73
+# Z/a* (50) (m(ll)>50, Z -> mu mu - NNLO) = 2008.4
+# DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8 (LO) = 4895
+# Scale factor k = 3 * 2008.4 / 4895 = 1.231
 
-ZJetsToNuNu_HT-100To200_13TeV-madgraph                                280.47
-ZJetsToNuNu_HT-200To400_13TeV-madgraph                                78.36
-ZJetsToNuNu_HT-400To600_13TeV-madgraph                                10.944
-ZJetsToNuNu_HT-600ToInf_13TeV-madgraph                                4.203
+ZJetsToNuNu_HT-100To200_13TeV-madgraph                                345.23
+ZJetsToNuNu_HT-200To400_13TeV-madgraph                                96.452
+ZJetsToNuNu_HT-400To600_13TeV-madgraph                                13.471
+ZJetsToNuNu_HT-600ToInf_13TeV-madgraph                                5.1734
+# Not applied below
 ZJetsToQQ_HT600toInf_13TeV-madgraph                                   5.67
 
-# W - NLO scale factor
-# k factor NOT applied, but k = 1.23 (same as for the PHYS14) could be applied
-# Reason to apply: HT-600ToInf RunII LO xsec is very similar, and we only care about HT>600
+# HT Binned W - (NN)LO scale factor
+# https://twiki.cern.ch/twiki/bin/viewauth/CMS/StandardModelCrossSectionsat13TeV
 # https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=73
+# Total W (W->lv, l=mu - NNLO) 20508.9
+# WJetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8 (LO) = 50690
+# Scale factor k = 3 * 20508.9 / 50690 = 1.214
 
-WJetsToLNu_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8         1347
-WJetsToLNu_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8	      360
-WJetsToLNu_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8	      48.98
-WJetsToLNu_HT-600To800_TuneCUETP8M1_13TeV-madgraphMLM-pythia8         12.8
-WJetsToLNu_HT-800To1200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8        5.261
-WJetsToLNu_HT-1200To2500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8       1.334
-WJetsToLNu_HT-2500ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8        0.03089
+WJetsToLNu_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8         1634.97
+WJetsToLNu_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8	      436.962
+WJetsToLNu_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8	      59.4511
+WJetsToLNu_HT-600To800_TuneCUETP8M1_13TeV-madgraphMLM-pythia8         15.5364
+WJetsToLNu_HT-800To1200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8        6.38572
+WJetsToLNu_HT-1200To2500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8       1.61919
+WJetsToLNu_HT-2500ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8        0.0374938
 
-WJetsToLNu_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8	      18.77
+WJetsToLNu_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8	      22.7827
 
 # QCD - LO
 # https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=73

@@ -318,7 +318,7 @@ else if ( $cmd == "set-perm" ) then
     unset nout
 
 else if ( $cmd == "mis" ) then
-    eval "$se_ls $arg1" | sed 's;_; ;g' | awk '{ print $(NF-2) }' | sort | uniq > jobnums.txt
+    eval "$se_ls $arg1" | sed 's;_; ;g;s;\.root;;' | awk '{ print $NF }' | sort | uniq > jobnums.txt
     set N=1
     if ( $narg < 2 ) then
 	echo "Need more arguments, Use:"

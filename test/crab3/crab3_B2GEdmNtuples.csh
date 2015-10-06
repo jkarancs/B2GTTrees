@@ -238,11 +238,41 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
         set SAMPLEDIR=`echo $taskdir | sed "s;crab_;;"`
         set time=`se ls "$SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname"`
         eval_or_echo "mkdir -p $DLDIR/$SAMPLEDIR"
-        eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$time/0000 $DLDIR/$SAMPLEDIR --par 4 --run"
         echo "mkdir -p "'$1'"/$SAMPLEDIR" >> dl_$TASKNAME.csh
-        echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$time/0000 "'$1'"/$SAMPLEDIR --par 4 --run" >> dl_$TASKNAME.csh
+	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$time` )
+	    eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$time/$thousand $DLDIR/$SAMPLEDIR --par 4 --run"
+	    echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$time/$thousand "'$1'"/$SAMPLEDIR --par 4 --run" >> dl_$TASKNAME.csh
+	end
     end
     if ( ( `grep "EDM_NTUPLE" $TASKDIR/config.txt | wc -l` == 1 ) && ( $dry == "0" ) ) echo "EDM_NTUPLE $DLDIR" >> $TASKDIR/config.txt
+
+else if ( `echo $cmd | grep "find_missing" | wc -l` ) then
+    set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
+    set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
+    foreach taskdir ( `ls -ltrd $TASKDIR/*/ | sed "s;/; ;g" | awk '{ print $NF }'`)
+        set primary_dataset=`grep inputDataset $TASKDIR/$taskdir.py | sed "s;/; ;g" | awk '{ print $4 }'`
+        set pubname=`grep publishDataName $TASKDIR/$taskdir.py | sed "s;'; ;g" | awk '{ print $3 }'`
+        set SAMPLEDIR=`echo $taskdir | sed "s;crab_;;"`
+        set time=`se ls "$SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname"`
+	set njobs=`crab status -d $TASKDIR/$taskdir | grep ".*\%.*\(.*\)" | tail -1 | sed "s;/; ;g;s;); ;g"| awk '{ print $NF }'`
+	# Get missing jobs
+        #set missing=`se mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$time/0000 $njobs | sed 's;.$;;'`
+	echo -n "" >! jobnums.txt
+	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$time` )
+	    se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$time/$thousand | grep "\.root" | sed 's;_; ;g;s;\.root;;' | awk '{ print $NF }' | sort -n | uniq >> jobnums.txt
+	end
+        set N=1
+	set missing=""
+	foreach N ( `seq 1 $njobs` )
+	    if ( `grep '^'$N'$' jobnums.txt | wc -l` == 0 ) set missing="$missing,$N"
+	end
+	set missing=`echo $missing | sed "s;,;;1"`
+        rm jobnums.txt
+        unset N
+	if ( $missing != "" ) then
+	    echo "crab resubmit -d $TASKDIR/$taskdir --wait --force --jobids=$missing"
+	endif
+    end
 
 else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
     if ( $#argv < 4 ) then

@@ -15,7 +15,7 @@ set n=`cat files.txt | wc -l`
 foreach i ( `seq 1 $n` )
     set infile=`sed -n "$i"p files.txt`
     set edmfile="$output_dir/$version/$name/B2GEDMNtuple_$i.root"
-    echo 'nice cmsRun $CMSSW_BASE/src/Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py sample="file:'$infile'" outputLabel="file:'$edmfile'" LHE=False isData=False DataProcessing=MC25ns globalTag=MCRUN2_74_V9 maxEvts=-1' >>! make_edmtrees_"$version"_$name.csh
+    echo 'nice cmsRun $CMSSW_BASE/src/Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py sample="file:'$infile'" outputLabel="file:'$edmfile'" DataProcessing=MC25ns globalTag=MCRUN2_74_V9 maxEvents=-1' >>! make_edmtrees_"$version"_$name.csh
 end
 rm files.txt
 

@@ -151,9 +151,9 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	set Status=`grep "Task status:" Status.txt | awk '{ print $3 }'`
 	printf "%-70s %s\n" $dir $Status
 	if ( `echo $Status | grep COMPLETED | wc -l` == 0 ) then
-	    grep "%.*\(.*\)" Status.txt	    grep "%.*\(.*\)" Status.txt
+	    grep "%.*\(.*\)" Status.txt
 	    if ( `grep "failed.*\%.*\(" Status.txt | wc -l` == 1 ) then
-		crab resubmit -d $dir >> Status.txt
+		crab resubmit -d $dir
 		echo "Failed jobs resubmitted"
 	    endif
 	endif
@@ -192,13 +192,12 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
         echo "cmsenv"
         echo "cd /uscms_data/d3/jkarancs/B2GTTreeNtuple"
         echo "scp jkarancs@grid18.kfki.hu:$PWD/dl_$TASKNAME.csh ."
-        echo "source dl_$TASKNAME.csh "`echo $TASKNAME | sed "s;_; ;g" | awk '{ print $1 }'`
-	exit
+        echo "source dl_$TASKNAME.csh "`echo $TASKNAME | sed "s;_; ;g" | awk '{ print $1 }'`"\n"
     endif
     echo 'if ( $#argv < 1 ) echo "Please specify directory where you want to download files"' >! dl_$TASKNAME.csh
     echo 'alias par_source "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/source_parallel.csh \\!*"' >> dl_$TASKNAME.csh
     echo 'alias se         "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/se_util.csh \\!*"\n' >> dl_$TASKNAME.csh
-    foreach taskdir ( `ls -ltrd $TASKDIR/*/ | sed "s;/; ;g" | awk '{ print $NF }'`)
+    foreach taskdir ( `ls -ltrd $TASKDIR/*/ | sed "s;/; ;g" | awk '{ print $NF }'` )
         set primary_dataset=`grep inputDataset $TASKDIR/$taskdir.py | sed "s;/; ;g" | awk '{ print $4 }'`
         set TIME=`se ls "$SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir" | tail -1`
         set SAMPLEDIR=`echo $taskdir | sed "s;crab_;;"`
@@ -206,6 +205,20 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
         eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir/$TIME/0000 $DLDIR/$SAMPLEDIR/ --par 4 --run"
         echo "mkdir -p "'$1'"/$SAMPLEDIR" >> dl_$TASKNAME.csh
         echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir/$TIME/0000 "'$1'"/$SAMPLEDIR/ --par 4 --run" >> dl_$TASKNAME.csh
+    end
+
+else if ( `echo $cmd | grep "find_missing" | wc -l` ) then
+    set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
+    set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
+    foreach taskdir ( `ls -ltrd $TASKDIR/*/ | sed "s;/; ;g" | awk '{ print $NF }'`)
+        set primary_dataset=`grep inputDataset $TASKDIR/$taskdir.py | sed "s;/; ;g" | awk '{ print $4 }'`
+        set TIME=`se ls "$SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir" | tail -1`
+        set SAMPLEDIR=`echo $taskdir | sed "s;crab_;;"`
+	set njobs=`crab status -d $TASKDIR/$taskdir | grep ".*\%.*\(.*\)" | tail -1 | sed "s;/; ;g;s;); ;g"| awk '{ print $NF }'`
+        set missing=`se mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir/$TIME/0000 $njobs | sed 's;.$;;'`
+	if ( $missing != "" ) then
+	    echo "crab resubmit -d $TASKDIR/$taskdir --wait --force --jobids=$missing"
+	endif
     end
 
 else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
@@ -228,9 +241,29 @@ else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
         end
 	set XSEC=`grep $dir $XSEC_FILE | awk '{ print $2 }'`
 	set WEIGHT=`echo | awk '{ printf "%lf", 1000*'$XSEC'/'$totevt' }'`
+	# Specify latest JEC
+	# 50ns
+	if ( `echo $dir | grep "Run2015B-17Jul2015" | wc -l` ) then
+	    set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_50nsV5_DATA"
+	    set isData="True"
+	else if ( `echo $dir | grep "Run2015B-PromptReco" | wc -l` ) then
+	    set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_50nsV5_DATA"
+	    set isData="True"
+	# 25 ns
+	else if ( `echo $dir | grep "Run2015C" | wc -l`) then
+	    set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_25nsV2_DATA"
+	    set isData="True"
+	else if ( `echo $dir | grep "Run2015D" | wc -l`) then
+	    set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_25nsV2_DATA"
+	    set isData="True"
+	else
+	    # This version only handles 25ns MC
+	    set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_25nsV2_MC"
+	    set isData="False"
+	endif
         foreach file ( `ls $EDM_NTUPLE/$dir | grep ".root"` )
             set outfile=`echo "$file" | sed "s;B2GEDMNtuple;B2GTTreeNtupleExtra;"`
-            echo "nice cmsRun $CMSSW_BASE/src/Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py sample=file:$EDM_NTUPLE/$dir/$file outputLabel=$TTREEDIR/$dir/$outfile isData=False globalTag=MCRUN2_74_V9 weight=$WEIGHT" >>! $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh
+            echo "nice cmsRun $CMSSW_BASE/src/Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py isData=$isData sample=file:$EDM_NTUPLE/$dir/$file outputLabel=$TTREEDIR/$dir/$outfile JECloc=$JEC_TXT_FILE weight=$WEIGHT" >>! $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh
         end
         eval_or_echo "source source_parallel.csh $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh $Nparallel"
     end
