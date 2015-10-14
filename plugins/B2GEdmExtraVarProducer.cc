@@ -1062,7 +1062,6 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
       jets_AK8.push_back(jl);
     }
   }
-  std::vector<TLorentzVector> hemis_AK8 = Razor::CombineJets(jets_AK8);
   
   // Same for AK4 jets
   std::vector<TLorentzVector> jets_AK4;
@@ -1074,7 +1073,6 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
       jets_AK4.push_back(jl);
     }
   }
-  std::vector<TLorentzVector> hemis_AK4 = Razor::CombineJets(jets_AK4);
   
   TVector3 metl;
   metl.SetPtEtaPhi(h_floats_["met_Pt"]->at(0), 0, h_floats_["met_Phi"]->at(0));
@@ -1097,24 +1095,33 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   single_float_["evt_R"]   = -9999;
   single_float_["evt_R2"]  = -9999;
   if (jets_AK8.size() >= 2) {
-    single_float_["evt_MR"]  = Razor::CalcMR(hemis_AK8[0], hemis_AK8[1]);              /* evt_MR */
-    single_float_["evt_MTR"] = Razor::CalcMTR(hemis_AK8[0], hemis_AK8[1], metl);       /* evt_MTR */
-    single_float_["evt_R"]   = single_float_["evt_MTR"] / single_float_["evt_MR"];     /* evt_R */
-    single_float_["evt_R2"]  = std::pow(single_float_["evt_R"], 2);                    /* evt_R2 */
+    if (h_floats_["AK4_Pt"]->size()<60) {
+      std::vector<TLorentzVector> hemis_AK8 = Razor::CombineJets(jets_AK8);
+      single_float_["evt_MR"]  = Razor::CalcMR(hemis_AK8[0], hemis_AK8[1]);              /* evt_MR */
+      single_float_["evt_MTR"] = Razor::CalcMTR(hemis_AK8[0], hemis_AK8[1], metl);       /* evt_MTR */
+      single_float_["evt_R"]   = single_float_["evt_MTR"] / single_float_["evt_MR"];     /* evt_R */
+      single_float_["evt_R2"]  = std::pow(single_float_["evt_R"], 2);                    /* evt_R2 */
+    } else {
+      std::cout<<"Too many AK8: "<<jets_AK8.size()<<" "<<h_floats_["AK8_Pt"]->size()<<std::endl;
+    }
   }
-  
+
   // AK4
   single_float_["evt_AK4_MR"]  = -9999;
   single_float_["evt_AK4_MTR"] = -9999;
   single_float_["evt_AK4_R"]   = -9999;
   single_float_["evt_AK4_R2"]  = -9999;
   if (jets_AK4.size() >= 2) {
-    single_float_["evt_AK4_MR"]  = Razor::CalcMR(hemis_AK4[0], hemis_AK4[1]);          /* evt_AK4_MR */
-    single_float_["evt_AK4_MTR"] = Razor::CalcMTR(hemis_AK4[0], hemis_AK4[1], metl);   /* evt_AK4_MTR */
-    single_float_["evt_AK4_R"]   = single_float_["evt_AK4_MTR"] / single_float_["evt_AK4_MR"]; /* evt_AK4_R */
-    single_float_["evt_AK4_R2"]  = std::pow(single_float_["evt_AK4_R"], 2);            /* evt_AK4_R2 */
+    if (h_floats_["AK4_Pt"]->size() <60) {
+      std::vector<TLorentzVector> hemis_AK4 = Razor::CombineJets(jets_AK4);
+      single_float_["evt_AK4_MR"]  = Razor::CalcMR(hemis_AK4[0], hemis_AK4[1]);          /* evt_AK4_MR */
+      single_float_["evt_AK4_MTR"] = Razor::CalcMTR(hemis_AK4[0], hemis_AK4[1], metl);   /* evt_AK4_MTR */
+      single_float_["evt_AK4_R"]   = single_float_["evt_AK4_MTR"] / single_float_["evt_AK4_MR"]; /* evt_AK4_R */
+      single_float_["evt_AK4_R2"]  = std::pow(single_float_["evt_AK4_R"], 2);            /* evt_AK4_R2 */
+    } else {
+      std::cout<<"Too many AK4: "<<jets_AK4.size()<<" "<<h_floats_["AK4_Pt"]->size()<<std::endl;
+    }
   }
-
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"
