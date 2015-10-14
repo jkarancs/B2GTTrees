@@ -391,7 +391,7 @@ process.EdmNtupleCountFilter = cms.EDFilter("EdmNtupleCountFilter", # This one w
     src = cms.InputTag("jetsAK8","jetAK8Pt"),
     filter = cms.bool(True), # False also filters for some reason (disable in Path instead)
     min = cms.double(350),
-    minNumber = cms.uint32(1)
+    minNumber = cms.uint32(2)
 )
 
 ### B2GTTreeMaker

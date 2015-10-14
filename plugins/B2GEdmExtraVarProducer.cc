@@ -1,5 +1,6 @@
 #include "Analysis/B2GTTrees/interface/B2GEdmExtraVarProducer.h"
 #include "Analysis/B2GTTrees/interface/Razor.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
 void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   // Read variables from EdmNtuple
@@ -88,6 +89,24 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   // Event weight (xsec/nevent in units of fb), 
   // Usage: Multiply this number by the total int luminosity in units of fb^-1
   single_float_["evt_weight"] = isData_ ? 1 : event_weight_;                            /* evt_weight */
+  
+  // NLO negative weights, see:
+  // https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideDataFormatGeneratorInterface
+  //
+  //  Comment:
+  //    The previous weight were of course not good, due to negative weights
+  //    This will not give the correct weight for 1 fb^-1 either
+  //    but s = Sum(weight) / Sum( abs(weight) ) fb^-1 instead
+  //    In order to get the correct weight for 1 fb^-1, one has to calculate
+  //    s on the whole dataset and multiply the currently set weight with 1/s
+  if (!isData_) {
+    edm::Handle<GenEventInfoProduct> genEvtInfo;
+    iEvent.getByLabel("generator", genEvtInfo);
+    
+    double theWeight = genEvtInfo->weight();
+    //std::cout<<theWeight<<std::endl;
+    if (theWeight<0) single_float_["evt_weight"] *= -1;
+  }
   
   // ----------------------------
   // - Trigger/Filter variables -
