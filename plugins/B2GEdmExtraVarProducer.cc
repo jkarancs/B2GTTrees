@@ -427,7 +427,7 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
       }
     }
   } // End !isData
-  
+    
   // ---------------------
   // -      Jets         -
   // ---------------------

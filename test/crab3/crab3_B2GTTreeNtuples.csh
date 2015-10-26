@@ -153,8 +153,8 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	if ( `echo $Status | grep COMPLETED | wc -l` == 0 ) then
 	    grep "%.*\(.*\)" Status.txt
 	    if ( `grep "failed.*\%.*\(" Status.txt | wc -l` == 1 ) then
-		crab resubmit -d $dir
-		echo "Failed jobs resubmitted"
+                crab resubmit -d $dir
+                echo "Failed jobs resubmitted"
 	    endif
 	endif
 	rm Status.txt

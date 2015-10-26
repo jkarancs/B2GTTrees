@@ -411,6 +411,13 @@ process.B2GTTreeMaker.physicsObjects.append(
 )
 process.B2GTTreeMaker.isData = options.isData
 
+### EventCounter - to be applied before any filter to count
+#   negative and positive weight events (for NLO samples)
+#   histo name: NEventNoFilter (bin 1: neg, bin 2: pos weighted events)
+process.EventCounter = cms.EDAnalyzer("EventCounter",
+    isData = cms.untracked.bool(options.isData)
+)
+
 
 process.edmNtuplesOut = cms.OutputModule("PoolOutputModule",
     fileName = cms.untracked.string(options.outputLabel),
@@ -421,10 +428,10 @@ process.edmNtuplesOut = cms.OutputModule("PoolOutputModule",
 )
 
 process.analysisPath = cms.Path(
+    process.EventCounter *
     process.EdmNtupleCountFilter *
     process.extraVar *
     process.B2GTTreeMaker
 )
 
 #process.endPath = cms.EndPath( process.edmNtuplesOut )
-
