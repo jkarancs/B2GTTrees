@@ -1,0 +1,99 @@
+# ------------- Data ---------------
+# JetHT
+JetHT_50ns_2015B                         /JetHT/Run2015B-05Oct2015-v1/MINIAOD
+JetHT_50ns_2015C                         /JetHT/Run2015C_50ns-05Oct2015-v1/MINIAOD
+JetHT_25ns_2015C                         /JetHT/Run2015C_25ns-05Oct2015-v1/MINIAOD
+JetHT_25ns_2015D_reMiniAOD               /JetHT/Run2015D-05Oct2015-v1/MINIAOD
+JetHT_25ns_2015D_Promptv4                /JetHT/Run2015D-PromptReco-v4/MINIAOD
+
+# MET
+MET_50ns_2015B                           /MET/Run2015B-05Oct2015-v1/MINIAOD
+MET_50ns_2015C                           /MET/Run2015C_50ns-05Oct2015-v1/MINIAOD
+MET_25ns_2015C                           /MET/Run2015C_25ns-05Oct2015-v1/MINIAOD
+MET_25ns_2015D_reMiniAOD                 /MET/Run2015D-05Oct2015-v1/MINIAOD
+MET_25ns_2015D_Promptv4                  /MET/Run2015D-PromptReco-v4/MINIAOD
+
+# SingleElectron
+SingleElectron_50ns_2015B                /SingleElectron/Run2015B-05Oct2015-v1/MINIAOD
+SingleElectron_50ns_2015C                /SingleElectron/Run2015C_50ns-05Oct2015-v1/MINIAOD
+SingleElectron_25ns_2015C                /SingleElectron/Run2015C_25ns-05Oct2015-v1/MINIAOD
+SingleElectron_25ns_2015D_reMiniAOD      /SingleElectron/Run2015D-05Oct2015-v1/MINIAOD
+SingleElectron_25ns_2015D_Promptv4       /SingleElectron/Run2015D-PromptReco-v4/MINIAOD
+
+# SingleMuon
+SingleMuon_50ns_2015B                    /SingleMuon/Run2015B-05Oct2015-v1/MINIAOD
+SingleMuon_50ns_2015C                    /SingleMuon/Run2015C_50ns-05Oct2015-v1/MINIAOD
+SingleMuon_25ns_2015C                    /SingleMuon/Run2015C_25ns-05Oct2015-v1/MINIAOD
+SingleMuon_25ns_2015D_reMiniAOD          /SingleMuon/Run2015D-05Oct2015-v1/MINIAOD
+SingleMuon_25ns_2015D_Promptv4           /SingleMuon/Run2015D-PromptReco-v4/MINIAOD
+
+# ---------- Background ------------
+# TTbar
+TT_powheg_pythia8                        /TT_TuneCUETP8M1_13TeV-powheg-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+TT_powheg_pythia8_ext                    /TT_TuneCUETP8M1_13TeV-powheg-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2_ext3-v1/MINIAODSIM
+TT_amcatnlo                              /TT_TuneCUETP8M1_13TeV-amcatnlo-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+TT_herwigpp                              /TT_TuneEE5C_13TeV-amcatnlo-herwigpp/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+TTJets_madgraph                          /TTJets_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+TTJets_madgraph_FastSim                  /TTJets_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15FSPremix-MCRUN2_74_V9-v1/MINIAODSIM
+TTJets_amcatnloFXFX                      /TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v3/MINIAODSIM
+
+TTJets_HT-600to800                       /TTJets_HT-600to800_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+TTJets_HT-800to1200                      /TTJets_HT-800to1200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+TTJets_HT-1200to2500                     /TTJets_HT-1200to2500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+TTJets_HT-2500toInf                      /TTJets_HT-2500toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+
+# TTbar + V
+TTWJetsToLNu                             /TTWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+TTWJetsToQQ                              /TTWJetsToQQ_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+TTZToLLNuNu                              /TTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v2/MINIAODSIM
+TTZToQQ                                  /TTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+
+# Single Top
+ST_s-channel_4f_leptonDecays             /ST_s-channel_4f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+ST_t-channel_4f_leptonDecays             /ST_t-channel_4f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+ST_t-channel_4f_leptonDecays_ext         /ST_t-channel_4f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2_ext1-v1/MINIAODSIM
+ST_tW_top_5f_inclusiveDecays             /ST_tW_top_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v2/MINIAODSIM
+ST_tW_antitop_5f_inclusiveDecays         /ST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+
+# QCD
+QCD_HT100to200                           /QCD_HT100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+QCD_HT200to300                           /QCD_HT200to300_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+QCD_HT300to500                           /QCD_HT300to500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+QCD_HT500to700                           /QCD_HT500to700_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+QCD_HT700to1000                          /QCD_HT700to1000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+QCD_HT1000to1500                         /QCD_HT1000to1500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+QCD_HT1500to2000                         /QCD_HT1500to2000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+QCD_HT2000toInf                          /QCD_HT2000toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+
+# Z/Gamma
+DYJetsToLL_M-50_HT-100to200              /DYJetsToLL_M-50_HT-100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+DYJetsToLL_M-50_HT-200to400              /DYJetsToLL_M-50_HT-200to400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+DYJetsToLL_M-50_HT-400to600              /DYJetsToLL_M-50_HT-400to600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v2/MINIAODSIM
+DYJetsToLL_M-50_HT-600toInf              /DYJetsToLL_M-50_HT-600toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+ZJetsToNuNu_HT-100To200                  /ZJetsToNuNu_HT-100To200_13TeV-madgraph/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+ZJetsToNuNu_HT-200To400                  /ZJetsToNuNu_HT-200To400_13TeV-madgraph/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+ZJetsToNuNu_HT-400To600                  /ZJetsToNuNu_HT-400To600_13TeV-madgraph/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+ZJetsToNuNu_HT-600ToInf                  /ZJetsToNuNu_HT-600ToInf_13TeV-madgraph/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v2/MINIAODSIM
+
+# W
+WJetsToLNu_HT-100To200                   /WJetsToLNu_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+WJetsToLNu_HT-200To400                   /WJetsToLNu_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+WJetsToLNu_HT-400To600                   /WJetsToLNu_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+WJetsToLNu_HT-600To800                   /WJetsToLNu_HT-600To800_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+WJetsToLNu_HT-800To1200                  /WJetsToLNu_HT-800To1200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+WJetsToLNu_HT-1200To2500                 /WJetsToLNu_HT-1200To2500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+WJetsToLNu_HT-2500ToInf                  /WJetsToLNu_HT-2500ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+
+# Diboson
+WWTo1L1Nu2Q                              /WWTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+WWTo2L2Nu                                /WWTo2L2Nu_13TeV-powheg/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+WWTo4Q_4f                                /WWTo4Q_4f_13TeV_amcatnloFXFX_madspin_pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+WZTo1L1Nu2Q                              /WZTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+WZTo1L3Nu                                /WZTo1L3Nu_13TeV_amcatnloFXFX_madspin_pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+WZTo2L2Q                                 /WZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+WZTo3LNu                                 /WZTo3LNu_TuneCUETP8M1_13TeV-powheg-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+ZZTo2L2Nu                                /ZZTo2L2Nu_13TeV_powheg_pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v2/MINIAODSIM
+ZZTo2L2Q                                 /ZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+ZZTo2Q2Nu                                /ZZTo2Q2Nu_13TeV_amcatnloFXFX_madspin_pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+ZZTo4L                                   /ZZTo4L_13TeV-amcatnloFXFX-pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM
+ZZTo4Q                                   /ZZTo4Q_13TeV_amcatnloFXFX_madspin_pythia8/RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/MINIAODSIM

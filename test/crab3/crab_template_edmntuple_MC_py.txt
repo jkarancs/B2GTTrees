@@ -11,18 +11,18 @@ config.General.workArea = 'TASKDIR'
 config.section_('JobType')
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = os.environ['CMSSW_BASE']+'/src/Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=GLOBALTAG', 'DataProcessing=DATAPROC']
+config.JobType.pyCfgParams = ['globalTag=GLOBALTAG', 'DataProcessing=DATAPROC', 'wantSummary=False', 'useNoHFMET=False']
 config.JobType.inputFiles = ['JEC_DB_FILE']
 
 config.section_('Data')
 config.Data.outLFNDirBase = 'SE_USERDIR'
 config.Data.inputDataset = 'DATASET'
 config.Data.inputDBS = 'global'
-config.Data.splitting = 'FileBased'
-config.Data.unitsPerJob = 1
+config.Data.publishDBS = 'phys03'
 config.Data.publication = True
 config.Data.publishDataName = 'PUBNAME'
-config.Data.publishDBS = 'phys03'
+config.Data.splitting = 'FileBased'
+config.Data.unitsPerJob = 1
 
 config.section_('Site')
 config.Site.storageSite = 'SE_SITE'

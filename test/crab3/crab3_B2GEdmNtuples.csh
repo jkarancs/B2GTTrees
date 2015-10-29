@@ -109,40 +109,62 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	set DATASET=`echo $line | awk '{ print $2 }'`
 	set PUBNAME2=`echo $DATASET | sed "s;/; ;g" | awk '{ print $2 }'`
 	set isData=`echo $DATASET | grep 'MINIAOD$' | wc -l`
-	# 50ns
-	if ( `echo $PUBNAME2 | grep "Run2015B-17Jul2015" | wc -l` ) then
-	    set GLOBALTAG="74X_dataRun2_Prompt_v0"
-	    set DATAPROC="Data50ns"
+	set CERT_DIR="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV"
+	set LATEST_50NS_GOLDEN_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/ | grep Collisions15_50ns_JSON | grep -v MuonPhys | tail -1`
+	set LATEST_25NS_GOLDEN_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/ | grep Collisions15_25ns_JSON | grep -v MuonPhys | tail -1`
+	# 50ns - Data (ReMiniAOD)
+	if ( `echo $PUBNAME2 | grep "Run2015B-05Oct2015" | wc -l` ) then
+	    set DATAPROC="Data50ns_MiniAODv2"
+	    set GLOBALTAG="74X_dataRun2_reMiniAOD_v0"
 	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_50nsV5_DATA.db"
-	    set JSON="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/Cert_246908-255031_13TeV_PromptReco_Collisions15_50ns_JSON_v2.txt"
-	    set RUNS="251162-251562"
-	else if ( `echo $PUBNAME2 | grep "Run2015B-PromptReco" | wc -l` ) then
-	    set GLOBALTAG="74X_dataRun2_Prompt_v0"
-	    set DATAPROC="Data50ns"
-	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_50nsV5_DATA.db"
-	    set JSON="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/Cert_246908-255031_13TeV_PromptReco_Collisions15_50ns_JSON_v2.txt"
-	    set RUNS="251585-252501"
-	else if ( `echo $PUBNAME2 | grep "Asympt50ns" | wc -l ` ) then
+	    set JSON="$CERT_DIR/$LATEST_50NS_GOLDEN_JSON"
+	    set RUNS="251585-999999"
+	else if ( `echo $PUBNAME2 | grep "Run2015C_50ns-05Oct2015" | wc -l`) then
+	    set DATAPROC="Data50ns_MiniAODv2"
+	    set GLOBALTAG="74X_dataRun2_reMiniAOD_v0"
+	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV5_DATA.db"
+	    set JSON="$CERT_DIR/$LATEST_50NS_GOLDEN_JSON"
+	    set RUNS="1-999999"
+	# 50ns - MC (ReMiniAOD)
+	else if ( `echo $PUBNAME2 | grep "RunIISpring15MiniAODv2-Asympt50ns" | wc -l ` ) then
+	    set DATAPROC="MC50ns_MiniAODv2"
+	    set GLOBALTAG="74X_mcRun2_asymptotic50ns_v0"
 	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_50nsV5_MC.db"
-	    set GLOBALTAG="MCRUN2_74_V9A"
-	    set DATAPROC="MC50ns"
-	# 25 ns
-	else if ( `echo $PUBNAME2 | grep "Run2015C" | wc -l`) then
-	    set GLOBALTAG="74X_dataRun2_Prompt_v1"
-	    set DATAPROC="Data25ns"
-	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV2_DATA.db"
-	    set JSON="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/Cert_246908-256869_13TeV_PromptReco_Collisions15_25ns_JSON.txt"
-	    set RUNS="246908-256869"
-	else if ( `echo $PUBNAME2 | grep "Run2015D" | wc -l`) then
-	    set GLOBALTAG="74X_dataRun2_Prompt_v2"
-	    set DATAPROC="Data25nsv2"
-	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV2_DATA.db"
-	    set JSON="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/Cert_246908-257599_13TeV_PromptReco_Collisions15_25ns_JSON.txt"
-	    set RUNS="246908-257599"
-	else if ( `echo $PUBNAME2 | grep "Asympt25ns" | wc -l` ) then
+	# 25 ns - Data (ReReco)
+	else if ( `echo $PUBNAME2 | grep "Run2015C_25ns-05Oct2015" | wc -l`) then
+	    set DATAPROC="Data25ns_MiniAODv2"
+	    set GLOBALTAG="74X_dataRun2_v4"
+	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV5_DATA.db"
+	    set JSON="$CERT_DIR/$LATEST_25NS_GOLDEN_JSON"
+	    set RUNS="1-999999"
+	# 25 ns - Data (ReMiniAOD)
+	else if ( `echo $PUBNAME2 | grep "Run2015D-05Oct2015" | wc -l`) then
+	    set DATAPROC="Data25ns_MiniAODv2"
+	    set GLOBALTAG="74X_dataRun2_reMiniAOD_v0"
+	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV5_DATA.db"
+	    set JSON="$CERT_DIR/$LATEST_25NS_GOLDEN_JSON"
+	    set RUNS="1-999999"
+	# 25 ns - Data (PromptReco)
+	else if ( `echo $PUBNAME2 | grep "Run2015D-PromptReco-v4" | wc -l`) then
+	    set DATAPROC="Data25ns_PromptRecov4"
+	    set GLOBALTAG="74X_dataRun2_Prompt_v4"
+	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV5_DATA.db"
+	    set JSON="$CERT_DIR/$LATEST_25NS_GOLDEN_JSON"
+	    set RUNS="1-999999"
+	# 25 ns - MC (ReMiniAOD)
+	else if ( `echo $PUBNAME2 | grep "RunIISpring15MiniAODv2" | wc -l` ) then
+	    set DATAPROC="MC25ns_MiniAODv2"
+	    set GLOBALTAG="74X_mcRun2_asymptotic_v2"
+	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV5_MC.db"
+	# 25 ns - MC FastSim
+	else if ( `echo $PUBNAME2 | grep "RunIISpring15FSPremix" | wc -l` ) then
+	    set DATAPROC="MC25ns_FastSim"
 	    set GLOBALTAG="MCRUN2_74_V9"
-	    set DATAPROC="MC25ns"
-	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV2_MC.db"
+	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV5_MC.db"
+	else
+	    echo "ERROR - Dataset not defined (probably because not using latest): "$DATASET
+	    rm -r $TASKDIR Usage.txt
+	    exit
 	endif
 	if ( $isData ) then
 	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME"_"$PUBNAME2;;s;DATASET;$DATASET;;s;GLOBALTAG;$GLOBALTAG;;s;DATAPROC;$DATAPROC;;s;JEC_DB_FILE;$JEC_DB_FILE;;s;JSON;$JSON;;s;RUNS;$RUNS;" $TASKDIR/crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_$SHORT.py
@@ -287,24 +309,19 @@ else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
         set Nparallel=$4
         foreach dir ( `ls -ltrd $EDM_NTUPLE/* | grep "^d" | sed "s;/; ;g" | awk '{ print $NF }'` )
             eval_or_echo "mkdir -p $TTREEDIR/$dir"
-	    # 50ns
-	    if ( `echo $dir | grep "Run2015B-17Jul2015" | wc -l` ) then
-	        set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_50nsV5_DATA"
+	    
+	    set is50ns="0"
+	    if ( `echo $dir | grep "Run2015B" | wc -l` || `echo $dir | grep "50ns" | wc -l`  ) set is50ns="1"
+	    set isData="False"
+	    set DATA="MC"
+	    if ( `echo $dir | grep "Run2015" | wc -l`  ) then
 		set isData="True"
-	    else if ( `echo $dir | grep "Run2015B-PromptReco" | wc -l` ) then
-	        set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_50nsV5_DATA"
-		set isData="True"
-	    # 25 ns
-	    else if ( `echo $dir | grep "Run2015C" | wc -l`) then
-	        set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_25nsV2_DATA"
-		set isData="True"
-	    else if ( `echo $dir | grep "Run2015D" | wc -l`) then
-	        set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_25nsV2_DATA"
-		set isData="True"
+		set DATA="DATA"
+	    endif
+            if ( $is50ns ) then
+		set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_50nsV5_$DATA"
 	    else
-		# This version only handles 25ns MC
-	        set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_25nsV2_MC"
-		set isData="False"
+		set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_25nsV5_$DATA"
 	    endif
             if ( -f $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh ) rm $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh
             foreach file ( `ls $EDM_NTUPLE/$dir | grep ".root"` )
