@@ -105,35 +105,56 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	set DATASET=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
 	set primary=`echo $DATASET | sed "s;/; ;g" | awk '{ print $1 }'`
 	set isData=`echo $DATASET | grep 'Run2015' | wc -l`
-	set xsec=`grep $primary $TASKDIR/xsec_datasets.txt | awk '{ print $2 }'`
-	if ( ! $isData && $xsec == "" ) then
-	    echo "Error: Cross-section is missing for $primary, exiting..."
-	    rm -r $TASKDIR
-	    exit
-	endif
+	set LHELABEL="externalLHEProducer"
 	if ( $isData ) then
 	    set WEIGHT=1
-	else 
-	    set nevent=`das_client.py --query="dataset=$DATASET instance=prod/phys03 | grep dataset.nevents" | tail -1`
-	    set WEIGHT=`echo | awk '{ printf "%lf", 1000*'$xsec'/'$nevent' }'`
+	else
+	    if ( ! `echo $primary | grep SMS | wc -l` ) then
+	        set xsec=`grep $primary $TASKDIR/xsec_datasets.txt | awk '{ print $2 }'`
+	        if ( $xsec == "" ) then
+	            echo "Error: Cross-section is missing for $primary, exiting..."
+	            rm -r $TASKDIR
+	            exit
+	        endif
+	        # Multiply cross-section with k-factor
+	        set k_factor=`grep $primary $TASKDIR/xsec_datasets.txt | awk '{ print $3 }'`
+	        set xsec=`echo | awk '{ printf "%lf", '$xsec'*'$k_factor' }'`
+	        # Correct the number of events for negative weights (beware, corr factor might not be available yet!)
+	        set nevent=`das_client.py --query="dataset=$DATASET instance=prod/phys03 | grep dataset.nevents" | tail -1`
+	        set neg_corr=`grep $primary $TASKDIR/xsec_datasets.txt | awk '{ print $4 }'`
+	        set nevent=`echo | awk '{ printf "%lf", '$nevent'/'$neg_corr' }'`
+	        # Calculate lumi weight for 1 fb^-1
+	        set lumiWeight=`echo | awk '{ printf "%lf", 1000*'$xsec'/'$nevent' }'`
+	    else
+		# Signal: Xsec depends on mGlu (fill in ntuple)
+		# also LHE label may be different
+		set xsec="0"
+		set nevent="0"
+		set lumiWeight="0"
+		set LHELABEL="source"
+	    endif
 	endif
 	set MIDNAME=`echo $DATASET | sed "s;/; ;g" | awk '{ print $2 }'`
 	# 50ns
-	if ( `echo $MIDNAME | grep "Run2015B" | wc -l` ) then
+	if ( `echo $MIDNAME | grep "Run2015B" | wc -l` || `echo $MIDNAME | grep "Run2015C_50ns" | wc -l`  ) then
 	    set JECNAME="Summer15_50nsV5_DATA"
 	    set ISDATA="True"
 	else if ( `echo $MIDNAME | grep "Asympt50ns" | wc -l` ) then
 	    set JECNAME="Summer15_50nsV5_MC"
 	    set ISDATA="False"
 	# 25ns
-	else if ( `echo $MIDNAME | grep "Run2015C" | wc -l` || `echo $MIDNAME | grep "Run2015D" | wc -l` ) then
-	    set JECNAME="Summer15_25nsV2_DATA"
+	else if ( `echo $MIDNAME | grep "Run2015C_25ns" | wc -l` || `echo $MIDNAME | grep "Run2015D" | wc -l` ) then
+	    set JECNAME="Summer15_25nsV6_DATA"
 	    set ISDATA="True"
-	else if ( `echo $MIDNAME | grep "Asympt25ns" | wc -l` ) then	    
-	    set JECNAME="Summer15_25nsV2_MC"
+	else if ( `echo $MIDNAME | grep "RunIISpring15" | wc -l` ) then	    
+	    set JECNAME="Summer15_25nsV6_MC"
 	    set ISDATA="False"
 	endif
-	sed "s;TASKNAME;$SHORT;;s;DATASET;$DATASET;;s;weight=1.0;weight=$WEIGHT;;s;JECNAME;$JECNAME;;s;ISDATA;$ISDATA;" $TASKDIR/crab_template_ttreentuple_py.txt > $TASKDIR/crab_$SHORT.py
+	# FastSim Specific options
+	sed "s;TASKNAME;$SHORT;;s;DATASET;$DATASET;;s;JECNAME;$JECNAME;;s;LHELABEL;$LHELABEL;;s;ISDATA;$ISDATA;;" $TASKDIR/crab_template_ttreentuple_py.txt > $TASKDIR/crab_$SHORT.py
+	if ( ! $isData ) then
+	    sed -i "s;xsec=0;xsec=$xsec;;s;nevent=0;nevent=$nevent;;s;lumiWeight=1.0;lumiWeight=$lumiWeight;" $TASKDIR/crab_$SHORT.py
+	endif
     end
     rm $TASKDIR/crab_template_ttreentuple_py.txt
     echo "Config files ready in directory: "$TASKDIR

@@ -60,11 +60,11 @@ if options.usePrivateSQLite:
         if options.DataProcessing=="Data50ns":
             options.era="Summer15_50nsV5_DATA"
         elif options.DataProcessing=="Data25ns":
-            options.era="Summer15_25nsV2_DATA"
+            options.era="Summer15_25nsV6_DATA"
         elif options.DataProcessing=="MC50ns":
             options.era="Summer15_50nsV5_DATA"
         elif options.DataProcessing=="MC25ns":
-            options.era="Summer15_25nsV2_MC"
+            options.era="Summer15_25nsV6_MC"
     gtName = options.era
     dBFile = options.era+".db"
     print "\nUsing private SQLite file", dBFile, "\n"

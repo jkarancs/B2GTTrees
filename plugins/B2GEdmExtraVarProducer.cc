@@ -1,17 +1,70 @@
 #include "Analysis/B2GTTrees/interface/B2GEdmExtraVarProducer.h"
 #include "Analysis/B2GTTrees/interface/Razor.h"
+#include "Analysis/B2GTTrees/data/GluinoXSec.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
 
-void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
+void B2GEdmExtraVarProducer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {
+  
+  if (!isData_) {
+    // Weights from scale variations, PDFs etc. are stored in the relative product. 
+    // Notice that to be used they need to be renormalized to the central event weight
+    // at LHE level which may be different from genEvtInfo->weight()
+    
+    //int whichWeight = XXX;
+    //theWeight *= EvtHandle->weights()[whichWeight].wgt/EvtHandle->originalXWGTUP(); 
+    
+    //To know which integer XXX corresponds to which weight you can use:
+    edm::Handle<LHERunInfoProduct> lheRunInfo;
+    iRun.getByLabel(lhe_label_, lheRunInfo);
+    
+    if (lheRunInfo.isValid()) {
+      
+      // Check which PDF set was used
+      // HEPRUP reference: http://arxiv.org/pdf/hep-ph/0609017.pdf
+      // ID reference: https://lhapdf.hepforge.org/pdfsets.html
+      lha_pdf_id_ = lheRunInfo->heprup().PDFSUP.first;
+      std::cout<<"LHE: LHA PDF ID = "<<lha_pdf_id_<<std::endl;
+      std::cout<<"LHE:   --> For more info about the sets, check: https://lhapdf.hepforge.org/pdfsets.html"<<std::endl;
+      
+      // Check headers
+      std::cout<<"LHE: Weight info in header:"<<std::endl;
+      LHERunInfoProduct lheRunInfoProduct = *(lheRunInfo.product());
+      typedef std::vector<LHERunInfoProduct::Header>::const_iterator headers_const_iterator;
+      size_t iHead = 0;
+      for (headers_const_iterator header=lheRunInfoProduct.headers_begin(); header!=lheRunInfoProduct.headers_end(); header++){
+        if (header->tag()=="initrwgt") {
+          std::cout<<"LHE: "<<iHead<<" "<<header->tag()<<std::endl;
+          for (auto line : header->lines()) {
+	    std::cout<<"LHE: "<<line;
+	    // Fix buggy powheg samples
+	    if (lha_pdf_id_==-1 && line.find("weight id=\"2001\"")!=std::string::npos) {
+	      if (line.find("PDF set = 260001")!=std::string::npos) lha_pdf_id_ = 260000;
+	      else if (line.find("PDF set = 260401")!=std::string::npos) lha_pdf_id_ = 260400;
+	    }
+	  }
+        }
+        iHead++;
+      }
+      
+    }
+  }
+}
+
+void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::EventSetup const& iSetup) {
   // Read variables from EdmNtuple
   iEvent.getByLabel(edm::InputTag(trigger_label_, "triggerNameTree"),      h_strings_["trigger_names"]);
   iEvent.getByLabel(edm::InputTag(trigger_label_, "triggerBitTree"),       h_floats_["trigger_bits"]);
   iEvent.getByLabel(edm::InputTag(trigger_label_, "triggerPrescaleTree"),  h_ints_["trigger_prescales"]);
   iEvent.getByLabel(edm::InputTag(filter_label_,  "triggerNameTree"),      h_strings_["filter_names"]);
-  iEvent.getByLabel(edm::InputTag(filter_label_, "triggerBitTree"),        h_floats_["filter_bits"]);
+  iEvent.getByLabel(edm::InputTag(filter_label_,  "triggerBitTree"),       h_floats_["filter_bits"]);
   
-  iEvent.getByLabel(edm::InputTag(evt_label_, evt_prefix_+"npv"), h_int_["evt_npv"]);
-  iEvent.getByLabel(edm::InputTag("fixedGridRhoFastjetAll", ""), h_double_["evt_rho"]);
+  iEvent.getByLabel(edm::InputTag("fixedGridRhoFastjetAll", ""),   h_double_["evt_rho"]);
+  iEvent.getByLabel(edm::InputTag(evt_label_, evt_prefix_+"npv"),  h_int_["evt_npv"]);
+  iEvent.getByLabel(edm::InputTag(vtx_label_, vtx_prefix_+"ndof"), h_ints_["vtx_ndof"]);
+  iEvent.getByLabel(edm::InputTag(vtx_label_, vtx_prefix_+"z"),    h_floats_["vtx_z"]);
+  iEvent.getByLabel(edm::InputTag(vtx_label_, vtx_prefix_+"rho"),  h_floats_["vtx_rho"]);
   
   iEvent.getByLabel(edm::InputTag(met_label_, met_prefix_+"Pt"),  h_floats_["met_Pt"]);
   iEvent.getByLabel(edm::InputTag(met_label_, met_prefix_+"Phi"), h_floats_["met_Phi"]);
@@ -86,12 +139,21 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
     iEvent.getByLabel(edm::InputTag(gen_label_, gen_prefix_+"Dau1Status"),  h_floats_["gen_Dau1Status"]);
   }
   
+  // ----------------------------
+  // -  LHE/Gen/Event weights   -
+  // ----------------------------
+  
   // Event weight (xsec/nevent in units of fb), 
   // Usage: Multiply this number by the total int luminosity in units of fb^-1
-  single_float_["evt_weight"] = isData_ ? 1 : event_weight_;                            /* evt_weight */
+  single_int_["evt_LHA_PDF_ID"] = -9999;                                               /* evt_LHA_PDF_ID */
+  single_float_["evt_XSec"] = isData_ ? -9999 : cross_section_;                        /* evt_Xsec */
+  single_float_["evt_NEvent_Corr"] = isData_ ? -9999 : num_events_;                    /* evt_NEvent_Corr */
+  single_float_["evt_Lumi_Weight"] = isData_ ? 1 : lumi_weight_;                       /* evt_Lumi_Weight */
+  single_float_["evt_Gen_Weight"] = -9999;                                             /* evt_Gen_Weight */
   
   // NLO negative weights, see:
   // https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideDataFormatGeneratorInterface
+  // https://twiki.cern.ch/twiki/bin/viewauth/CMS/LHEReaderCMSSW
   //
   //  Comment:
   //    The previous weight were of course not good, due to negative weights
@@ -99,13 +161,79 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   //    but s = Sum(weight) / Sum( abs(weight) ) fb^-1 instead
   //    In order to get the correct weight for 1 fb^-1, one has to calculate
   //    s on the whole dataset and multiply the currently set weight with 1/s
+
+  // Gen/LHE info
+  // For Run II recommendations see:
+  // https://indico.cern.ch/event/459797/contribution/2/attachments/1181555/1710844/mcaod-Nov4-2015.pdf
+  vector_float_["scale_Weights"].clear();
+  vector_float_["pdf_Weights"].clear();
+  vector_float_["alphas_Weights"].clear();
   if (!isData_) {
     edm::Handle<GenEventInfoProduct> genEvtInfo;
     iEvent.getByLabel("generator", genEvtInfo);
     
-    double theWeight = genEvtInfo->weight();
-    //std::cout<<theWeight<<std::endl;
-    if (theWeight<0) single_float_["evt_weight"] *= -1;
+    edm::Handle<LHEEventProduct> lheEvtInfo;
+    iEvent.getByLabel(lhe_label_, lheEvtInfo);
+    
+    single_int_["evt_LHA_PDF_ID"] = lha_pdf_id_;
+    
+    if (lheEvtInfo.isValid() && genEvtInfo.isValid()) {
+      // We only look for the sign of the gen weight but not it's value
+      // The xsec weight is already calculated, but certain NLO samples
+      // have negative weights and such events need to be subtracted
+      // (and consequently the weight also needs to be corrected with a factor)
+      single_float_["evt_Gen_Weight"] = genEvtInfo->weight();
+      if (single_float_["evt_Gen_Weight"]<0) single_float_["evt_Xsec_Weight"] *= -1;
+      
+      // This weight is used to normalize pdf/scale etc weights
+      double lheOrigWeight = lheEvtInfo->originalXWGTUP();
+      
+      // Print factors for an event
+      //if (nfilt_!=h_strings_["filter_names"]->size()) for (size_t i=0; i<lheEvtInfo->weights().size(); ++i)
+      //  std::cout<<"LHE: weights() - index: "<<i<<" id = "<<lheEvtInfo->weights()[i].id<<" wgt = "<<(lheEvtInfo->weights()[i].wgt/lheOrigWeight)<<std::endl;
+      
+      // Renormalization/Factorization scale weights
+      // These are the first 9 weights for all generators
+      // mu_R and mu_F are varied independently (by a factor of 1, 2, 0.5) - check LHE header
+      // [0] is the default weight (no variation) - it has worse precision even
+      // --> I skip saving it (one can just use 1)
+      // --> Also do not save unphysical combinations as recommended
+      //    (mu_R = 0.5, mu_F = 2 and mu_R = 2, mu_F = 0.5)
+      // Save only: 1,2,3,4,6,8
+      if (lheEvtInfo->weights().size()>=9) for (size_t i=0; i<9; ++i) if (i!=0&&i!=5&&i!=7)
+        vector_float_["scale_Weights"].push_back(lheEvtInfo->weights()[i].wgt/lheOrigWeight);
+      
+      // PDF weights
+      // Usually a set of 100 weights (excluding default)
+      // Only default PDF variation is saved, but if needed
+      // likely others are available depending on the generator
+      // index of first weight varies, beware!
+      // Sometimes first weight is default=1 weight (has to skip!)
+      // Additional info: MC2Hessian conversion will soon be provided
+      size_t first = 9;
+      // Madgraph nf5 - have to skip 1 weight which is default
+      if (lha_pdf_id_ == 263000) first = 10;
+      // Madgraph nf4 uses NNPDF30_lo_as_0130_nf_4 (ID=263400)
+      // Which is the second 101 pdf set, again has to skip first weight
+      if (lha_pdf_id_ == 263400) first = 111;
+      if (lheEvtInfo->weights().size()>=first+100) for (size_t i=first; i<first+100; ++i)
+        vector_float_["pdf_Weights"].push_back(lheEvtInfo->weights()[i].wgt/lheOrigWeight);
+      
+      // Alpha_s weights (only for NLO!)
+      // A set of two weights for 
+      // alpha_s = 0.118 - 0.002 and
+      // alpha_s = 0.118 + 0.002
+      // is given --> scale result uncertainty by 0.75
+      if ( lheEvtInfo->weights().size()>=111 &&
+            ( (lha_pdf_id_ == 260000) || // Powheg 5nf
+             (lha_pdf_id_ == 260400) || // Powheg 4nf 
+             (lha_pdf_id_ == 292000) || // aMC@NLO 5nf
+             (lha_pdf_id_ == 292200)    // aMC@NLO 5nf
+             ) ) {
+        vector_float_["alphas_Weights"].push_back(lheEvtInfo->weights()[109].wgt/lheOrigWeight);
+        vector_float_["alphas_Weights"].push_back(lheEvtInfo->weights()[110].wgt/lheOrigWeight);
+      }
+    }
   }
   
   // ----------------------------
@@ -137,6 +265,15 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
       = h_ints_["trigger_prescales"]->at(trigger.second);
   }
   
+  // ----------------------------
+  // -        Vertices          -
+  // ----------------------------
+  
+  single_int_["evt_NGoodVtx"] = 0;
+  for (int iVtx=0; iVtx<*h_int_["evt_npv"]; ++iVtx)
+    if (h_ints_["vtx_ndof"]->at(iVtx)>=4&&fabs(h_floats_["vtx_z"]->at(iVtx))<24&&fabs(h_floats_["vtx_rho"]->at(iVtx)<2))
+      ++single_int_["evt_NGoodVtx"];                                                    /* evt_NGoodVtx */
+  
   // ---------------------
   // - Gen Particle Info -
   // ---------------------
@@ -157,6 +294,7 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   vector_float_["gen_Eta"].clear();
   vector_float_["gen_E"].clear();
   vector_float_["gen_Charge"].clear();
+  vector_float_["gen_Mass"].clear();
   
   std::vector<TLorentzVector> gen_top;
   std::vector<size_t > gen_top_index;
@@ -187,11 +325,13 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   size_t njet = h_floats_["AK8_Pt"]->size();
   
   if (!isData_) {
+    double gluino_mass = -9999;
+    double lsp_mass = -9999;
     for (size_t i=0, n=h_floats_["gen_Pt"]->size(); i<n; ++i) {
       // Only saving b,t,W,l,nu
       if (abs(h_floats_["gen_ID"]->at(i))==5||abs(h_floats_["gen_ID"]->at(i))==6||
           (abs(h_floats_["gen_ID"]->at(i))>=11&&abs(h_floats_["gen_ID"]->at(i))<=16)
-          ||abs(h_floats_["gen_ID"]->at(i))==24) {
+          ||abs(h_floats_["gen_ID"]->at(i))==24||abs(h_floats_["gen_ID"]->at(i))>1000000) {
         vector_int_["gen_ID"].push_back(h_floats_["gen_ID"]->at(i));                                /* gen_ID  */
         vector_int_["gen_Status"].push_back(h_floats_["gen_Status"]->at(i));			    /* gen_Status */
         vector_int_["gen_Mom0ID"].push_back(h_floats_["gen_Mom0ID"]->at(i));			    /* gen_Mom0ID */
@@ -207,6 +347,18 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
         vector_float_["gen_Phi"].push_back(h_floats_["gen_Phi"]->at(i));			    /* gen_Phi */
         vector_float_["gen_E"].push_back(h_floats_["gen_E"]->at(i));				    /* gen_E */
         vector_float_["gen_Charge"].push_back(h_floats_["gen_Charge"]->at(i));			    /* gen_Charge */
+        TLorentzVector genp; genp.SetPtEtaPhiE(h_floats_["gen_Pt"]->at(i), h_floats_["gen_Eta"]->at(i),
+					       h_floats_["gen_Phi"]->at(i), h_floats_["gen_E"]->at(i));
+	vector_float_["gen_Mass"].push_back(genp.M());				                    /* gen_Mass */
+	// Gluino Mass is needef for cross-section
+	if (abs(h_floats_["gen_ID"]->at(i))==1000021) {
+	  // round because there's a small precision loss
+	  // and also for xsec you need to round anyway
+	  gluino_mass = std::round(genp.M()/5)*5;
+	  // LSP Mass
+	} else if (abs(h_floats_["gen_ID"]->at(i))==1000022) {
+	  lsp_mass = std::round(genp.M()/5)*5;
+	}
       }
       if (h_floats_["gen_Pt"]->at(i)>0) {
         TLorentzVector genp; genp.SetPtEtaPhiE(h_floats_["gen_Pt"]->at(i), h_floats_["gen_Eta"]->at(i),
@@ -256,6 +408,15 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
           gen_top_index[imatch]=i;
         }
       }
+    }
+    
+    // Save SUSY Signal related quantities
+    if (gluino_mass != -9999) {
+      single_float_["SUSY_Gluino_Mass"] = gluino_mass;                                              /* SUSY_Gluino_Mass */
+      single_float_["SUSY_LSP_Mass"] = lsp_mass;                                                    /* SUSY_LSP_Mass */
+      if (gluino_mass != single_float_["prev_gluino_mass"])
+        single_float_["evt_XSec"] = GetGluinoXSec(gluino_mass).first;                               /* evt_XSec */
+      single_float_["prev_gluino_mass"] = gluino_mass;
     }
     
     // Find bs and Ws
@@ -427,7 +588,7 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
       }
     }
   } // End !isData
-    
+  
   // ---------------------
   // -      Jets         -
   // ---------------------
@@ -983,6 +1144,7 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   // ---------------------
   
   single_int_["evt_NTopHad"] = 0;
+  single_int_["evt_NTopHadPreTag"] = 0;
   single_int_["evt_NTopLep"] = 0;
   single_int_["evt_NTop"] = 0;
   single_float_["evt_HtTop"] = 0;
@@ -996,20 +1158,25 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
     bool is_top = false;
     vector_int_["jetAK8_PassTopTag"][i] = 0;
     // Hadronic tops (Loose selection)
-    if (h_floats_["AK8_Pt"]->at(i) > 400 &&
-        h_floats_["AK8_softDropMass"]->at(i) > 110 &&
-        h_floats_["AK8_softDropMass"]->at(i) < 210 &&
-        ( (h_floats_["AK8_tau2"]->at(i)>0 && h_floats_["AK8_tau3"]->at(i)>0) ?  
-          (h_floats_["AK8_tau3"]->at(i)/h_floats_["AK8_tau2"]->at(i)) < 0.75 : 0 )) {
-      vector_int_["jetAK8_PassTopTag"][i] = 1;
-      ++single_int_["evt_NTopHad"];                                                     /* evt_NTopHad */
-      is_top = true;
-      if (single_int_["evt_NTopHad"]==1) 
-        top1_had.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(i), h_floats_["AK8_Eta"]->at(i),
-                              h_floats_["AK8_Phi"]->at(i), h_floats_["AK8_E"]->at(i));
-      if (single_int_["evt_NTopHad"]==2) 
-        top2_had.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(i), h_floats_["AK8_Eta"]->at(i),
-                              h_floats_["AK8_Phi"]->at(i), h_floats_["AK8_E"]->at(i));
+    if (i<2) { // only check two highest pt jets
+      if (h_floats_["AK8_Pt"]->at(i) > 400 &&
+	  h_floats_["AK8_softDropMass"]->at(i) > 110 &&
+	  h_floats_["AK8_softDropMass"]->at(i) < 210) {
+	++single_int_["evt_NTopHadPreTag"];                                                 /* evt_NTopHadPreTag */
+	if (single_int_["evt_NTopHadPreTag"]==1) 
+	  top1_had.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(i), h_floats_["AK8_Eta"]->at(i),
+				h_floats_["AK8_Phi"]->at(i), h_floats_["AK8_E"]->at(i));
+	if (single_int_["evt_NTopHadPreTag"]==2) 
+	  top2_had.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(i), h_floats_["AK8_Eta"]->at(i),
+				h_floats_["AK8_Phi"]->at(i), h_floats_["AK8_E"]->at(i));
+	// Pass n-subjettiness cut
+	if (h_floats_["AK8_tau2"]->at(i)>0 ?  
+	    (h_floats_["AK8_tau3"]->at(i)/h_floats_["AK8_tau2"]->at(i)) < 0.75 : 0 ) {
+	  vector_int_["jetAK8_PassTopTag"][i] = 1;
+	  ++single_int_["evt_NTopHad"];                                                     /* evt_NTopHad */
+	  is_top = true;
+	}
+      }
     }
     // Leptonic tops
     TLorentzVector lep;
@@ -1057,10 +1224,11 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   single_float_["evt_TTHadPz"]   = -9999;
   single_float_["evt_TTHadHz"]   = -9999;
   single_float_["evt_TTHadDPz"]  = -9999;
-  if (single_int_["evt_NTopHad"]==2) {
+  if (single_int_["evt_NTopHadPreTag"]==2) {
     single_float_["evt_TTHadDR"]   = top1_had.DeltaR(top2_had);                         /* evt_TTHadDR */
     single_float_["evt_TTHadDPhi"] = top1_had.DeltaPhi(top2_had);                       /* evt_TTHadDPhi */
     single_float_["evt_TTHadDEta"] = fabs(top1_had.Eta() - top2_had.Eta());             /* evt_TTHadDEta */
+    single_float_["evt_TTHadSumPt"] = top1_had.Pt()+top2_had.Pt();                      /* evt_TTHadSumPt */
     single_float_["evt_TTHadMass"] = (top1_had + top2_had).M();                         /* evt_TTHadMass */
     single_float_["evt_TTHadPz"]   = (top1_had + top2_had).Pz();                        /* evt_TTHadPz */
     single_float_["evt_TTHadHz"]   = top1_had.Pz() + top2_had.Pz();                     /* evt_TTHadHz */
@@ -1101,7 +1269,7 @@ void B2GEdmExtraVarProducer::calculate_variables(const edm::Event& iEvent, const
   single_float_["evt_TTHadMTR"] = -9999;
   single_float_["evt_TTHadR"]   = -9999;
   single_float_["evt_TTHadR2"]  = -9999;
-  if (single_int_["evt_NTopHad"]==2) {
+  if (single_int_["evt_NTopHadPreTag"]==2) {
     single_float_["evt_TTHadMR"]  = Razor::CalcMR(top1_had, top2_had);                 /* evt_TTHadMR */
     single_float_["evt_TTHadMTR"] = Razor::CalcMTR(top1_had, top2_had, metl);          /* evt_TTHadMTR */
     single_float_["evt_TTHadR"]   = single_float_["evt_TTHadMTR"]                      /* evt_TTHadR */

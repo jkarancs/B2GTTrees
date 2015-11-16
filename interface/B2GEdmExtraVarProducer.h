@@ -1,5 +1,6 @@
 #include "FWCore/Framework/interface/EDProducer.h"
 #include "FWCore/Framework/interface/Event.h"
+#include "FWCore/Framework/interface/Run.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "DataFormats/Common/interface/Handle.h"
@@ -11,22 +12,29 @@
 
 class  B2GEdmExtraVarProducer : public edm::EDProducer {
 public:
-  B2GEdmExtraVarProducer( const edm::ParameterSet & );
+  B2GEdmExtraVarProducer(edm::ParameterSet const&);
+  
+  void beginRun(edm::Run const&, edm::EventSetup const&);
+  void produce(edm::Event&, edm::EventSetup const&);
   
 private:
-  void produce(edm::Event&, const edm::EventSetup& );
-  void calculate_variables(const edm::Event&, const edm::EventSetup&);
+  void calculate_variables(edm::Event const&, edm::EventSetup const&);
   
   // Input
   bool isData_;
   std::string JEC_location_;
   
-  double event_weight_;
+  double cross_section_;
+  double num_events_;
+  double lumi_weight_;
   
+  std::string lhe_label_;
   std::string filter_label_;
   std::string trigger_label_;
   std::string evt_label_;
   std::string evt_prefix_;
+  std::string vtx_label_;
+  std::string vtx_prefix_;
   std::string met_label_;
   std::string met_prefix_;
   std::string gen_label_;
@@ -51,6 +59,7 @@ private:
   // Handles
   std::map<std::string, edm::Handle<int> > h_bool_;
   std::map<std::string, edm::Handle<int> > h_int_;
+  std::map<std::string, edm::Handle<int> > h_uint_;
   std::map<std::string, edm::Handle<double> > h_double_;
   std::map<std::string, edm::Handle<std::vector<int> > > h_ints_;
   std::map<std::string, edm::Handle<std::vector<float> > > h_floats_;
@@ -71,17 +80,25 @@ private:
   
   // JEC
   FactorizedJetCorrector *AK4_JetCorrector_, *AK8_JetCorrector_;
+
+  // LHE/GEN stuff
+  int lha_pdf_id_;
 };
 
 
-B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(const edm::ParameterSet& iConfig) :
+B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(edm::ParameterSet const& iConfig) :
   isData_(iConfig.getUntrackedParameter<bool>("isData", false)),
   JEC_location_(iConfig.getUntrackedParameter<std::string>("JEC_location")),
-  event_weight_(iConfig.getUntrackedParameter<double>("event_weight",1)),
+  cross_section_(iConfig.getUntrackedParameter<double>("cross_section",0)),
+  num_events_(iConfig.getUntrackedParameter<double>("num_events",0)),
+  lumi_weight_(iConfig.getUntrackedParameter<double>("lumi_weight",1)),
+  lhe_label_(iConfig.getUntrackedParameter<std::string>("lhe_label")),
   filter_label_(iConfig.getUntrackedParameter<std::string>("filter_label")),
   trigger_label_(iConfig.getUntrackedParameter<std::string>("trigger_label")),
   evt_label_(iConfig.getUntrackedParameter<std::string>("evt_label")),
   evt_prefix_(iConfig.getUntrackedParameter<std::string>("evt_prefix")),
+  vtx_label_(iConfig.getUntrackedParameter<std::string>("vtx_label")),
+  vtx_prefix_(iConfig.getUntrackedParameter<std::string>("vtx_prefix")),
   met_label_(iConfig.getUntrackedParameter<std::string>("met_label")),
   met_prefix_(iConfig.getUntrackedParameter<std::string>("met_prefix")),
   gen_label_(iConfig.getUntrackedParameter<std::string>("gen_label")),
@@ -141,22 +158,23 @@ B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(const edm::ParameterSet& iConfig)
   AK4_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L1FastJet_AK4PFchs.txt")));
   AK4_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L2Relative_AK4PFchs.txt")));
   AK4_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L3Absolute_AK4PFchs.txt")));
-  //if (isData_)
-  //  AK4_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L2L3Residual_AK4PFchs.txt")));
+  if (isData_)
+    AK4_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L2L3Residual_AK4PFchs.txt")));
   
   AK8_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L1FastJet_AK8PFchs.txt")));
   AK8_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L2Relative_AK8PFchs.txt")));
   AK8_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L3Absolute_AK8PFchs.txt")));
-  //if (isData_)
-  //  AK8_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L2L3Residual_AK8PFchs.txt")));
+  if (isData_)
+    AK8_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L2L3Residual_AK8PFchs.txt")));
   
   AK4_JetCorrector_ = new FactorizedJetCorrector(AK4_vPar);
   AK8_JetCorrector_ = new FactorizedJetCorrector(AK8_vPar);
   
   nfilt_=ntrig_=0;
+  lha_pdf_id_ = -9999;
 }
 
-void B2GEdmExtraVarProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
+void B2GEdmExtraVarProducer::produce(edm::Event& iEvent, edm::EventSetup const& iSetup) {
   // Initialize containers for each variable
   for ( auto nameB : singleB_ ) single_bool_[nameB] = 0;
   for ( auto nameI : trigger_names_ ) single_int_[nameI+"_prescale"] = -9999;

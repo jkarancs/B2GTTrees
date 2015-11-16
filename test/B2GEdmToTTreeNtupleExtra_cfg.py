@@ -44,17 +44,41 @@ options.register('isData',
 #                 opts.VarParsing.varType.string,
 #                 'GlobalTag (empty = auto)')
 
-options.register('weight',
+options.register('xsec',
+                 0,# default value: 0
+                 opts.VarParsing.multiplicity.singleton,
+                 opts.VarParsing.varType.float,
+                 'Cross section (with k-factor applied, in units of pb)')
+
+options.register('nevent',
+                 0,# default value: 0
+                 opts.VarParsing.multiplicity.singleton,
+                 opts.VarParsing.varType.float,
+                 'Number of events (corrected for neg weights)')
+
+options.register('lumiWeight',
                  1,# default value: 1
                  opts.VarParsing.multiplicity.singleton,
                  opts.VarParsing.varType.float,
-                 'Event weight')
+                 'Event weight = (xsec*k_factor)*lumi(1fb^-1)/(num_event(neg weight corr))')
 
 options.register('JECloc',
                  os.environ['CMSSW_BASE']+'/src/Analysis/B2GTTrees/JECs/Summer15_25nsV2_DATA',
                  opts.VarParsing.multiplicity.singleton,
                  opts.VarParsing.varType.string,
                  'Directory, where the JEC text files are lcoated')
+
+options.register('lheLabel',
+                 "",
+                 opts.VarParsing.multiplicity.singleton,
+                 opts.VarParsing.varType.string,
+                 'LHE module label, MC sample specific. Can be: externalLHEProducer')
+
+options.register('isFastSim',
+                 True,
+                 opts.VarParsing.multiplicity.singleton,
+                 opts.VarParsing.varType.bool,
+                 'Is FastSim?')
 
 options.parseArguments()
 
@@ -84,18 +108,23 @@ process.source = cms.Source("PoolSource",
 process.TFileService = cms.Service("TFileService", fileName = cms.string(options.outputLabel))
 
 ### B2GEdmExtraVarProducer
-from Analysis.B2GAnaFW.b2gedmntuples_cff import met, genPart, electrons, muons, jetsAK4, jetsAK8, subjetsAK8, subjetsCmsTopTag, eventInfo
+from Analysis.B2GAnaFW.b2gedmntuples_cff import metNoHF, genPart, electrons, muons, jetsAK4, jetsAK8, subjetsAK8, subjetsCmsTopTag, eventInfo
 
 process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
     isData = cms.untracked.bool(options.isData),
     JEC_location = cms.untracked.string(options.JECloc),
-    event_weight = cms.untracked.double(options.weight),
+    cross_section = cms.untracked.double(options.xsec),
+    num_events = cms.untracked.double(options.nevent),
+    lumi_weight = cms.untracked.double(options.lumiWeight),
+    lhe_label = cms.untracked.string(options.lheLabel),
     filter_label = cms.untracked.string("METUserData"),
     trigger_label = cms.untracked.string("TriggerUserData"),
     evt_label = cms.untracked.string("eventUserData"),
     evt_prefix = cms.untracked.string(""),
-    met_label = cms.untracked.string("met"), # This now excludes HF (07 Aug 2015 recommendation)
-    met_prefix = met.prefix,
+    vtx_label = cms.untracked.string("vertexInfo"),
+    vtx_prefix = cms.untracked.string(""),
+    met_label = cms.untracked.string("metNoHF"), # This now excludes HF (07 Aug 2015 recommendation)
+    met_prefix = metNoHF.prefix,
     gen_label = cms.untracked.string("genPart"),
     gen_prefix = genPart.prefix,
     electrons_label = cms.untracked.string("electrons"),
@@ -248,10 +277,13 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
     ),
     singleI = cms.untracked.vstring(
         # event variables
+        "evt_NGoodVtx",
         "evt_NLep",
         "evt_NTopHad",
+        "evt_NTopHadPreTag",
         "evt_NTopLep",
         "evt_NTop",
+        "evt_LHA_PDF_ID",
     ),
     singleF = cms.untracked.vstring(
         "evt_HtLep",
@@ -265,6 +297,7 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "evt_TTHadDPhi",
         "evt_TTHadDEta",
         "evt_TTHadMass",
+        "evt_TTHadSumPt",
         "evt_TTHadPz",
         "evt_TTHadHz",
         "evt_TTHadDPz",
@@ -280,7 +313,12 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "evt_AK4_MTR",
         "evt_AK4_R",
         "evt_AK4_R2",
-        "evt_weight",
+        "evt_XSec",
+        "evt_NEvent_Corr",
+        "evt_Lumi_Weight",
+        "evt_Gen_Weight",
+        "SUSY_Gluino_Mass",
+        "SUSY_LSP_Mass",
     ),
     vectorI = cms.untracked.vstring(
         "gen_ID",
@@ -308,10 +346,14 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "mu_IsPartOfNearSubjet",
     ),
     vectorF = cms.untracked.vstring(
+        "scale_Weights",
+        "pdf_Weights",
+        "alphas_Weights",
         "gen_Pt",
         "gen_Eta",
         "gen_Phi",
         "gen_E",
+        "gen_Mass",
         "gen_Charge",
         "jetAK8_DRNearGenTop",
         "jetAK8_DRNearGenWFromTop",
@@ -386,7 +428,7 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
 #    src = cms.InputTag("slimmedJetsAK8"),
 #    filter = cms.bool(True),
 #    cut = cms.string("pt>300"),
-#    minNumber = cms.uint32(1)g
+#    minNumber = cms.uint32(1)
 #)
 
 # Filter For Edm ntuple - Use this here
@@ -410,8 +452,25 @@ process.B2GTTreeMaker.physicsObjects.append(
         singleF = process.extraVar.singleF,
         vectorI = process.extraVar.vectorI,
         vectorF = process.extraVar.vectorF,
-    ),
+    )
 )
+
+if not options.isFastSim:
+    process.B2GTTreeMaker.physicsObjects.append(
+        # HBHE Noise (MET) filter
+        cms.PSet(
+            label = cms.untracked.string("HBHENoiseFilterResultProducer"),
+            prefix_in = cms.untracked.string(""),
+            prefix_out = cms.untracked.string("Flag_"),
+            singleB = cms.untracked.vstring(
+                "HBHEIsoNoiseFilterResult",
+                "HBHENoiseFilterResult",
+                "HBHENoiseFilterResultRun1",
+                "HBHENoiseFilterResultRun2Loose",
+                "HBHENoiseFilterResultRun2Tight"),
+        )
+    )
+
 process.B2GTTreeMaker.isData = options.isData
 
 ### EventCounter - to be applied before any filter to count
@@ -432,7 +491,7 @@ process.edmNtuplesOut = cms.OutputModule("PoolOutputModule",
 
 process.analysisPath = cms.Path(
     process.EventCounter *
-    process.EdmNtupleCountFilter *
+    #process.EdmNtupleCountFilter *
     process.extraVar *
     process.B2GTTreeMaker
 )

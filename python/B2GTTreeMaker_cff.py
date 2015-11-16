@@ -5,14 +5,14 @@ import copy
 # Set to false, and define your own lists (eg. comment out unused vairables)
 getVariablesFromConfig = False
 
-from Analysis.B2GAnaFW.b2gedmntuples_cff import met, metFull, genPart, electrons, muons, photons, photonjets, jetsAK4, jetsAK4NoHF, jetsAK8, subjetsAK8, subjetsCmsTopTag, genJetsAK8, genJetsAK8SoftDrop, eventInfo
+from Analysis.B2GAnaFW.b2gedmntuples_cff import metNoHF, metFull, genPart, electrons, muons, photons, photonjets, jetsAK4, jetsAK4NoHF, jetsAK8, subjetsAK8, subjetsCmsTopTag, genJetsAK8, genJetsAK8SoftDrop, eventInfo
 
 if getVariablesFromConfig:
     
-    met_var = cms.untracked.vstring()
-    for pset in met.variables:
+    metNoHF_var = cms.untracked.vstring()
+    for pset in metNoHF.variables:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
-        met_var.append(s)
+        metNoHF_var.append(s)
     
     metFull_var = cms.untracked.vstring()
     for pset in metFull.variables:
@@ -80,18 +80,17 @@ if getVariablesFromConfig:
         genJetsAK8SoftDrop_var.append(s)
 
 else:
-    # Currrent B2GAnaFW ver: 26 Sep (v7.4.x_v6.1_25ns ntuple version)
-    met_var = cms.untracked.vstring(
+    # Currrent B2GAnaFW ver: 10 Nov (v7.4.x_v8.4 ntuple version)
+    metNoHF_var = cms.untracked.vstring(
         "Pt",
         "Px",
         "Py",
         "Phi",
-        # Uncomment these 3 to make it compatible with v7.4.x_v7.1_25ns
-        #"UncorrPt",
-        #"UncorrPhi",
-        #"UncorrSumEt",
+        "uncorPt",
+        "uncorPhi",
+        "uncorSumEt",
     )
-    metFull_var    = copy.deepcopy(met_var)
+    metFull_var    = copy.deepcopy(metNoHF_var)
     
     basicVars = cms.untracked.vstring(
         #"Mass",
@@ -141,6 +140,12 @@ else:
         "isLoose",
         "isTight",
         "isMedium",
+        "vidVeto",
+        "vidLoose",
+        "vidTight",
+        "vidMedium",
+        "vidHEEP",
+        "vidHEEPnoiso",
         "scEta",
     )
     
@@ -393,10 +398,10 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
         ),
         # MET
         cms.PSet(
-            label = cms.untracked.string("met"),
-            prefix_in = met.prefix,
+            label = cms.untracked.string("metNoHF"),
+            prefix_in = metNoHF.prefix,
             prefix_out = cms.untracked.string("met_NoHF_"),
-            vectorF = met_var,
+            vectorF = metNoHF_var,
         ),
         cms.PSet(
             label = cms.untracked.string("metFull"),
@@ -495,18 +500,6 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
             prefix_out = cms.untracked.string("genjetAK8SD_"),
             vectorF = genJetsAK8SoftDrop_var,
             mc_only = cms.untracked.bool(True),
-        ),
-        # HBHE Noise (MET) filter
-        cms.PSet(
-            label = cms.untracked.string("HBHENoiseFilterResultProducer"),
-            prefix_in = cms.untracked.string(""),
-            prefix_out = cms.untracked.string("Flag_"),
-            singleB = cms.untracked.vstring(
-                "HBHEIsoNoiseFilterResult",
-                "HBHENoiseFilterResult",
-                "HBHENoiseFilterResultRun1",
-                "HBHENoiseFilterResultRun2Loose",
-                "HBHENoiseFilterResultRun2Tight"),
         ),
     )
 )

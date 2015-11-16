@@ -32,20 +32,24 @@ echo "" 						         >> Usage.txt
 echo "5) get_datasets <TASKNAME>"                                >> Usage.txt
 echo "  Get a list of produced datasets"		         >> Usage.txt
 echo "" 						         >> Usage.txt
-echo "6) make_twiki <TASKNAME>"                                  >> Usage.txt
+echo "6) checkup <TASKNAME>"                                     >> Usage.txt
+echo "  Check for duplicate files due to double submission"      >> Usage.txt
+echo "  Gives a script to invalidate them"		         >> Usage.txt
+echo "" 						         >> Usage.txt
+echo "7) make_twiki <TASKNAME>"                                  >> Usage.txt
 echo "  Generate a table in general cern twiki format that"      >> Usage.txt
 echo "  contains useful infos for the produced datasets."        >> Usage.txt
 echo "  Just copy-paste this to the B2G Ntuple twiki"            >> Usage.txt
 echo -n "  https://twiki.cern.ch/twiki/bin/view/CMS/"            >> Usage.txt
 echo      "B2GAnaFilesRunIISpring15DR74Asympt25ns"               >> Usage.txt
 echo "" 						         >> Usage.txt
-echo "7) download <TASKNAME> <DLDIR>"                            >> Usage.txt
+echo "8) download <TASKNAME> <DLDIR>"                            >> Usage.txt
 echo "  Download all root output files from the Storage"         >> Usage.txt
 echo "  element to a local directory DLDIR"                      >> Usage.txt
 echo "  Check that the SRM site name and url is defined for"     >> Usage.txt
 echo "  SE_SITE in the se_util.csh script (look for SITE_INFO)"  >> Usage.txt
 echo "" 						         >> Usage.txt
-echo "8) make_ttrees <TASKNAME> <DIR> <NPARALLEL>"               >> Usage.txt
+echo "9) make_ttrees <TASKNAME> <DIR> <NPARALLEL>"               >> Usage.txt
 echo "  Produce locally TTreeNtuples from EdmNtuples"            >> Usage.txt
 echo "  Files need to be downloaded with the download command"   >> Usage.txt
 echo "  Multiple background cmsRuns can be run in parallel"      >> Usage.txt
@@ -85,6 +89,8 @@ else
     set dry="1"
 endif
 
+set DATE=`date | sed "s; ;_;g;s;:;h;1;s;:;m;1"`
+
 if ( `echo $cmd | grep "create" | wc -l` ) then
     if ( $#argv < 6 ) then
 	cat Usage.txt; rm Usage.txt; exit
@@ -110,66 +116,58 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	set PUBNAME2=`echo $DATASET | sed "s;/; ;g" | awk '{ print $2 }'`
 	set isData=`echo $DATASET | grep 'MINIAOD$' | wc -l`
 	set CERT_DIR="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV"
-	set LATEST_50NS_GOLDEN_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/ | grep Collisions15_50ns_JSON | grep -v MuonPhys | tail -1`
-	set LATEST_25NS_GOLDEN_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/ | grep Collisions15_25ns_JSON | grep -v MuonPhys | tail -1`
+	set LATEST_50NS_GOLDEN_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/ | grep Collisions15_50ns_JSON | grep -v MuonPhys | grep -v Silver | tail -1`
+	set LATEST_25NS_GOLDEN_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/ | grep Collisions15_25ns_JSON | grep -v MuonPhys | grep -v Silver | tail -1`
 	# 50ns - Data (ReMiniAOD)
 	if ( `echo $PUBNAME2 | grep "Run2015B-05Oct2015" | wc -l` ) then
 	    set DATAPROC="Data50ns_MiniAODv2"
-	    set GLOBALTAG="74X_dataRun2_reMiniAOD_v0"
-	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_50nsV5_DATA.db"
+	    set JEC_DB_FILE="Summer15_50nsV5_DATA.db"
 	    set JSON="$CERT_DIR/$LATEST_50NS_GOLDEN_JSON"
-	    set RUNS="251585-999999"
+	    set RUNS="1-999999"
 	else if ( `echo $PUBNAME2 | grep "Run2015C_50ns-05Oct2015" | wc -l`) then
 	    set DATAPROC="Data50ns_MiniAODv2"
-	    set GLOBALTAG="74X_dataRun2_reMiniAOD_v0"
-	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV5_DATA.db"
+	    set JEC_DB_FILE="Summer15_50nsV5_DATA.db"
 	    set JSON="$CERT_DIR/$LATEST_50NS_GOLDEN_JSON"
 	    set RUNS="1-999999"
 	# 50ns - MC (ReMiniAOD)
 	else if ( `echo $PUBNAME2 | grep "RunIISpring15MiniAODv2-Asympt50ns" | wc -l ` ) then
 	    set DATAPROC="MC50ns_MiniAODv2"
-	    set GLOBALTAG="74X_mcRun2_asymptotic50ns_v0"
-	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_50nsV5_MC.db"
+	    set JEC_DB_FILE="Summer15_50nsV5_MC.db"
 	# 25 ns - Data (ReReco)
 	else if ( `echo $PUBNAME2 | grep "Run2015C_25ns-05Oct2015" | wc -l`) then
-	    set DATAPROC="Data25ns_MiniAODv2"
-	    set GLOBALTAG="74X_dataRun2_v4"
-	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV5_DATA.db"
+	    set DATAPROC="Data25ns_ReReco"
+	    set JEC_DB_FILE="Summer15_25nsV6_DATA.db"
 	    set JSON="$CERT_DIR/$LATEST_25NS_GOLDEN_JSON"
 	    set RUNS="1-999999"
 	# 25 ns - Data (ReMiniAOD)
 	else if ( `echo $PUBNAME2 | grep "Run2015D-05Oct2015" | wc -l`) then
 	    set DATAPROC="Data25ns_MiniAODv2"
-	    set GLOBALTAG="74X_dataRun2_reMiniAOD_v0"
-	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV5_DATA.db"
+	    set JEC_DB_FILE="Summer15_25nsV6_DATA.db"
 	    set JSON="$CERT_DIR/$LATEST_25NS_GOLDEN_JSON"
 	    set RUNS="1-999999"
 	# 25 ns - Data (PromptReco)
 	else if ( `echo $PUBNAME2 | grep "Run2015D-PromptReco-v4" | wc -l`) then
 	    set DATAPROC="Data25ns_PromptRecov4"
-	    set GLOBALTAG="74X_dataRun2_Prompt_v4"
-	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV5_DATA.db"
+	    set JEC_DB_FILE="Summer15_25nsV6_DATA.db"
 	    set JSON="$CERT_DIR/$LATEST_25NS_GOLDEN_JSON"
 	    set RUNS="1-999999"
-	# 25 ns - MC (ReMiniAOD)
+	# 25 ns - MC FastSim
+	else if ( `echo $PUBNAME2 | grep "RunIISpring15MiniAODv2-FastAsympt25ns" | wc -l` ) then
+	    set DATAPROC="MC25ns_MiniAODv2_FastSim"
+	    set JEC_DB_FILE="Summer15_25nsV6_MC.db"
+	# 25 ns - MC FullSim (ReMiniAOD)
 	else if ( `echo $PUBNAME2 | grep "RunIISpring15MiniAODv2" | wc -l` ) then
 	    set DATAPROC="MC25ns_MiniAODv2"
-	    set GLOBALTAG="74X_mcRun2_asymptotic_v2"
-	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV5_MC.db"
-	# 25 ns - MC FastSim
-	else if ( `echo $PUBNAME2 | grep "RunIISpring15FSPremix" | wc -l` ) then
-	    set DATAPROC="MC25ns_FastSim"
-	    set GLOBALTAG="MCRUN2_74_V9"
-	    set JEC_DB_FILE="$CMSSW_BASE/src/Analysis/B2GAnaFW/test/Summer15_25nsV5_MC.db"
+	    set JEC_DB_FILE="Summer15_25nsV6_MC.db"
 	else
 	    echo "ERROR - Dataset not defined (probably because not using latest): "$DATASET
 	    rm -r $TASKDIR Usage.txt
 	    exit
 	endif
 	if ( $isData ) then
-	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME"_"$PUBNAME2;;s;DATASET;$DATASET;;s;GLOBALTAG;$GLOBALTAG;;s;DATAPROC;$DATAPROC;;s;JEC_DB_FILE;$JEC_DB_FILE;;s;JSON;$JSON;;s;RUNS;$RUNS;" $TASKDIR/crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_$SHORT.py
+	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME"_"$PUBNAME2;;s;DATASET;$DATASET;;s;DATAPROC;$DATAPROC;;s;JEC_DB_FILE;$JEC_DB_FILE;;s;JSON;$JSON;;s;RUNS;$RUNS;" $TASKDIR/crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_$SHORT.py
 	else
-	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME"_"$PUBNAME2;;s;DATASET;$DATASET;;s;GLOBALTAG;$GLOBALTAG;;s;DATAPROC;$DATAPROC;;s;JEC_DB_FILE;$JEC_DB_FILE;" $TASKDIR/crab_template_edmntuple_MC_py.txt > $TASKDIR/crab_$SHORT.py
+	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME"_"$PUBNAME2;;s;DATASET;$DATASET;;s;DATAPROC;$DATAPROC;;s;JEC_DB_FILE;$JEC_DB_FILE;" $TASKDIR/crab_template_edmntuple_MC_py.txt > $TASKDIR/crab_$SHORT.py
 	endif
     end
     rm $TASKDIR/crab_template_edmntuple_Data_py.txt $TASKDIR/crab_template_edmntuple_MC_py.txt
@@ -178,59 +176,135 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 
 else if ( `echo $cmd | grep "submit" | wc -l` ) then
     if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
-    foreach cfg_file ( `ls -ltr $TASKDIR/*.py | awk '{ print $NF }'`)
+    foreach cfg_file ( `awk '{ print "'$TASKDIR'/crab_"$1".py" }' $TASKDIR/input_datasets.txt` )
         eval_or_echo "crab submit -c $cfg_file --wait"
     end
 
 else if ( `echo $cmd | grep "status" | wc -l` ) then
-    foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
-	crab status -d $dir >! Status.txt
-	set Status=`grep "Task status:" Status.txt | awk '{ print $3 }'`
-	printf "%-70s %s\n" $dir $Status
-	if ( `echo $Status | grep COMPLETED | wc -l` == 0 ) then
-	    grep "%.*\(.*\)" Status.txt
-	    if ( `grep "failed.*\%.*\(" Status.txt | wc -l` == 1 ) then
-		crab resubmit -d $dir >> Status.txt
-		echo "Failed jobs resubmitted"
+    foreach short ( `awk '{ print $1 }' $TASKDIR/input_datasets.txt` )
+	set dir=`echo $TASKDIR"/crab_"$short`
+	if ( ! -d $dir ) then
+	    set Status="MISSING"
+	else
+	    if ( ! -d $TASKDIR/status/$short ) then
+		mkdir -p $TASKDIR/status/$short
+            else
+		# Check if task was completed already
+		set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
+		set Status=`grep "Task status:" $status_txt | awk '{ print $3 }'`
+		if ( $Status != "COMPLETED" ) then
+		    crab status -d $dir >! $TASKDIR/status/$short/$DATE.txt
+		endif
+	    endif
+	    set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
+	    set Status=`grep "Task status:" $status_txt | awk '{ print $3 }'`
+	    if ( $Status == "" ) then
+                set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | head -n -1 | tail -1`
+                set Status=`grep "Task status:" $status_txt | awk '{ print $3 }'`
 	    endif
 	endif
-	rm Status.txt
+        printf "%-70s %s\n" $dir $Status
+	if ( $Status == "MISSING" ) then
+	    echo "  -> Task is not found (not yet submitted?). Submitting ...\n"
+	    crab submit -c $dir.py
+	    echo
+	else if ( `grep "Cannot find \.requestcache" $status_txt | wc -l` ) then
+	    echo "  -> Task submission failed - No requestcache. Delete and submit again ...\n"
+	    #rm -rf $dir
+	    #crab submit -c $dir.py
+	    #echo
+	else if ( `echo $Status | grep SUBMITFAILED | wc -l` && `find $dir -maxdepth 0 -type d -mmin +120 | wc -l` && `grep "\%.*\(" $status_txt | wc -l` == 0 ) then
+	    echo "  -> Task submission failed after more than 2 hours and no jobs are running. Delete and submit again ...\n"
+	    #rm -rf $dir
+	    #crab submit -c $dir.py
+	    #echo
+	else if ( `grep "The server answered with an error" $status_txt | wc -l` ) then
+	    echo "  -> Server error. Do nothing ...\n"
+	
+	#else if ( `echo $Status | grep NEW | wc -l` && `find $dir -maxdepth 0 -type d -mmin +120 | wc -l` ) then
+	#    echo "  -> Task stuck in NEW state for more than 2 hours. Kill, delete and submit again ...\n"
+	#    crab kill -d $dir
+	#    rm -rf $dir
+	#    crab submit -c $dir.py
+	#    echo
+	#else if ( `echo $Status | grep SUBMITTED | wc -l` && `grep "not yet bootstrapped" $status_txt | wc -l` && `find $dir -maxdepth 0 -type d -mmin +120 | wc -l` ) then
+	#    echo "  -> Task stuck in bootstrapping for more than 2 hours. Kill, delete and submit again ...\n"
+	#    crab kill -d $dir
+	#    rm -rf $dir
+	#    crab submit -c $dir.py
+	#    echo
+        else if ( `echo $Status | grep COMPLETED | wc -l` == 0 ) then
+	    grep "%.*\(.*\)" $status_txt
+            if ( `grep "failed.*\%.*\(" $status_txt | wc -l` == 1 ) then
+        	echo "  -> Resubmitting failed jobs ...\n"
+        	#crab resubmit -d $dir
+		#echo
+            endif
+        endif
     end
 
 else if ( `echo $cmd | grep "report" | wc -l` ) then
     if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
-    foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
+    foreach dir ( `awk '{ print "'$TASKDIR'/crab_"$1 }' $TASKDIR/input_datasets.txt` )
         eval_or_echo "crab report -d $dir"
     end
 
 else if ( `echo $cmd | grep "get_datasets" | wc -l` ) then
-    if ( (-f $TASKDIR/output_datasets.txt) ) then
-	if ( `cat $TASKDIR/output_datasets.txt | wc -l` != `cat $TASKDIR/input_datasets.txt | wc -l` ) then
-	    rm $TASKDIR/output_datasets.txt
-	    if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
-		foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
-		eval_or_echo "crab status -d $dir | grep 'Output dataset:' | awk '{ print "'$NF'" }' >>! $TASKDIR/output_datasets.txt"
-	    end
-	endif
-    else
-	if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
-	foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
-	    eval_or_echo "crab status -d $dir | grep 'Output dataset:' | awk '{ print "'$NF'" }' >>! $TASKDIR/output_datasets.txt"
-	end
-    endif
-    eval_or_echo "cat $TASKDIR/output_datasets.txt"
+    # Get list of output datasets
+    if ( -f $TASKDIR/output_datasets.txt ) rm $TASKDIR/output_datasets.txt
+    # use already saved status txt files
+    set N=`cat $TASKDIR/input_datasets.txt | wc -l`
+    foreach i ( `seq 1 $N` )
+        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+        set primary_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | sed "s;/; ;g" | awk '{ print "/"$2"/" }'`
+        set out_dataset=`grep 'Output dataset:' $TASKDIR/status/$short/*.txt | grep $primary_dataset | awk '{ print $NF }' | tail -1`
+        echo $out_dataset >>! $TASKDIR/output_datasets.txt
+    end
+    # ask status again
+    #foreach dir ( `awk '{ print "'$TASKDIR'/crab_"$1 }' $TASKDIR/input_datasets.txt` )
+    #    crab status -d $dir | grep 'Output dataset:' | awk '{ print "'$NF'" }' >>! $TASKDIR/output_datasets.txt
+    #end
+    # get maximum number of characters to print
     set Nchar_max="0"
     foreach short ( `cat $TASKDIR/input_datasets.txt | awk '{ print $1 }'` )
-	set Nchar=`echo $short | wc -m`
-	if ( $Nchar > $Nchar_max ) set Nchar_max=$Nchar
+        set Nchar=`echo $short | wc -m`
+        if ( $Nchar > $Nchar_max ) set Nchar_max=$Nchar
     end
     set N=`cat $TASKDIR/input_datasets.txt | wc -l`
     if ( -f EdmNtuple_"$TASKNAME"_input.txt ) rm EdmNtuple_"$TASKNAME"_input.txt
     foreach i ( `seq 1 $N` )
-	set SHORT=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
-	set OUT_DATASET=`sed -n "$i"p $TASKDIR/output_datasets.txt`
-	printf "%-"$Nchar_max"s %s\n" $SHORT $OUT_DATASET >>! EdmNtuple_"$TASKNAME"_input.txt
+        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+        set out_dataset=`sed -n "$i"p $TASKDIR/output_datasets.txt`
+        printf "%-"$Nchar_max"s %s\n" $short $out_dataset >>! EdmNtuple_"$TASKNAME"_input.txt
     end
+    cat EdmNtuple_"$TASKNAME"_input.txt
+
+else if ( `echo $cmd | grep "checkup" | wc -l` ) then
+    set N=`cat $TASKDIR/input_datasets.txt | wc -l`
+    foreach i ( `seq 1 $N` )
+        set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
+        set out_dataset=`sed -n "$i"p $TASKDIR/output_datasets.txt`
+        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
+	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
+	das_client.py --limit=10000 --query="file dataset=$out_dataset instance=prod/phys03" | grep "\.root" | grep -v $timestamp >! duplicates.txt
+	if ( `cat duplicates.txt | wc -l` ) then
+	    printf "%-70s Duplicates found: %d\n" $short `cat duplicates.txt | wc -l`
+	    if ( ! -e $TASKDIR/Duplicates_$DATE.txt ) touch $TASKDIR/Duplicates_$DATE.txt
+	    cat duplicates.txt >> $TASKDIR/Duplicates_$DATE.txt
+	else
+	    if ( `grep "Task status" $status_txt | awk '{ print $NF }'` == "COMPLETED" ) then
+		printf "%-70s OK\n" $short
+	    else
+		printf "%-70s %s\n" $short `grep "Task status" $status_txt | awk '{ print $NF }'`
+	    endif
+	endif
+	rm duplicates.txt
+    end
+    if ( -e $TASKDIR/Duplicates_$DATE.txt ) then
+	echo "Please issue command below to invalidate duplicate files on the Storage element:"
+	echo "python $DBS3_CLIENT_ROOT/examples/DBS3SetFileStatus.py --url=https://cmsweb.cern.ch/dbs/prod/phys03/DBSWriter --status=invalid --recursive=False --files=$TASKDIR/Duplicates_$DATE.txt"
+    endif
 
 else if ( `echo $cmd | grep "getoutput" | wc -l` ) then
     if ( $#argv < 3 ) then
@@ -238,9 +312,9 @@ else if ( `echo $cmd | grep "getoutput" | wc -l` ) then
     endif
     if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
     set DLDIR=`echo $3"/"$TASKNAME | sed "s;//;/;"`
-    foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
-	eval_or_echo "mkdir -p $DLDIR/"`echo $dir | sed "s;$TASKDIR/crab_;;"`
-        eval_or_echo "crab getoutput -d $dir --outputpath=$DLDIR/"`echo $dir | sed "s;$TASKDIR/crab_;;"`"/"
+    foreach short ( `awk '{ print $1 }' $TASKDIR/input_datasets.txt` )
+	eval_or_echo "mkdir -p $DLDIR/$short"
+        eval_or_echo "crab getoutput -d $dir --outputpath=$DLDIR/$short/"
     end
 
 else if ( `echo $cmd | grep "download" | wc -l` ) then
@@ -254,16 +328,19 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
     echo 'if ( $#argv < 1 ) echo "Please specify directory where you want to download files"' >! dl_$TASKNAME.csh
     echo 'alias par_source "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/source_parallel.csh \\!*"' >> dl_$TASKNAME.csh
     echo 'alias se         "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/se_util.csh \\!*"\n' >> dl_$TASKNAME.csh
-    foreach taskdir ( `ls -ltrd $TASKDIR/*/ | sed "s;/; ;g" | awk '{ print $NF }'`)
-        set primary_dataset=`grep inputDataset $TASKDIR/$taskdir.py | sed "s;/; ;g" | awk '{ print $4 }'`
-        set pubname=`grep publishDataName $TASKDIR/$taskdir.py | sed "s;'; ;g" | awk '{ print $3 }'`
-        set SAMPLEDIR=`echo $taskdir | sed "s;crab_;;"`
-        set time=`se ls "$SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname"`
-        eval_or_echo "mkdir -p $DLDIR/$SAMPLEDIR"
-        echo "mkdir -p "'$1'"/$SAMPLEDIR" >> dl_$TASKNAME.csh
-	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$time` )
-	    eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$time/$thousand $DLDIR/$SAMPLEDIR --par 4 --run"
-	    echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$time/$thousand "'$1'"/$SAMPLEDIR --par 4 --run" >> dl_$TASKNAME.csh
+    set N=`cat $TASKDIR/input_datasets.txt | wc -l`
+    foreach i ( `seq 1 $N` )
+        set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
+        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
+	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
+        set pubname=`grep outputDatasetTag $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
+	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
+        eval_or_echo "mkdir -p $DLDIR/$short"
+        echo "mkdir -p "'$1'"/$short" >> dl_$TASKNAME.csh
+	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp` )
+	    eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand $DLDIR/$short --par 4 --run"
+	    echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand "'$1'"/$short --par 4 --run" >> dl_$TASKNAME.csh
 	end
     end
     if ( ( `grep "EDM_NTUPLE" $TASKDIR/config.txt | wc -l` == 1 ) && ( $dry == "0" ) ) echo "EDM_NTUPLE $DLDIR" >> $TASKDIR/config.txt
@@ -271,29 +348,34 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
 else if ( `echo $cmd | grep "find_missing" | wc -l` ) then
     set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
     set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
-    foreach taskdir ( `ls -ltrd $TASKDIR/*/ | sed "s;/; ;g" | awk '{ print $NF }'`)
-        set primary_dataset=`grep inputDataset $TASKDIR/$taskdir.py | sed "s;/; ;g" | awk '{ print $4 }'`
-        set pubname=`grep publishDataName $TASKDIR/$taskdir.py | sed "s;'; ;g" | awk '{ print $3 }'`
-        set SAMPLEDIR=`echo $taskdir | sed "s;crab_;;"`
-        set time=`se ls "$SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname"`
-	set njobs=`crab status -d $TASKDIR/$taskdir | grep ".*\%.*\(.*\)" | tail -1 | sed "s;/; ;g;s;); ;g"| awk '{ print $NF }'`
+    set N=`cat $TASKDIR/input_datasets.txt | wc -l`
+    foreach i ( `seq 1 $N` )
+        set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
+        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
+	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
+        set pubname=`grep outputDatasetTag $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
+	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
+	set isData=`echo $in_dataset | grep '/MINIAOD$' | wc -l`
+	if ( $isData ) then
+	    # status txt file not very reliable, but that's available for data
+	    set njobs=`grep ".*\%.*\(.*\)" $status_txt | tail -1 | sed "s;/; ;g;s;); ;g"| awk '{ print $NF }'`
+	else
+	    # better way to get job number as long as the split mode is by file and 1 file = 1 job
+	    set njobs=`das_client --query "dataset=$in_dataset | grep dataset.nfiles" | tail -1`
+	endif
 	# Get missing jobs
-        #set missing=`se mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$time/0000 $njobs | sed 's;.$;;'`
 	echo -n "" >! jobnums.txt
-	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$time` )
-	    se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$time/$thousand | grep "\.root" | sed 's;_; ;g;s;\.root;;' | awk '{ print $NF }' | sort -n | uniq >> jobnums.txt
+	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp` )
+	    se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand | grep "\.root" | sed 's;_; ;g;s;\.root;;' | awk '{ print $NF }' | sort -n | uniq >> jobnums.txt
 	end
-        set N=1
 	set missing=""
 	foreach N ( `seq 1 $njobs` )
 	    if ( `grep '^'$N'$' jobnums.txt | wc -l` == 0 ) set missing="$missing,$N"
 	end
-	set missing=`echo $missing | sed "s;,;;1"`
         rm jobnums.txt
-        unset N
-	if ( $missing != "" ) then
-	    echo "crab resubmit -d $TASKDIR/$taskdir --wait --force --jobids=$missing"
-	endif
+	set missing=`echo $missing | sed "s;,;;1"`
+	if ( $missing != "" ) echo "crab resubmit -d $TASKDIR/crab_$short --wait --force --jobids=$missing"
     end
 
 else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
@@ -309,7 +391,6 @@ else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
         set Nparallel=$4
         foreach dir ( `ls -ltrd $EDM_NTUPLE/* | grep "^d" | sed "s;/; ;g" | awk '{ print $NF }'` )
             eval_or_echo "mkdir -p $TTREEDIR/$dir"
-	    
 	    set is50ns="0"
 	    if ( `echo $dir | grep "Run2015B" | wc -l` || `echo $dir | grep "50ns" | wc -l`  ) set is50ns="1"
 	    set isData="False"
@@ -321,7 +402,7 @@ else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
             if ( $is50ns ) then
 		set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_50nsV5_$DATA"
 	    else
-		set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_25nsV5_$DATA"
+		set JEC_TXT_FILE="$CMSSW_BASE/src/Analysis/B2GTTrees/JECs/Summer15_25nsV6_$DATA"
 	    endif
             if ( -f $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh ) rm $TASKDIR/make_ttrees_"$TASKNAME"_$dir.csh
             foreach file ( `ls $EDM_NTUPLE/$dir | grep ".root"` )
@@ -332,35 +413,18 @@ else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
         end
     endif
 
-else if ( `echo $cmd | grep "make_twiki" | wc -l` ) then
-    set infile=$TASKDIR/input_datasets.txt
-    set outfile=$TASKDIR/output_datasets.txt
-    if ( ! -e $outfile ) then
-	"List of output datasets is not yet collected, please issue get_datasets command first"
-	cat Usage.txt; rm Usage.txt; exit
-    endif
+else if ( `echo $cmd | grep "make_init_twiki" | wc -l` ) then
     echo "Please enter your name:"
     set NAME=$<
     echo "Please enter B2GAnaFW Version tag:"
     set TAG=$<
-    
-    ### echo "|  *Dataset*  |  *B2GEdmNtuple*  |  *Nevents*  |  *Nfile*  |  *LO cross section (pb)*  |"
-    echo "Paste this to the B2G ntuple twiki: https://twiki.cern.ch/twiki/bin/view/CMS/B2GAnaFilesRunIISpring15DR74Asympt25ns"
     set first_data="0"
     set first_mc="0"
-    foreach in_dataset (`awk '{ print $2 }' $infile`)
-	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
+    echo "Paste this to the B2G ntuple twiki: https://twiki.cern.ch/twiki/bin/view/CMS/B2GAnaFilesRunIISpring15DR74Asympt25ns"
+    foreach in_dataset (`awk '{ print $2 }' $TASKDIR/input_datasets.txt`)
 	set isData=`echo $in_dataset | grep '/MINIAOD$' | wc -l`
 	if ( $first_data == 0 && $isData ) then
 	    set first_data=1
-	    if ( $?JSON ) then
-		set CERT=`echo $JSON | cut -d "/" -f9`
-	    else 
-		echo "Please enter Cert:"
-		set CERT=$<
-	    endif
-	    echo "Please enter Total Int. lumi [pb-1]:"
-	    set INTLUMI=$<
 	    echo
 	    echo "| *Parent Sample* | *Submitted* | *Status* | *Lumi mask* | *Int. lumi [pb-1]* | *Published dataset* | *B2GFWAna tag* |"
 	else if ( $first_mc == 0 && $isData == 0 ) then
@@ -368,38 +432,64 @@ else if ( `echo $cmd | grep "make_twiki" | wc -l` ) then
 	    echo
 	    echo "| *Parent Sample* | *Submitted* | *Status* | *N_events (orig. dataset)* | *N_events processed* | *Published dataset* | *B2GFWAna tag* |"
 	endif
-	set out_dataset=`grep "/$primary_dataset/" $outfile`
-	set parent=`das_client.py --query="parent dataset=$in_dataset" | tail -1`
-	set nevents=`das_client.py --query="dataset=$in_dataset | grep dataset.nevents" | tail -1`
-	set nevents_proc=`das_client.py --query="dataset=$out_dataset instance=prod/phys03 | grep dataset.nevents" | tail -1`
-	set nfiles=`das_client.py --query="dataset=$in_dataset | grep dataset.nfiles" | tail -1`
-	set ntry=0
-	while ( (`echo $parent | grep '/GEN-SIM$' | wc -l` == 0) && ( $ntry < 10 ) )
-	    set ntry=`expr $ntry + 1`
-	    set parent2=`das_client.py --query="parent dataset=$parent" | tail -1`
-	    if ( $parent2 != "None" ) then
-		set parent=$parent2
-	    else 
-		set ntry=10
-	    endif
-	end
-	set prep_id=`das_client.py --query="dataset=$parent | grep dataset.prep_id" | tail -1`
-	#set LO_XSec=`das_client.py --query="mcm prepid=$prep_id | grep mcm.generator_parameters.cross_section" | tail -1`
-	set LO_XSec=`das_client.py --format=json --query="mcm prepid=$prep_id | grep mcm.generator_parameters.cross_section" | tr "," "\n" | grep '"cross_section"' | tail -1 | sed "s;};;g;s;];;g" | awk '{ print $NF }'`
-	### echo -n "| [[https://cmsweb.cern.ch/das/request?input=$in_dataset&instance=prod%2Fglobal]["`echo $in_dataset | cut -d '/' -f-3`"]] "
-	### echo -n "|  [[https://cmsweb.cern.ch/das/request?input=$out_dataset&instance=prod%2Fphys03][DAS link]]  "
-	### echo -n "|  $nevents "
-	### echo -n "|  $nfiles "
-	### #echo -n "|  $LO_XSec [[https://cmsweb.cern.ch/das/request?view=list&limit=10&instance=prod%2Fglobal&input=mcm+prepid%3D$prep_id+|+grep+mcm.generator_parameters.cross_section][(Link)]] |\n"
-	### echo -n "|  $LO_XSec [[https://cms-pdmv.cern.ch/mcm/requests?dataset_name=$primary_dataset&page=0&shown=262163][(Link)]] |\n"
 	
 	echo -n "| [[https://cmsweb.cern.ch/das/request?input=$in_dataset&instance=prod%2Fglobal][$in_dataset]] "
 	echo -n "| $NAME "
 	if ( $isData ) then
+	    set crab_script=`grep $in_dataset $TASKDIR/input_datasets.txt | awk '{ print "'$TASKDIR'/crab_"$1".py" }'`
+	    set CERT=`grep lumiMask $crab_script | sed "s;'; ;g;s;/; ;g" | awk '{ print $NF }'`
+	    echo -n "| Submitted "
+	    echo -n "| [[https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/$CERT][$CERT]] "
+	    echo -n "|  "
+	else
+	    set nevents=`das_client.py --query="dataset=$in_dataset | grep dataset.nevents" | tail -1`
+	    echo -n "| Submitted "
+	    echo -n "|  $nevents "
+	    echo -n "|  "
+	endif
+	echo -n "|  "
+	echo "| $TAG |"
+    end
+
+else if ( `echo $cmd | grep "make_twiki" | wc -l` ) then
+    if ( ! -e $TASKDIR/output_datasets.txt ) then
+	"List of output datasets is not yet collected, please issue get_datasets command first"
+	cat Usage.txt; rm Usage.txt; exit
+    endif
+    echo "Please enter your name:"
+    set NAME=$<
+    echo "Please enter B2GAnaFW Version tag:"
+    set TAG=$<
+    #echo "Please enter Total Int. lumi [pb-1]:"
+    #set INTLUMI=$<
+    
+    echo "Paste this to the B2G ntuple twiki: https://twiki.cern.ch/twiki/bin/view/CMS/B2GAnaFilesRunIISpring15DR74Asympt25ns"
+    set first_data="0"
+    set first_mc="0"
+    foreach out_dataset ( `cat $TASKDIR/output_datasets.txt` )
+	set in_dataset=`das_client.py --query="parent dataset=$out_dataset instance=prod/phys03" | tail -1`
+	### set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
+	set isData=`echo $in_dataset | grep '/MINIAOD$' | wc -l`
+	if ( $first_data == 0 && $isData ) then
+	    set first_data=1
+	    echo
+	    echo "| *Parent Sample* | *Submitted* | *Status* | *Lumi mask* | *Int. lumi [pb-1]* | *Published dataset* | *B2GFWAna tag* |"
+	else if ( $first_mc == 0 && $isData == 0 ) then
+	    set first_mc=1
+	    echo
+	    echo "| *Parent Sample* | *Submitted* | *Status* | *N_events (orig. dataset)* | *N_events processed* | *Published dataset* | *B2GFWAna tag* |"
+	endif
+	echo -n "| [[https://cmsweb.cern.ch/das/request?input=$in_dataset&instance=prod%2Fglobal][$in_dataset]] "
+	echo -n "| $NAME "
+	if ( $isData ) then
+	    set crab_script=`grep $in_dataset $TASKDIR/input_datasets.txt | awk '{ print "'$TASKDIR'/crab_"$1".py" }'`
+	    set CERT=`grep lumiMask $crab_script | sed "s;'; ;g;s;/; ;g" | awk '{ print $NF }'`
 	    echo -n "| Completed "
 	    echo -n "| [[https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/$CERT][$CERT]] "
-	    echo -n "| $INTLUMI  "
+	    echo -n "|  "#$INTLUMI  "
 	else
+	    set nevents=`das_client.py --query="dataset=$in_dataset | grep dataset.nevents" | tail -1`
+	    set nevents_proc=`das_client.py --query="dataset=$out_dataset instance=prod/phys03 | grep dataset.nevents" | tail -1`
 	    if ( $nevents == $nevents_proc ) then
 		echo -n "| Completed "
 	    else

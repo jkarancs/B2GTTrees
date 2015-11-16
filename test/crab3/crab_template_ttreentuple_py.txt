@@ -13,7 +13,7 @@ config.General.workArea = 'TASKDIR'
 config.section_('JobType')
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = os.environ['CMSSW_BASE']+'/src/Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py'
-config.JobType.pyCfgParams = ['isData=ISDATA', 'weight=1.0', 'JECloc=JECNAME']
+config.JobType.pyCfgParams = ['isData=ISDATA', 'JECloc=JECNAME', 'lheLabel=LHELABEL', 'xsec=0', 'nevent=0', 'lumiWeight=1.0']
 config.JobType.inputFiles = glob.glob(os.environ['CMSSW_BASE']+'/src/Analysis/B2GTTrees/JECs/JECNAME*.txt')
 
 config.section_('Data')
