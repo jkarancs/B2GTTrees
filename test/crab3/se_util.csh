@@ -107,7 +107,7 @@ if ( $use_rfio == 1 ) then
     set se_ls_l='/usr/bin/rfdir'
    #set se_cp='/usr/bin/rfcp' # rfcp can not copy from SE to an other SE
     set se_mv='/usr/bin/rfrename'
-    set se_rm_r='/usr/bin/rfrm -r'
+    set se_rm_r='/usr/bin/rfrm -rf'
     set se_mkdir='/usr/bin/rfmkdir'
     set se_get_perm='/usr/bin/rfstat'
     set se_chmod_664='/usr/bin/rfchmod 664'
@@ -338,7 +338,7 @@ else if ( $cmd == "mis" ) then
 
 else if ( $cmd == "dl" ) then # specify output directory
     if ( $narg == "1" ) set arg2="."
-    eval "$se_ls $arg1" | sed "s;/; ;g" | awk '{ print "'"$se_cp"' ARG1/"$NF" '$arg2'/"$NF }' | sed "s;ARG1;$arg1;;s;?;\\?;" > ! dl.csh
+    eval "$se_ls $arg1" | grep "\.root" | sed "s;/; ;g" | awk '{ print "'"$se_cp"' ARG1/"$NF" ARG2/"$NF }' | sed "s;ARG1;$arg1;;s;ARG2;$arg2;;s;?;\\?;g" > ! dl.csh
     peek_or_source "dl.csh"
 
 else if ( $cmd == "dl_mis" ) then
@@ -368,6 +368,62 @@ else if ( $cmd == "dl_mis" ) then
 	else
 	    peek_or_source "dl_mis.csh"
 	endif
+    endif
+
+else if ( $cmd == "dirsize" || $cmd == "ds" ) then
+    if ( $narg < 1 ) then
+	echo "Need more arguments, Use:"
+	echo "se dirsize <se_dir>"
+    else
+	echo "$arg1" >! subdirs.txt
+	set Ndone=0
+	set Ntotal=0
+	set SUBTOTAL=0
+	set TOTAL=0
+	while ( `cat subdirs.txt | wc -l` )
+	    set curr_dir=`head -1 subdirs.txt`
+	    sed -i -e "1d" subdirs.txt
+	    eval "$se_ls_l $curr_dir" >! lsout.txt
+	    # Remove the same directory (stupid behaviour of lcg-ls for empty directories)
+	    grep '^d' lsout.txt >! dirs.txt
+	    if ( -f dirs_clean.txt ) rm dirs_clean.txt
+	    touch dirs_clean.txt
+	    while ( `cat dirs.txt | grep '^d' | wc -l` )
+		set curr=`head -1 dirs.txt | awk '{ print $NF }'`
+		if ( ! `echo "$curr_dir" | grep $curr | wc -l` ) then
+		    head -1 dirs.txt >> dirs_clean.txt
+		endif
+		sed -i -e "1d" dirs.txt
+	    end
+	    # Append new subdirs in front
+	    cat dirs_clean.txt | sed "s;/; ;g" | awk '{ print $NF }' | sed 's;^;'"$curr_dir/"';;s;\?;\\\?;' >! newsubdirs.txt
+	    if ( $Ntotal == 0 ) then
+		set Ntotal=`cat newsubdirs.txt | wc -l`
+		cp newsubdirs.txt main_subdirs.txt
+	    endif
+	    cat subdirs.txt >> newsubdirs.txt
+	    mv newsubdirs.txt subdirs.txt
+	    rm dirs.txt dirs_clean.txt
+	    # Count total file sizes
+	    grep -v '^d' lsout.txt >! files.txt
+	    set SUM=0
+	    if ( `wc -l files.txt | awk '{ print $1 }'` ) set SUM=`awk '{total = total + $5}END{print total}' files.txt`
+	    rm files.txt
+	    set SUBTOTAL=`expr $SUBTOTAL + $SUM`
+	    # Print total subdir sizes (recursive)
+	    set N=`wc -l subdirs.txt | awk '{ print $1 }'`
+	    if ( $N == `expr $Ntotal - $Ndone - 1` ) then
+		# Print total subdir size
+		set Ndone=`expr $Ndone + 1`
+		set subdir=`sed -n "$Ndone"p main_subdirs.txt | sed "s;/; ;g" | awk '{ print $NF }'`
+		echo $SUBTOTAL $subdir | awk '{ printf "%5.1f GB    %s\n", $1/1073741824, $2 }'
+		set TOTAL=`expr $TOTAL + $SUBTOTAL`
+		set SUBTOTAL=0
+	    endif
+	end
+	echo "---------------------"
+	echo $TOTAL "--TOTAL--" | awk '{ printf "%5.1f GB    %s\n", $1/1073741824, $2 }'
+	rm main_subdirs.txt lsout.txt subdirs.txt
     endif
 
 else

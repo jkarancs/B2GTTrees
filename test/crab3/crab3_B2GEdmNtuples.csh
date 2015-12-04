@@ -118,6 +118,7 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	set CERT_DIR="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV"
 	set LATEST_50NS_GOLDEN_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/ | grep Collisions15_50ns_JSON | grep -v MuonPhys | grep -v Silver | tail -1`
 	set LATEST_25NS_GOLDEN_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/ | grep Collisions15_25ns_JSON | grep -v MuonPhys | grep -v Silver | tail -1`
+	set LATEST_25NS_SILVER_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/ | grep Collisions15_25ns_JSON | grep -v MuonPhys | grep Silver | tail -1`
 	# 50ns - Data (ReMiniAOD)
 	if ( `echo $PUBNAME2 | grep "Run2015B-05Oct2015" | wc -l` ) then
 	    set DATAPROC="Data50ns_MiniAODv2"
@@ -177,7 +178,7 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 else if ( `echo $cmd | grep "submit" | wc -l` ) then
     if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
     foreach cfg_file ( `awk '{ print "'$TASKDIR'/crab_"$1".py" }' $TASKDIR/input_datasets.txt` )
-        eval_or_echo "crab submit -c $cfg_file --wait"
+        eval_or_echo "crab submit -c $cfg_file; sleep 1m"
     end
 
 else if ( `echo $cmd | grep "status" | wc -l` ) then
@@ -186,21 +187,22 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	if ( ! -d $dir ) then
 	    set Status="MISSING"
 	else
-	    if ( ! -d $TASKDIR/status/$short ) then
-		mkdir -p $TASKDIR/status/$short
-            else
-		# Check if task was completed already
+	    if ( ! -d $TASKDIR/status/$short ) mkdir -p $TASKDIR/status/$short
+	    # Check if task was completed already
+	    if ( `ls $TASKDIR/status/$short | grep ".txt" | wc -l` ) then
 		set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
 		set Status=`grep "Task status:" $status_txt | awk '{ print $3 }'`
 		if ( $Status != "COMPLETED" ) then
 		    crab status -d $dir >! $TASKDIR/status/$short/$DATE.txt
 		endif
+            else
+		crab status -d $dir >! $TASKDIR/status/$short/$DATE.txt
 	    endif
 	    set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
 	    set Status=`grep "Task status:" $status_txt | awk '{ print $3 }'`
 	    if ( $Status == "" ) then
                 set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | head -n -1 | tail -1`
-                set Status=`grep "Task status:" $status_txt | awk '{ print $3 }'`
+                set Status=`if ( $status_txt != "" ) grep "Task status:" $status_txt | awk '{ print $3 }'`
 	    endif
 	endif
         printf "%-70s %s\n" $dir $Status
@@ -210,14 +212,14 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	    echo
 	else if ( `grep "Cannot find \.requestcache" $status_txt | wc -l` ) then
 	    echo "  -> Task submission failed - No requestcache. Delete and submit again ...\n"
-	    #rm -rf $dir
-	    #crab submit -c $dir.py
-	    #echo
+	    echo "rm -rf $dir"
+	    echo "crab submit -c $dir.py"
+	    echo
 	else if ( `echo $Status | grep SUBMITFAILED | wc -l` && `find $dir -maxdepth 0 -type d -mmin +120 | wc -l` && `grep "\%.*\(" $status_txt | wc -l` == 0 ) then
 	    echo "  -> Task submission failed after more than 2 hours and no jobs are running. Delete and submit again ...\n"
-	    #rm -rf $dir
-	    #crab submit -c $dir.py
-	    #echo
+	    echo "rm -rf $dir"
+	    echo "crab submit -c $dir.py"
+	    echo
 	else if ( `grep "The server answered with an error" $status_txt | wc -l` ) then
 	    echo "  -> Server error. Do nothing ...\n"
 	
@@ -237,8 +239,8 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	    grep "%.*\(.*\)" $status_txt
             if ( `grep "failed.*\%.*\(" $status_txt | wc -l` == 1 ) then
         	echo "  -> Resubmitting failed jobs ...\n"
-        	#crab resubmit -d $dir
-		#echo
+        	crab resubmit -d $dir
+		echo
             endif
         endif
     end

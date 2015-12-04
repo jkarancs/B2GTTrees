@@ -257,10 +257,10 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     for ( auto trigger : triggers_ ) std::cout<<trigger.first<<std::endl;
     //for (size_t i=0; i<ntrig_; ++i) std::cout<<h_strings_["trigger_names"]->at(i)<<std::endl;
   }
-  for ( auto filter : filters_ ) single_bool_[filter.first]                             /* Flag_* */
+  for ( auto filter : filters_ ) single_int_[filter.first]                              /* Flag_* */
       = h_floats_["filter_bits"]->at(filter.second);
   for ( auto trigger : triggers_ ) {
-    single_bool_[trigger.first] = h_floats_["trigger_bits"]->at(trigger.second);        /* HLT_* */
+    single_int_[trigger.first] = h_floats_["trigger_bits"]->at(trigger.second);         /* HLT_* */
     single_int_[trigger.first+"_prescale"]                                              /* HLT_*_prescale */
       = h_ints_["trigger_prescales"]->at(trigger.second);
   }

@@ -57,7 +57,6 @@ private:
   std::string CmsTTSubjetKeys_label_;
     
   // Handles
-  std::map<std::string, edm::Handle<int> > h_bool_;
   std::map<std::string, edm::Handle<int> > h_int_;
   std::map<std::string, edm::Handle<int> > h_uint_;
   std::map<std::string, edm::Handle<double> > h_double_;
@@ -67,8 +66,7 @@ private:
   std::map<std::string, edm::Handle<std::vector<std::string> > > h_strings_;
   
   // Output
-  std::vector<std::string> singleB_, singleI_, singleF_, vectorI_, vectorF_;
-  std::map<std::string, int> single_bool_;
+  std::vector<std::string> singleI_, singleF_, vectorI_, vectorF_;
   std::map<std::string, int> single_int_;
   std::map<std::string, float> single_float_;
   std::map<std::string, std::vector<int> > vector_int_;
@@ -119,25 +117,19 @@ B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(edm::ParameterSet const& iConfig)
   AK8JetKeys_label_(iConfig.getUntrackedParameter<std::string>("AK8JetKeys_label")),
   AK8SubjetKeys_label_(iConfig.getUntrackedParameter<std::string>("AK8SubjetKeys_label")),
   CmsTTSubjetKeys_label_(iConfig.getUntrackedParameter<std::string>("CmsTTSubjetKeys_label")),
-  singleB_(iConfig.getUntrackedParameter<std::vector<std::string> >("singleB")),
   singleI_(iConfig.getUntrackedParameter<std::vector<std::string> >("singleI")),
   singleF_(iConfig.getUntrackedParameter<std::vector<std::string> >("singleF")),
   vectorI_(iConfig.getUntrackedParameter<std::vector<std::string> >("vectorI")),
   vectorF_(iConfig.getUntrackedParameter<std::vector<std::string> >("vectorF"))
 {
-  for ( auto nameB : singleB_ ) {
-    if (nameB.find("Flag_")==0) filter_names_.push_back(nameB);
-    if (nameB.find("HLT_")==0) trigger_names_.push_back(nameB);
-    size_t f; while ((f=nameB.find("_"))!=std::string::npos) nameB.erase(f,1); // Remove "_" from var name
-    produces<bool>(nameB);
-  }
-  for ( auto nameI : trigger_names_ ) {
-    size_t f; while ((f=nameI.find("_"))!=std::string::npos) nameI.erase(f,1); // Remove "_" from var name
-    produces<int>(nameI+"prescale");
-  }
   for ( auto nameI : singleI_ ) {
+    if (nameI.find("Flag_")==0) filter_names_.push_back(nameI);
+    if (nameI.find("HLT_")==0) trigger_names_.push_back(nameI);
     size_t f; while ((f=nameI.find("_"))!=std::string::npos) nameI.erase(f,1); // Remove "_" from var name
     produces<int>(nameI);
+    if (nameI.find("HLT")==0) {
+      produces<int>(nameI+"prescale");
+    }
   }
   for ( auto nameF : singleF_ ) {
     size_t f; while ((f=nameF.find("_"))!=std::string::npos) nameF.erase(f,1); // Remove "_" from var name
@@ -176,32 +168,25 @@ B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(edm::ParameterSet const& iConfig)
 
 void B2GEdmExtraVarProducer::produce(edm::Event& iEvent, edm::EventSetup const& iSetup) {
   // Initialize containers for each variable
-  for ( auto nameB : singleB_ ) single_bool_[nameB] = 0;
-  for ( auto nameI : trigger_names_ ) single_int_[nameI+"_prescale"] = -9999;
   for ( auto nameI : singleI_ ) single_int_[nameI] = -9999;
+  for ( auto nameI : trigger_names_ ) single_int_[nameI+"_prescale"] = -9999;
   for ( auto nameF : singleF_ ) single_float_[nameF] = -9999.0;
   /* size of vectors are not known, therefor they have to be initialized in calculate_varibles() */
   
   calculate_variables(iEvent, iSetup);
   
   // Put new variables to the event
-  for ( auto nameB : singleB_ ) {
-    std::auto_ptr<bool> newB(new bool);
-    *newB = single_bool_[nameB];
-    size_t f; while ((f=nameB.find("_"))!=std::string::npos) nameB.erase(f,1); // Remove "_" from var name
-    iEvent.put(newB,nameB);
+  for ( auto nameI : singleI_ ) {
+    std::auto_ptr<int> newI(new int);
+    *newI = single_int_[nameI];
+    size_t f; while ((f=nameI.find("_"))!=std::string::npos) nameI.erase(f,1); // Remove "_" from var name
+    iEvent.put(newI,nameI);
   }
   for ( auto nameI : trigger_names_ ) {
     std::auto_ptr<int> newI(new int);
     *newI = single_int_[nameI+"_prescale"];
     size_t f; while ((f=nameI.find("_"))!=std::string::npos) nameI.erase(f,1); // Remove "_" from var name
     iEvent.put(newI,nameI+"prescale");
-  }
-  for ( auto nameI : singleI_ ) {
-    std::auto_ptr<int> newI(new int);
-    *newI = single_int_[nameI];
-    size_t f; while ((f=nameI.find("_"))!=std::string::npos) nameI.erase(f,1); // Remove "_" from var name
-    iEvent.put(newI,nameI);
   }
   for ( auto nameF : singleF_ ) {
     std::auto_ptr<float> newF(new float);

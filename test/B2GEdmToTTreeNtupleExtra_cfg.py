@@ -74,12 +74,6 @@ options.register('lheLabel',
                  opts.VarParsing.varType.string,
                  'LHE module label, MC sample specific. Can be: externalLHEProducer')
 
-options.register('isFastSim',
-                 True,
-                 opts.VarParsing.multiplicity.singleton,
-                 opts.VarParsing.varType.bool,
-                 'Is FastSim?')
-
 options.parseArguments()
 
 process = cms.Process("b2gAnalysisTTrees")
@@ -143,7 +137,7 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
     AK8JetKeys_label = cms.untracked.string("jetKeysAK8"),
     AK8SubjetKeys_label = cms.untracked.string("subjetKeysAK8"),
     CmsTTSubjetKeys_label = cms.untracked.string("subjetsCmsTopTagKeys"),
-    singleB = cms.untracked.vstring(
+    singleI = cms.untracked.vstring(
         # Event filters (these are automatically picked up)
         "Flag_trackingFailureFilter",
         "Flag_goodVertices",
@@ -274,8 +268,6 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "HLT_Ele12_CaloIdL_TrackIdL_IsoVL",
         "HLT_Ele17_CaloIdL_TrackIdL_IsoVL",
         "HLT_Ele23_CaloIdL_TrackIdL_IsoVL",
-    ),
-    singleI = cms.untracked.vstring(
         # event variables
         "evt_NGoodVtx",
         "evt_NLep",
@@ -441,35 +433,32 @@ process.EdmNtupleCountFilter = cms.EDFilter("EdmNtupleCountFilter", # This one w
 
 ### B2GTTreeMaker
 process.load("Analysis.B2GTTrees.B2GTTreeMaker_cff")
+# Adding HBHE Noise (MET) filter results
+process.B2GTTreeMaker.physicsObjects.append(
+    cms.PSet(
+        label = cms.untracked.string("HBHENoiseFilterResultProducer"),
+        prefix_in = cms.untracked.string(""),
+        prefix_out = cms.untracked.string("Flag_"),
+        singleB = cms.untracked.vstring(
+            "HBHEIsoNoiseFilterResult",
+            "HBHENoiseFilterResult",
+            "HBHENoiseFilterResultRun1",
+            "HBHENoiseFilterResultRun2Loose",
+            "HBHENoiseFilterResultRun2Tight"),
+    )
+)
 # Adding extra Variables
 process.B2GTTreeMaker.physicsObjects.append(
     cms.PSet(
         label = cms.untracked.string("extraVar"),
         prefix_in = cms.untracked.string(""),
         prefix_out = cms.untracked.string(""),
-        singleB = process.extraVar.singleB,
         singleI = process.extraVar.singleI,
         singleF = process.extraVar.singleF,
         vectorI = process.extraVar.vectorI,
         vectorF = process.extraVar.vectorF,
     )
 )
-
-if not options.isFastSim:
-    process.B2GTTreeMaker.physicsObjects.append(
-        # HBHE Noise (MET) filter
-        cms.PSet(
-            label = cms.untracked.string("HBHENoiseFilterResultProducer"),
-            prefix_in = cms.untracked.string(""),
-            prefix_out = cms.untracked.string("Flag_"),
-            singleB = cms.untracked.vstring(
-                "HBHEIsoNoiseFilterResult",
-                "HBHENoiseFilterResult",
-                "HBHENoiseFilterResultRun1",
-                "HBHENoiseFilterResultRun2Loose",
-                "HBHENoiseFilterResultRun2Tight"),
-        )
-    )
 
 process.B2GTTreeMaker.isData = options.isData
 
@@ -491,7 +480,7 @@ process.edmNtuplesOut = cms.OutputModule("PoolOutputModule",
 
 process.analysisPath = cms.Path(
     process.EventCounter *
-    #process.EdmNtupleCountFilter *
+    process.EdmNtupleCountFilter *
     process.extraVar *
     process.B2GTTreeMaker
 )

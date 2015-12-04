@@ -76,6 +76,7 @@ else
     set dry="1"
 endif
 
+set DATE=`date | sed "s; ;_;g;s;:;h;1;s;:;m;1"`
 
 if ( `echo $cmd | grep "create" | wc -l` ) then
     if ( $#argv < 6 ) then
@@ -163,22 +164,71 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 else if ( `echo $cmd | grep "submit" | wc -l` ) then
     if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
     foreach cfg_file ( `ls -ltr $TASKDIR/*.py | awk '{ print $NF }'`)
-        eval_or_echo "crab submit -c $cfg_file --wait"
+        eval_or_echo "crab submit -c $cfg_file"
     end
 
 else if ( `echo $cmd | grep "status" | wc -l` ) then
-    foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
-	crab status -d $dir >! Status.txt
-	set Status=`grep "Task status:" Status.txt | awk '{ print $3 }'`
-	printf "%-70s %s\n" $dir $Status
-	if ( `echo $Status | grep COMPLETED | wc -l` == 0 ) then
-	    grep "%.*\(.*\)" Status.txt
-	    if ( `grep "failed.*\%.*\(" Status.txt | wc -l` == 1 ) then
-                crab resubmit -d $dir
-                echo "Failed jobs resubmitted"
+    foreach short ( `awk '{ print $1 }' $TASKDIR/input_datasets.txt` )
+	set dir=`echo $TASKDIR"/crab_"$short`
+	if ( ! -d $dir ) then
+	    set Status="MISSING"
+	else
+	    if ( ! -d $TASKDIR/status/$short ) mkdir -p $TASKDIR/status/$short
+	    # Check if task was completed already
+	    if ( `ls $TASKDIR/status/$short | grep "\.txt" | wc -l` ) then
+		set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
+		set Status=`grep "Task status:" $status_txt | awk '{ print $3 }'`
+		if ( $Status != "COMPLETED" ) then
+		    crab status -d $dir >! $TASKDIR/status/$short/$DATE.txt
+		endif
+            else
+		crab status -d $dir >! $TASKDIR/status/$short/$DATE.txt
+	    endif
+	    set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
+	    set Status=`grep "Task status:" $status_txt | awk '{ print $3 }'`
+	    if ( $Status == "" && `ls -tr $TASKDIR/status/$short/ | grep "\.txt" | wc -l` > 1 ) then
+                set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | head -n -1 | tail -1`
+                set Status=`if ( $status_txt != "" ) grep "Task status:" $status_txt | awk '{ print $3 }'`
 	    endif
 	endif
-	rm Status.txt
+        printf "%-70s %s\n" $dir $Status
+	if ( $Status == "MISSING" ) then
+	    echo "  -> Task is not found (not yet submitted?). Submitting ...\n"
+	    crab submit -c $dir.py
+	    echo
+	else if ( `grep "Cannot find \.requestcache" $status_txt | wc -l` ) then
+	    echo "  -> Task submission failed - No requestcache. Delete and submit again ...\n"
+	    echo "rm -rf $dir"
+	    echo "crab submit -c $dir.py"
+	    echo
+	else if ( `echo $Status | grep SUBMITFAILED | wc -l` && `find $dir -maxdepth 0 -type d -mmin +120 | wc -l` && `grep "\%.*\(" $status_txt | wc -l` == 0 ) then
+	    echo "  -> Task submission failed after more than 2 hours and no jobs are running. Delete and submit again ...\n"
+	    echo "rm -rf $dir"
+	    echo "crab submit -c $dir.py"
+	    echo
+	else if ( `grep "The server answered with an error" $status_txt | wc -l` ) then
+	    echo "  -> Server error. Do nothing ...\n"
+	
+	#else if ( `echo $Status | grep NEW | wc -l` && `find $dir -maxdepth 0 -type d -mmin +120 | wc -l` ) then
+	#    echo "  -> Task stuck in NEW state for more than 2 hours. Kill, delete and submit again ...\n"
+	#    crab kill -d $dir
+	#    rm -rf $dir
+	#    crab submit -c $dir.py
+	#    echo
+	#else if ( `echo $Status | grep SUBMITTED | wc -l` && `grep "not yet bootstrapped" $status_txt | wc -l` && `find $dir -maxdepth 0 -type d -mmin +120 | wc -l` ) then
+	#    echo "  -> Task stuck in bootstrapping for more than 2 hours. Kill, delete and submit again ...\n"
+	#    crab kill -d $dir
+	#    rm -rf $dir
+	#    crab submit -c $dir.py
+	#    echo
+        else if ( `echo $Status | grep COMPLETED | wc -l` == 0 ) then
+	    grep "%.*\(.*\)" $status_txt
+            if ( `grep "failed.*\%.*\(" $status_txt | wc -l` == 1 ) then
+        	echo "  -> Resubmitting failed jobs ...\n"
+        	crab resubmit -d $dir
+		echo
+            endif
+        endif
     end
 
 else if ( `echo $cmd | grep "report" | wc -l` ) then
@@ -218,28 +268,67 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
     echo 'if ( $#argv < 1 ) echo "Please specify directory where you want to download files"' >! dl_$TASKNAME.csh
     echo 'alias par_source "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/source_parallel.csh \\!*"' >> dl_$TASKNAME.csh
     echo 'alias se         "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/se_util.csh \\!*"\n' >> dl_$TASKNAME.csh
-    foreach taskdir ( `ls -ltrd $TASKDIR/*/ | sed "s;/; ;g" | awk '{ print $NF }'` )
-        set primary_dataset=`grep inputDataset $TASKDIR/$taskdir.py | sed "s;/; ;g" | awk '{ print $4 }'`
-        set TIME=`se ls "$SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir" | tail -1`
-        set SAMPLEDIR=`echo $taskdir | sed "s;crab_;;"`
-        eval_or_echo "mkdir -p $DLDIR/$SAMPLEDIR"
-        eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir/$TIME/0000 $DLDIR/$SAMPLEDIR/ --par 4 --run"
-        echo "mkdir -p "'$1'"/$SAMPLEDIR" >> dl_$TASKNAME.csh
-        echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir/$TIME/0000 "'$1'"/$SAMPLEDIR/ --par 4 --run" >> dl_$TASKNAME.csh
+    set N=`cat $TASKDIR/input_datasets.txt | wc -l`
+    foreach i ( `seq 1 $N` )
+        set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
+	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
+        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
+	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
+        eval_or_echo "mkdir -p $DLDIR/$short"
+        echo "mkdir -p "'$1'"/$short" >> dl_$TASKNAME.csh
+	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp` )
+	    eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp/$thousand $DLDIR/$short --par 4 --run"
+	    echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp/$thousand "'$1'"/$short --par 4 --run" >> dl_$TASKNAME.csh
+	end
     end
 
 else if ( `echo $cmd | grep "find_missing" | wc -l` ) then
     set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
     set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
-    foreach taskdir ( `ls -ltrd $TASKDIR/*/ | sed "s;/; ;g" | awk '{ print $NF }'`)
-        set primary_dataset=`grep inputDataset $TASKDIR/$taskdir.py | sed "s;/; ;g" | awk '{ print $4 }'`
-        set TIME=`se ls "$SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir" | tail -1`
-        set SAMPLEDIR=`echo $taskdir | sed "s;crab_;;"`
-	set njobs=`crab status -d $TASKDIR/$taskdir | grep ".*\%.*\(.*\)" | tail -1 | sed "s;/; ;g;s;); ;g"| awk '{ print $NF }'`
-        set missing=`se mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$taskdir/$TIME/0000 $njobs | sed 's;.$;;'`
-	if ( $missing != "" ) then
-	    echo "crab resubmit -d $TASKDIR/$taskdir --wait --force --jobids=$missing"
-	endif
+    set N=`cat $TASKDIR/input_datasets.txt | wc -l`
+    foreach i ( `seq 1 $N` )
+        set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
+        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
+	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
+        set pubname=`grep outputDatasetTag $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
+	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
+	set isData=`echo $in_dataset | grep 'Run2015' | wc -l`
+	set njobs=`grep ".*\%.*\(.*\)" $TASKDIR/status/$short/*.txt | sed "s;/; ;g;s;); ;g" | awk '{ print $NF }' | sort | uniq -c | sort | tail -1 | awk '{ print $2 }'`
+	# Get missing jobs
+	echo -n "" >! jobnums.txt
+	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp` )
+	    se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp/$thousand | grep "\.root" | sed 's;_; ;g;s;\.root;;' | awk '{ print $NF }' | sort -n | uniq >> jobnums.txt
+	end
+	set missing=""
+	foreach N ( `seq 1 $njobs` )
+	    if ( `grep '^'$N'$' jobnums.txt | wc -l` == 0 ) set missing="$missing,$N"
+	end
+        rm jobnums.txt
+	set missing=`echo $missing | sed "s;,;;1"`
+	if ( $missing != "" ) echo "crab resubmit -d $TASKDIR/crab_$short --wait --force --jobids=$missing"
+    end
+
+else if ( `echo $cmd | grep "transfer" | wc -l` ) then
+    if ( $#argv < 3 ) then
+	cat Usage.txt; rm Usage.txt; exit
+    endif
+    set DIR=$3
+    set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
+    set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
+    set N=`cat $TASKDIR/input_datasets.txt | wc -l`
+    eval_or_echo "se mkdir caf:B2GTTreeNtuple/$DIR"
+    foreach i ( `seq 1 $N` )
+        set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
+	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
+        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
+	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
+	eval_or_echo "se mkdir caf:B2GTTreeNtuple/$DIR/$short"
+	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp` )
+	    eval_or_echo "se dl $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp/$thousand caf:B2GTTreeNtuple/$DIR/$short --par 4 --run"
+	end
     end
 
 else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
