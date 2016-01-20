@@ -347,6 +347,14 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "gen_E",
         "gen_Mass",
         "gen_Charge",
+        "jetAK4_jecUncertainty",
+        "jetAK4_JER",
+        "jetAK4_JERup",
+        "jetAK4_JERdown",
+        "jetAK8_jecUncertainty",
+        "jetAK8_JER",
+        "jetAK8_JERup",
+        "jetAK8_JERdown",
         "jetAK8_DRNearGenTop",
         "jetAK8_DRNearGenWFromTop",
         "jetAK8_DRNearGenBFromTop",
@@ -479,9 +487,9 @@ process.edmNtuplesOut = cms.OutputModule("PoolOutputModule",
 )
 
 process.analysisPath = cms.Path(
-    process.EventCounter *
-    process.EdmNtupleCountFilter *
     process.extraVar *
+    process.EventCounter *
+    #process.EdmNtupleCountFilter *
     process.B2GTTreeMaker
 )
 

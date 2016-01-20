@@ -9,6 +9,9 @@ if ( `which par_source | grep "aliased to" | wc -l` == 0 ) then
     endif
 endif
 
+set RAND=`uuid | sed "s;-;_;g"`
+set DATE=`date | sed "s; ;_;g;s;:;h;1;s;:;m;1"`
+
 set cmd=$1
 set script_opts=""
 set cmd_opts=""
@@ -141,6 +144,8 @@ else
 endif
 set se_cp='lcg-cp -b -D srmv2 --vo cms'
 set se_cp_v='lcg-cp -b -D srmv2 --vo cms -v'
+set se2_ls='lcg-ls -b -D srmv2 --vo cms'
+set se2_ls_l='lcg-ls -b -D srmv2 --vo cms -l'
 
 #-------------------- Options ------------------------
 
@@ -151,12 +156,12 @@ if ( `hasopt "\-\-dry"` ) then
     if ( `hasopt "\-\-par"` ) alias peek_or_source 'echo "> Add --run option or Run this script:\npar_source "\!*" $Npar\n\n> head -5 "\!*":"; head -5 \!*; if ( `cat \!* | wc -l` > 10 ) echo "...\n> tail -5 "\!*":"; if ( `cat \!* | wc -l` > 10 ) tail -5 \!*'
 else if ( `hasopt "\-\-run"` ) then
     #eval workaround: do not want to interpret newline char for echo
-    alias echo_or_eval   'echo \!* >! temp.csh; source temp.csh; rm temp.csh'
+    alias echo_or_eval   'echo \!* >! temp_$RAND.csh; source temp_$RAND.csh; rm temp_$RAND.csh'
     alias peek_or_source 'source \!*; rm \!*'
     if ( `hasopt "\-\-par"` ) alias peek_or_source 'par_source \!* $Npar; rm \!*'
 else
     # These are the default actions
-    alias echo_or_eval   'echo \!* >! temp.csh; source temp.csh; rm temp.csh'
+    alias echo_or_eval   'echo \!* >! temp_$RAND.csh; source temp_$RAND.csh; rm temp_$RAND.csh'
     alias peek_or_source 'echo "> Add --run option or Run this script:\nsource "\!*"\n\n> head -5 "\!*":"; head -5 \!*; if ( `cat \!* | wc -l` > 10 ) echo "...\n> tail -5 "\!*":"; if ( `cat \!* | wc -l` > 10 ) tail -5 \!*'
     if ( `hasopt "\-\-par"` ) alias peek_or_source 'echo "> Add --run option or Run this script:\npar_source "\!*" $Npar\n\n> head -5 "\!*":"; head -5 \!*; if ( `cat \!* | wc -l` > 10 ) echo "...\n> tail -5 "\!*":"; if ( `cat \!* | wc -l` > 10 ) tail -5 \!*'
 endif
@@ -207,12 +212,12 @@ else if ( $cmd == "ls-l" ) then
     endif
 
 else if ( $cmd == "cp" ) then # specify filename
-    echo "$se_cp $arg1 $arg2" >! cp.csh
-    peek_or_source "cp.csh"
+    echo "$se_cp $arg1 $arg2" >! cp_$DATE.csh
+    peek_or_source "cp_$DATE.csh"
 
 else if ( $cmd == "cp-v" ) then
-    echo "$se_cp_v $arg1 $arg2" >! cp.csh
-    peek_or_source "cp.csh"
+    echo "$se_cp_v $arg1 $arg2" >! cp_$DATE.csh
+    peek_or_source "cp_$DATE.csh"
 
 else if ( $cmd == "cplfn" ) then
     set localfile="/data"`echo "$arg1" | sed "s;$PATH;;"`
@@ -232,35 +237,35 @@ else if ( $cmd == "cplfn" ) then
 
 else if ( $cmd == "rm" ) then
     if ( $use_rfio == 1 || $use_eos == 1 ) then
-    	echo "$se_rm_r $arg1" >! rm.csh
-        peek_or_source "rm.csh"
+    	echo "$se_rm_r $arg1" >! rm_$DATE.csh
+        peek_or_source "rm_$DATE.csh"
     else
-        ( eval "$se_ls_l $arg1" >! lsout.txt ) >& /dev/null
-        set nout=`cat lsout.txt | wc -l`
+        ( eval "$se_ls_l $arg1" >! lsout_$RAND.txt ) >& /dev/null
+        set nout=`cat lsout_$RAND.txt | wc -l`
         if ( $nout == 0 ) then
             echo "File/Directory does not exist"
         else
-	    ( sed "s;/; ;g" lsout.txt | awk '{ print "'"$se_rm"' "$NF }' | sed "s;$se_rm ;$se_rm $arg1/;;s;\?;\\\?;" >! rm.csh ) >& /dev/null
+	    ( sed "s;/; ;g" lsout_$RAND.txt | awk '{ print "'"$se_rm"' "$NF }' | sed "s;$se_rm ;$se_rm $arg1/;;s;\?;\\\?;" >! rm_$DATE.csh ) >& /dev/null
             if ( $nout == 1 ) then
-                if ( `cat lsout.txt | grep "^d" | wc -l` ) then
-                    echo "$se_rmdir $arg1" >! rm.csh
+                if ( `cat lsout_$RAND.txt | grep "^d" | wc -l` ) then
+                    echo "$se_rmdir $arg1" >! rm_$DATE.csh
                 else 
-                    set list_lastfile=`sed "s;/; ;g" lsout.txt | awk '{ print $NF }'`
+                    set list_lastfile=`sed "s;/; ;g" lsout_$RAND.txt | awk '{ print $NF }'`
                     set arg1_lastfile=`echo "$arg1" | sed "s;/; ;g" | awk '{ print $NF }'`
                     if ( $list_lastfile == "$arg1"_lastfile ) then
-			echo "$se_rm $arg1" >! rm.csh
+			echo "$se_rm $arg1" >! rm_$DATE.csh
                     else 
-			echo "$se_rmdir $arg1" >> rm.csh
+			echo "$se_rmdir $arg1" >> rm_$DATE.csh
                     endif
 		    unset list_lastfile
 		    unset arg1_lastfile
                 endif
             else
-                echo "$se_rmdir $arg1" >> rm.csh
+                echo "$se_rmdir $arg1" >> rm_$DATE.csh
             endif
-            peek_or_source "rm.csh"
+            peek_or_source "rm_$DATE.csh"
         endif
-        rm lsout.txt
+        rm lsout_$RAND.txt
         unset nout
     endif
 
@@ -269,8 +274,8 @@ else if ( $cmd == "mv" ) then
 	echo "Sorry, there are no commands to move SE files on lxplus"
 	echo "Use srmmv on another computer!"
     else
-	echo "$se_mv $arg1 $arg2" >! mv.csh
-	peek_or_source "mv.csh"
+	echo "$se_mv $arg1 $arg2" >! mv_$DATE.csh
+	peek_or_source "mv_$DATE.csh"
     endif
 
 else if ( $cmd == "mkdir" ) then
@@ -289,84 +294,87 @@ else if ( $cmd == "get-perm" ) then
     endif
 
 else if ( $cmd == "set-perm" ) then
-    ( eval "$se_ls_l $arg1" >! lsout.txt ) >& /dev/null
-    set nout=`cat lsout.txt | wc -l`
+    ( eval "$se_ls_l $arg1" >! lsout_$RAND.txt ) >& /dev/null
+    set nout=`cat lsout_$RAND.txt | wc -l`
     if ( $nout == 0 ) then
 	echo "File/Directory does not exist"
     else 
-	( sed "s;/; ;g" lsout.txt | awk '{ print "'"$se_chmod_664"' "$NF }' | sed "s;$se_chmod_664 ;$se_chmod_664 $arg1/;;s;\?;\\\?;" >! set_perm.csh ) >& /dev/null
+	( sed "s;/; ;g" lsout_$RAND.txt | awk '{ print "'"$se_chmod_664"' "$NF }' | sed "s;$se_chmod_664 ;$se_chmod_664 $arg1/;;s;\?;\\\?;" >! set_perm_$DATE.csh ) >& /dev/null
 	if ( $nout == 1 ) then
-	    if ( `cat lsout.txt | grep "^d" | wc -l` ) then
-		echo "$se_chmod_775 $arg1" >! set_perm.csh
+	    if ( `cat lsout_$RAND.txt | grep "^d" | wc -l` ) then
+		echo "$se_chmod_775 $arg1" >! set_perm_$DATE.csh
 	    else
-                set list_lastfile=`sed "s;/; ;g" lsout.txt | awk '{ print $NF }'`
+                set list_lastfile=`sed "s;/; ;g" lsout_$RAND.txt | awk '{ print $NF }'`
                 set arg1_lastfile=`echo "$arg1" | sed "s;/; ;g" | awk '{ print $NF }'`
                 if ( $list_lastfile == "$arg1"_lastfile ) then
-	            echo "$se_chmod_664 $arg1" >! rm.csh
+	            echo "$se_chmod_664 $arg1" >! rm_$DATE.csh
                 else 
-	            echo "$se_chmod_775 $arg1" >> rm.csh
+	            echo "$se_chmod_775 $arg1" >> rm_$DATE.csh
                 endif
 	        unset list_lastfile
 	        unset arg1_lastfile
 	    endif
 	else
-	    echo "$se_chmod_775 $arg1" >> set_perm.csh
+	    echo "$se_chmod_775 $arg1" >> set_perm_$DATE.csh
 	endif
-	peek_or_source "set_perm.csh"
+	peek_or_source "set_perm_$DATE.csh"
     endif
-    rm lsout.txt
+    rm lsout_$RAND.txt
     unset nout
 
 else if ( $cmd == "mis" ) then
-    eval "$se_ls $arg1" | sed 's;_; ;g;s;\.root;;' | awk '{ print $NF }' | sort | uniq > jobnums.txt
+    eval "$se_ls $arg1" | sed 's;_; ;g;s;\.root;;' | awk '{ print $NF }' | sort | uniq > jobnums_$RAND.txt
     set N=1
     if ( $narg < 2 ) then
 	echo "Need more arguments, Use:"
 	echo "se mis <se_dir> Njobs"
     else
         while ( $N <= $arg2 )
-            set n=`cat jobnums.txt | grep '^'$N'$'`
+            set n=`cat jobnums_$RAND.txt | grep '^'$N'$'`
             if ( .$n == . ) then
                 echo -n $N","
             endif
             set N = `expr $N + 1`
         end
         echo
-        rm jobnums.txt
+        rm jobnums_$RAND.txt
         unset N
     endif
 
 else if ( $cmd == "dl" ) then # specify output directory
     if ( $narg == "1" ) set arg2="."
-    eval "$se_ls $arg1" | grep "\.root" | sed "s;/; ;g" | awk '{ print "'"$se_cp"' ARG1/"$NF" ARG2/"$NF }' | sed "s;ARG1;$arg1;;s;ARG2;$arg2;;s;?;\\?;g" > ! dl.csh
-    peek_or_source "dl.csh"
+    eval "$se_ls $arg1" | grep "\.root" | sed "s;/; ;g" | awk '{ print "'"$se_cp"' ARG1/"$NF" ARG2/"$NF }' | sed "s;ARG1;$arg1;;s;ARG2;$arg2;;s;?;\\?;g" > ! dl_$DATE.csh
+    peek_or_source "dl_$DATE.csh"
 
 else if ( $cmd == "dl_mis" ) then
     if ( $narg < 2 ) then
 	echo "Need more arguments, Use:"
 	echo "se dl_mis <se_dir> <local_dir>"
     else
-	eval "$se_ls $arg1" >! lsout.txt;
-	sed "s;/; ;g" lsout.txt | awk '{ print "'"$se_cp_v"' ARG1/"$NF" '$arg2'/"$NF }' | sed "s;ARG1;$arg1;;s;?;\\?;" >! dl_temp.csh
-	sed "s;_[0-9]*_[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]\.root;\.root;;s;\.root;;;s;_; ;g" lsout.txt | awk '{ printf "%d\n",$NF }' >! jobnums_se.txt
-	rm lsout.txt
-	ls -l $arg2 | grep "\.root" | awk '{ print $5,$NF }' | grep -v "^0" | sed "s;_[0-9]*_[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]\.root;\.root;;s;\.root;;;s;_; ;g" | awk '{ printf "%d\n",$NF }' > ! jobnums_dled.txt
-	if ( -f dl_mis.csh ) mv dl_mis.csh dl_mis_old.csh
-	foreach jobnum ( `cat jobnums_se.txt` )
-	    if ( ! `grep '^'$jobnum'$' jobnums_dled.txt | wc -l` ) then
+	eval "$se_ls $arg1" >! lsout_$RAND.txt;
+	sed "s;/; ;g" lsout_$RAND.txt | awk '{ print "'"$se_cp_v"' ARG1/"$NF" ARG2/"$NF }' | sed "s;ARG1;$arg1;;s;ARG2;$arg2;;s;?;\\?;g" >! dl_temp_$RAND.csh
+	sed "s;_[0-9]*_[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]\.root;\.root;;s;\.root;;;s;_; ;g" lsout_$RAND.txt | awk '{ printf "%d\n",$NF }' >! jobnums_se_$RAND.txt
+	rm lsout_$RAND.txt
+	if ( `echo "$arg2" | grep "srm:" | wc -l` ) then
+	    eval "$se2_ls_l -l $arg2" | grep "\.root" | sed "s;/; ;g" | awk '{ print $5,$NF }' | grep -v "^0" | sed "s;_[0-9]*_[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]\.root;\.root;;s;\.root;;;s;_; ;g" | awk '{ printf "%d\n",$NF }' > ! jobnums_dled_$RAND.txt
+	else
+	    ls -l $arg2 | grep "\.root" | awk '{ print $5,$NF }' | grep -v "^0" | sed "s;_[0-9]*_[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]\.root;\.root;;s;\.root;;;s;_; ;g" | awk '{ printf "%d\n",$NF }' > ! jobnums_dled_$RAND.txt
+	endif
+	foreach jobnum ( `cat jobnums_se_$RAND.txt` )
+	    if ( ! `grep '^'$jobnum'$' jobnums_dled_$RAND.txt | wc -l` ) then
 		# old crab format
-		#grep "_"$jobnum"_[0-9]_[0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z]\.root" dl_temp.csh >>! dl_mis.csh
+		#grep "_"$jobnum"_[0-9]_[0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z]\.root" dl_temp_$RAND.csh >>! dl_mis_$DATE.csh
 		# This is for TSBatch output format
-		#grep "_"`printf "%04d" $jobnum`"\.root" dl_temp.csh >>! dl_mis.csh
+		#grep "_"`printf "%04d" $jobnum`"\.root" dl_temp_$RAND.csh >>! dl_mis_$DATE.csh
 		# crab3 format
-		grep "_"`printf "%d" $jobnum`"\.root" dl_temp.csh >>! dl_mis.csh
+		grep "_"`printf "%d" $jobnum`"\.root" dl_temp_$RAND.csh >>! dl_mis_$DATE.csh
 	    endif
 	end
-	rm jobnums_se.txt jobnums_dled.txt dl_temp.csh
-	if ( ! -e dl_mis.csh ) then
+	rm jobnums_se_$RAND.txt jobnums_dled_$RAND.txt dl_temp_$RAND.csh
+	if ( ! -e dl_mis_$DATE.csh ) then
 	    echo "All files are downloaded already"
 	else
-	    peek_or_source "dl_mis.csh"
+	    peek_or_source "dl_mis_$DATE.csh"
 	endif
     endif
 
@@ -375,47 +383,47 @@ else if ( $cmd == "dirsize" || $cmd == "ds" ) then
 	echo "Need more arguments, Use:"
 	echo "se dirsize <se_dir>"
     else
-	echo "$arg1" >! subdirs.txt
+	echo "$arg1" >! subdirs_$RAND.txt
 	set Ndone=0
 	set Ntotal=0
 	set SUBTOTAL=0
 	set TOTAL=0
-	while ( `cat subdirs.txt | wc -l` )
-	    set curr_dir=`head -1 subdirs.txt`
-	    sed -i -e "1d" subdirs.txt
-	    eval "$se_ls_l $curr_dir" >! lsout.txt
+	while ( `cat subdirs_$RAND.txt | wc -l` )
+	    set curr_dir=`head -1 subdirs_$RAND.txt`
+	    sed -i -e "1d" subdirs_$RAND.txt
+	    eval "$se_ls_l $curr_dir" >! lsout_$RAND.txt
 	    # Remove the same directory (stupid behaviour of lcg-ls for empty directories)
-	    grep '^d' lsout.txt >! dirs.txt
-	    if ( -f dirs_clean.txt ) rm dirs_clean.txt
-	    touch dirs_clean.txt
-	    while ( `cat dirs.txt | grep '^d' | wc -l` )
-		set curr=`head -1 dirs.txt | awk '{ print $NF }'`
+	    grep '^d' lsout_$RAND.txt >! dirs_$RAND.txt
+	    if ( -f dirs_clean_$RAND.txt ) rm dirs_clean_$RAND.txt
+	    touch dirs_clean_$RAND.txt
+	    while ( `cat dirs_$RAND.txt | grep '^d' | wc -l` )
+		set curr=`head -1 dirs_$RAND.txt | awk '{ print $NF }'`
 		if ( ! `echo "$curr_dir" | grep $curr | wc -l` ) then
-		    head -1 dirs.txt >> dirs_clean.txt
+		    head -1 dirs_$RAND.txt >> dirs_clean_$RAND.txt
 		endif
-		sed -i -e "1d" dirs.txt
+		sed -i -e "1d" dirs_$RAND.txt
 	    end
 	    # Append new subdirs in front
-	    cat dirs_clean.txt | sed "s;/; ;g" | awk '{ print $NF }' | sed 's;^;'"$curr_dir/"';;s;\?;\\\?;' >! newsubdirs.txt
+	    cat dirs_clean_$RAND.txt | sed "s;/; ;g" | awk '{ print $NF }' | sed 's;^;'"$curr_dir/"';;s;\?;\\\?;' >! newsubdirs_$RAND.txt
 	    if ( $Ntotal == 0 ) then
-		set Ntotal=`cat newsubdirs.txt | wc -l`
-		cp newsubdirs.txt main_subdirs.txt
+		set Ntotal=`cat newsubdirs_$RAND.txt | wc -l`
+		cp newsubdirs_$RAND.txt main_subdirs_$RAND.txt
 	    endif
-	    cat subdirs.txt >> newsubdirs.txt
-	    mv newsubdirs.txt subdirs.txt
-	    rm dirs.txt dirs_clean.txt
+	    cat subdirs_$RAND.txt >> newsubdirs_$RAND.txt
+	    mv newsubdirs_$RAND.txt subdirs_$RAND.txt
+	    rm dirs_$RAND.txt dirs_clean_$RAND.txt
 	    # Count total file sizes
-	    grep -v '^d' lsout.txt >! files.txt
+	    grep -v '^d' lsout_$RAND.txt >! files_$RAND.txt
 	    set SUM=0
-	    if ( `wc -l files.txt | awk '{ print $1 }'` ) set SUM=`awk '{total = total + $5}END{print total}' files.txt`
-	    rm files.txt
+	    if ( `wc -l files_$RAND.txt | awk '{ print $1 }'` ) set SUM=`awk '{total = total + $5}END{print total}' files_$RAND.txt`
+	    rm files_$RAND.txt
 	    set SUBTOTAL=`expr $SUBTOTAL + $SUM`
 	    # Print total subdir sizes (recursive)
-	    set N=`wc -l subdirs.txt | awk '{ print $1 }'`
+	    set N=`wc -l subdirs_$RAND.txt | awk '{ print $1 }'`
 	    if ( $N == `expr $Ntotal - $Ndone - 1` ) then
 		# Print total subdir size
 		set Ndone=`expr $Ndone + 1`
-		set subdir=`sed -n "$Ndone"p main_subdirs.txt | sed "s;/; ;g" | awk '{ print $NF }'`
+		set subdir=`sed -n "$Ndone"p main_subdirs_$RAND.txt | sed "s;/; ;g" | awk '{ print $NF }'`
 		echo $SUBTOTAL $subdir | awk '{ printf "%5.1f GB    %s\n", $1/1073741824, $2 }'
 		set TOTAL=`expr $TOTAL + $SUBTOTAL`
 		set SUBTOTAL=0
@@ -423,7 +431,7 @@ else if ( $cmd == "dirsize" || $cmd == "ds" ) then
 	end
 	echo "---------------------"
 	echo $TOTAL "--TOTAL--" | awk '{ printf "%5.1f GB    %s\n", $1/1073741824, $2 }'
-	rm main_subdirs.txt lsout.txt subdirs.txt
+	rm main_subdirs_$RAND.txt lsout_$RAND.txt subdirs_$RAND.txt
     endif
 
 else

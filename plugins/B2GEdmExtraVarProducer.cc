@@ -5,6 +5,50 @@
 #include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
 
+// JER Updated to:
+// https://twiki.cern.ch/twiki/bin/view/CMS/JetResolution?rev=41#JER_Scaling_factors_and_Uncertai
+double
+B2GEdmExtraVarProducer::getJER_(double eta)
+{
+  eta=fabs(eta);
+  if(eta>=0.0 && eta<0.8) return 1.061; // +-0.023
+  if(eta>=0.8 && eta<1.3) return 1.088; // +-0.029
+  if(eta>=1.3 && eta<1.9) return 1.106; // +-0.030   
+  if(eta>=1.9 && eta<2.5) return 1.126; // +-0.094 
+  if(eta>=2.5 && eta<3.0) return 1.343; // +-0.123 
+  if(eta>=3.0 && eta<3.2) return 1.303; // +-0.111 
+  if(eta>=3.2 && eta<5.0) return 1.320; // +-0.286 
+  return -1.;
+}
+
+double
+B2GEdmExtraVarProducer::getJERup_(double eta)
+{
+  eta=fabs(eta);
+  if(eta>=0.0 && eta<0.8) return 1.084;
+  if(eta>=0.8 && eta<1.3) return 1.117;
+  if(eta>=1.3 && eta<1.9) return 1.136;
+  if(eta>=1.9 && eta<2.5) return 1.220;
+  if(eta>=2.5 && eta<3.0) return 1.466;
+  if(eta>=3.0 && eta<3.2) return 1.414;
+  if(eta>=3.2 && eta<5.0) return 1.606;
+  return -1.;  
+}
+
+double
+B2GEdmExtraVarProducer::getJERdown_(double eta)
+{
+  eta=fabs(eta);
+  if(eta>=0.0 && eta<0.8) return 1.038;
+  if(eta>=0.8 && eta<1.3) return 1.059;
+  if(eta>=1.3 && eta<1.9) return 1.076;
+  if(eta>=1.9 && eta<2.5) return 1.032;
+  if(eta>=2.5 && eta<3.0) return 1.220;
+  if(eta>=3.0 && eta<3.2) return 1.192;
+  if(eta>=3.2 && eta<5.0) return 1.034;
+  return -1.;  
+}
+
 void B2GEdmExtraVarProducer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {
   
   if (!isData_) {
@@ -323,6 +367,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   size_t nele = h_floats_["ele_Pt"]->size();
   size_t nmu =  h_floats_["mu_Pt"]->size();
   size_t njet = h_floats_["AK8_Pt"]->size();
+  size_t njet_AK4 = h_floats_["AK4_Pt"]->size();
   
   if (!isData_) {
     double gluino_mass = -9999;
@@ -592,7 +637,41 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   // ---------------------
   // -      Jets         -
   // ---------------------
-  
+
+  // NB: JEC/JER is already in new versions of B2G ntuples
+  // JEC Uncertainties
+  vector_float_["jetAK4_jecUncertainty"].assign(njet_AK4,-9999);
+  for (size_t iJet=0, nAK4jet=h_floats_["AK4_Pt"]->size(); iJet<nAK4jet; ++iJet) {
+    AK4_JetUncertainty_->setJetPt(h_floats_["AK4_Pt"]->at(iJet));
+    AK4_JetUncertainty_->setJetEta(h_floats_["AK4_Eta"]->at(iJet));
+    vector_float_["jetAK4_jecUncertainty"][iJet] = AK4_JetUncertainty_->getUncertainty(true);
+  }
+  vector_float_["jetAK8_jecUncertainty"].assign(njet,-9999);
+  for (size_t iJet=0, nAK8jet=h_floats_["AK8_Pt"]->size(); iJet<nAK8jet; ++iJet) {
+    AK8_JetUncertainty_->setJetPt(h_floats_["AK8_Pt"]->at(iJet));
+    AK8_JetUncertainty_->setJetEta(h_floats_["AK8_Eta"]->at(iJet));
+    vector_float_["jetAK8_jecUncertainty"][iJet] = AK8_JetUncertainty_->getUncertainty(true);
+  }
+
+  // JER
+  vector_float_["jetAK4_JER"].assign(njet_AK4,-9999);
+  vector_float_["jetAK4_JERup"].assign(njet_AK4,-9999);
+  vector_float_["jetAK4_JERdown"].assign(njet_AK4,-9999);
+  for (size_t iJet=0; iJet<njet_AK4; ++iJet) {
+    vector_float_["jetAK4_JER"][iJet] = getJER_(h_floats_["AK4_Eta"]->at(iJet));
+    vector_float_["jetAK4_JERup"][iJet] = getJERup_(h_floats_["AK4_Eta"]->at(iJet));
+    vector_float_["jetAK4_JERdown"][iJet] = getJERdown_(h_floats_["AK4_Eta"]->at(iJet));
+  }
+  vector_float_["jetAK8_JER"].assign(njet,-9999);
+  vector_float_["jetAK8_JERup"].assign(njet,-9999);
+  vector_float_["jetAK8_JERdown"].assign(njet,-9999);
+  for (size_t iJet=0; iJet<njet; ++iJet) {
+    vector_float_["jetAK8_JER"][iJet] = getJER_(h_floats_["AK8_Eta"]->at(iJet));
+    vector_float_["jetAK8_JERup"][iJet] = getJERup_(h_floats_["AK8_Eta"]->at(iJet));
+    vector_float_["jetAK8_JERdown"][iJet] = getJERdown_(h_floats_["AK8_Eta"]->at(iJet));
+  }
+
+  // GEN infos
   vector_int_["jetAK8_HasNearGenTop"].assign(njet,-9999);
   vector_int_["jetAK8_NearGenTopIsHadronic"].assign(njet,-9999);
   vector_int_["jetAK8_NearGenWIsHadronic"].assign(njet,-9999);
@@ -1160,7 +1239,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     // Hadronic tops (Loose selection)
     if (i<2) { // only check two highest pt jets
       if (h_floats_["AK8_Pt"]->at(i) > 400 &&
-	  h_floats_["AK8_softDropMass"]->at(i) > 110 &&
+	  h_floats_["AK8_softDropMass"]->at(i) >= 110 &&
 	  h_floats_["AK8_softDropMass"]->at(i) < 210) {
 	++single_int_["evt_NTopHadPreTag"];                                                 /* evt_NTopHadPreTag */
 	if (single_int_["evt_NTopHadPreTag"]==1) 

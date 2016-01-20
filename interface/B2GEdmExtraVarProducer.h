@@ -8,6 +8,7 @@
 
 // JEC
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
+#include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
 #include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
 
 class  B2GEdmExtraVarProducer : public edm::EDProducer {
@@ -78,7 +79,12 @@ private:
   
   // JEC
   FactorizedJetCorrector *AK4_JetCorrector_, *AK8_JetCorrector_;
+  JetCorrectionUncertainty *AK4_JetUncertainty_, *AK8_JetUncertainty_;
 
+  double getJER_(double);
+  double getJERup_(double);
+  double getJERdown_(double);
+  
   // LHE/GEN stuff
   int lha_pdf_id_;
 };
@@ -162,6 +168,10 @@ B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(edm::ParameterSet const& iConfig)
   AK4_JetCorrector_ = new FactorizedJetCorrector(AK4_vPar);
   AK8_JetCorrector_ = new FactorizedJetCorrector(AK8_vPar);
   
+  // JEC Uncertainties
+  AK4_JetUncertainty_ = new JetCorrectionUncertainty(JEC_location_+"_Uncertainty_AK4PFchs.txt");
+  AK8_JetUncertainty_ = new JetCorrectionUncertainty(JEC_location_+"_Uncertainty_AK8PFchs.txt");
+
   nfilt_=ntrig_=0;
   lha_pdf_id_ = -9999;
 }

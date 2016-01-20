@@ -82,7 +82,7 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
     if ( $#argv < 6 ) then
 	cat Usage.txt; rm Usage.txt; exit
     endif
-    set INPUT_FILE=$3
+    set INSStatusPUT_FILE=$3
     set XSEC_FILE=$4
     set SE_SITE=$5
     set SE_USERDIR=$6
@@ -123,7 +123,7 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	        # Correct the number of events for negative weights (beware, corr factor might not be available yet!)
 	        set nevent=`das_client.py --query="dataset=$DATASET instance=prod/phys03 | grep dataset.nevents" | tail -1`
 	        set neg_corr=`grep $primary $TASKDIR/xsec_datasets.txt | awk '{ print $4 }'`
-	        set nevent=`echo | awk '{ printf "%lf", '$nevent'/'$neg_corr' }'`
+	        set nevent=`echo | awk '{ printf "%10.0f", '$nevent'/'$neg_corr' }'`
 	        # Calculate lumi weight for 1 fb^-1
 	        set lumiWeight=`echo | awk '{ printf "%lf", 1000*'$xsec'/'$nevent' }'`
 	    else
@@ -147,11 +147,13 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	else if ( `echo $MIDNAME | grep "Run2015C_25ns" | wc -l` || `echo $MIDNAME | grep "Run2015D" | wc -l` ) then
 	    set JECNAME="Summer15_25nsV6_DATA"
 	    set ISDATA="True"
+	else if ( `echo $MIDNAME | grep "RunIISpring15MiniAODv2-FastAsympt25ns" | wc -l` ) then	    
+	    set JECNAME="MCRUN2_74_V9"
+	    set ISDATA="False"
 	else if ( `echo $MIDNAME | grep "RunIISpring15" | wc -l` ) then	    
 	    set JECNAME="Summer15_25nsV6_MC"
 	    set ISDATA="False"
 	endif
-	# FastSim Specific options
 	sed "s;TASKNAME;$SHORT;;s;DATASET;$DATASET;;s;JECNAME;$JECNAME;;s;LHELABEL;$LHELABEL;;s;ISDATA;$ISDATA;;" $TASKDIR/crab_template_ttreentuple_py.txt > $TASKDIR/crab_$SHORT.py
 	if ( ! $isData ) then
 	    sed -i "s;xsec=0;xsec=$xsec;;s;nevent=0;nevent=$nevent;;s;lumiWeight=1.0;lumiWeight=$lumiWeight;" $TASKDIR/crab_$SHORT.py
@@ -168,7 +170,13 @@ else if ( `echo $cmd | grep "submit" | wc -l` ) then
     end
 
 else if ( `echo $cmd | grep "status" | wc -l` ) then
-    foreach short ( `awk '{ print $1 }' $TASKDIR/input_datasets.txt` )
+    set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
+    set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
+    set N=`cat $TASKDIR/input_datasets.txt | wc -l`
+    foreach i ( `seq 1 $N` )
+        set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
+	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
+        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
 	set dir=`echo $TASKDIR"/crab_"$short`
 	if ( ! -d $dir ) then
 	    set Status="MISSING"
@@ -191,23 +199,44 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
                 set Status=`if ( $status_txt != "" ) grep "Task status:" $status_txt | awk '{ print $3 }'`
 	    endif
 	endif
-        printf "%-70s %s\n" $dir $Status
+	set ncomp=0
+	set nall=0
+	if ( $Status != "COMPLETED" ) then
+	    set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
+	    set ncomp=`se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp/0000 | grep "\.root" | wc -l`
+	    set nall=`cat $TASKDIR/status/$short/*.txt | grep "%.*\(.*\)" | sed "s;/; ;g;s;);;g" | awk '{ print $NF }' | sort | uniq -c | sort | tail -1 | awk '{ print $NF }'`
+	    if ( $ncomp == $nall ) then
+		set Status="COMPLETED"
+		printf "%-70s %20s\n" $dir $Status
+	    else
+		printf "%-70s %20s (%d/%d)\n" $dir $Status $ncomp $nall
+	    endif
+	else
+	    printf "%-70s %20s\n" $dir $Status
+	endif
 	if ( $Status == "MISSING" ) then
 	    echo "  -> Task is not found (not yet submitted?). Submitting ...\n"
-	    crab submit -c $dir.py
+	    eval_or_echo "crab submit -c $dir.py"
 	    echo
 	else if ( `grep "Cannot find \.requestcache" $status_txt | wc -l` ) then
 	    echo "  -> Task submission failed - No requestcache. Delete and submit again ...\n"
-	    echo "rm -rf $dir"
-	    echo "crab submit -c $dir.py"
+	    eval_or_echo "rm -rf $dir"
+	    eval_or_echo "crab submit -c $dir.py"
 	    echo
 	else if ( `echo $Status | grep SUBMITFAILED | wc -l` && `find $dir -maxdepth 0 -type d -mmin +120 | wc -l` && `grep "\%.*\(" $status_txt | wc -l` == 0 ) then
 	    echo "  -> Task submission failed after more than 2 hours and no jobs are running. Delete and submit again ...\n"
-	    echo "rm -rf $dir"
-	    echo "crab submit -c $dir.py"
+	    eval_or_echo "rm -rf $dir"
+	    eval_or_echo "crab submit -c $dir.py"
 	    echo
 	else if ( `grep "The server answered with an error" $status_txt | wc -l` ) then
 	    echo "  -> Server error. Do nothing ...\n"
+	else if ( ( `echo $Status | grep KILLED | wc -l` || `echo $Status | grep FAILED | wc -l` ) && `find $dir -maxdepth 0 -type d -mmin +2880 | wc -l` && $ncomp != $nall ) then
+	    grep "%.*\(.*\)" $status_txt
+	    echo "  -> Task KILLED/FAILED after more than 2 days, and not all jobs completed. Remove SE files, delete and submit again ...\n"
+	    eval_or_echo "se rm $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp --run"
+	    eval_or_echo "rm -rf $dir"
+	    eval_or_echo "crab submit -c $dir.py"
+	    echo
 	
 	#else if ( `echo $Status | grep NEW | wc -l` && `find $dir -maxdepth 0 -type d -mmin +120 | wc -l` ) then
 	#    echo "  -> Task stuck in NEW state for more than 2 hours. Kill, delete and submit again ...\n"
@@ -223,9 +252,9 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	#    echo
         else if ( `echo $Status | grep COMPLETED | wc -l` == 0 ) then
 	    grep "%.*\(.*\)" $status_txt
-            if ( `grep "failed.*\%.*\(" $status_txt | wc -l` == 1 ) then
+            if ( `grep "failed.*\%.*\(" $status_txt | wc -l` == 1 && $ncomp != $nall ) then
         	echo "  -> Resubmitting failed jobs ...\n"
-        	crab resubmit -d $dir
+        	eval_or_echo "crab resubmit -d $dir"
 		echo
             endif
         endif
@@ -327,7 +356,7 @@ else if ( `echo $cmd | grep "transfer" | wc -l` ) then
 	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
 	eval_or_echo "se mkdir caf:B2GTTreeNtuple/$DIR/$short"
 	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp` )
-	    eval_or_echo "se dl $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp/$thousand caf:B2GTTreeNtuple/$DIR/$short --par 4 --run"
+	    eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp/$thousand caf:B2GTTreeNtuple/$DIR/$short --par 4 --run"
 	end
     end
 

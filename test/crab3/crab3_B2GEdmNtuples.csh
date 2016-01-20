@@ -138,24 +138,24 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	else if ( `echo $PUBNAME2 | grep "Run2015C_25ns-05Oct2015" | wc -l`) then
 	    set DATAPROC="Data25ns_ReReco"
 	    set JEC_DB_FILE="Summer15_25nsV6_DATA.db"
-	    set JSON="$CERT_DIR/$LATEST_25NS_GOLDEN_JSON"
+	    set JSON="$CERT_DIR/$LATEST_25NS_SILVER_JSON"
 	    set RUNS="1-999999"
 	# 25 ns - Data (ReMiniAOD)
 	else if ( `echo $PUBNAME2 | grep "Run2015D-05Oct2015" | wc -l`) then
 	    set DATAPROC="Data25ns_MiniAODv2"
 	    set JEC_DB_FILE="Summer15_25nsV6_DATA.db"
-	    set JSON="$CERT_DIR/$LATEST_25NS_GOLDEN_JSON"
+	    set JSON="$CERT_DIR/$LATEST_25NS_SILVER_JSON"
 	    set RUNS="1-999999"
 	# 25 ns - Data (PromptReco)
 	else if ( `echo $PUBNAME2 | grep "Run2015D-PromptReco-v4" | wc -l`) then
 	    set DATAPROC="Data25ns_PromptRecov4"
 	    set JEC_DB_FILE="Summer15_25nsV6_DATA.db"
-	    set JSON="$CERT_DIR/$LATEST_25NS_GOLDEN_JSON"
+	    set JSON="$CERT_DIR/$LATEST_25NS_SILVER_JSON"
 	    set RUNS="1-999999"
 	# 25 ns - MC FastSim
 	else if ( `echo $PUBNAME2 | grep "RunIISpring15MiniAODv2-FastAsympt25ns" | wc -l` ) then
 	    set DATAPROC="MC25ns_MiniAODv2_FastSim"
-	    set JEC_DB_FILE="Summer15_25nsV6_MC.db"
+	    set JEC_DB_FILE="MCRUN2_74_V9.db"
 	# 25 ns - MC FullSim (ReMiniAOD)
 	else if ( `echo $PUBNAME2 | grep "RunIISpring15MiniAODv2" | wc -l` ) then
 	    set DATAPROC="MC25ns_MiniAODv2"
@@ -379,6 +379,27 @@ else if ( `echo $cmd | grep "find_missing" | wc -l` ) then
 	set missing=`echo $missing | sed "s;,;;1"`
 	if ( $missing != "" ) echo "crab resubmit -d $TASKDIR/crab_$short --wait --force --jobids=$missing"
     end
+
+else if ( `echo $cmd | grep "cancel" | wc -l` ) then
+    set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
+    set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
+    set N=`cat $TASKDIR/input_datasets.txt | wc -l`
+    foreach i ( `seq 1 $N` )
+        set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
+        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
+	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
+        set out_dataset=`grep 'Output dataset:' $TASKDIR/status/$short/*.txt | grep $primary_dataset | awk '{ print $NF }' | tail -1`
+        set pubname=`grep outputDatasetTag $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
+	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
+	# Invalidate dataset
+	eval_or_echo "python $DBS3_CLIENT_ROOT/examples/DBS3SetDatasetStatus.py --url=https://cmsweb.cern.ch/dbs/prod/phys03/DBSWriter --status=INVALID --recursive=False --dataset=$out_dataset"
+	# delete all files on SE
+	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp` )
+	    eval_or_echo "se rm $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand --run"
+	end
+    end
+    eval_or_echo "rm -r $TASKDIR"
 
 else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
     if ( $#argv < 4 ) then

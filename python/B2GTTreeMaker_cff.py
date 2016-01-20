@@ -274,12 +274,14 @@ else:
         "jecFactor0",
         "jecFactorL3Absolute",
         "jetArea",
+        #"jecUncertainty",
         "SmearedPt",
         "SmearedPEta",
         "SmearedPhi",
         "SmearedE",
-        "JERup",
-        "JERdown",
+        #"JER",
+        #"JERup",
+        #"JERdown",
     )
 
     jetVarsJEC = cms.untracked.vstring(
