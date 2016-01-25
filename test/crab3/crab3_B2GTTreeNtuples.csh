@@ -82,7 +82,7 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
     if ( $#argv < 6 ) then
 	cat Usage.txt; rm Usage.txt; exit
     endif
-    set INSStatusPUT_FILE=$3
+    set INPUT_FILE=$3
     set XSEC_FILE=$4
     set SE_SITE=$5
     set SE_USERDIR=$6
