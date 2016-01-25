@@ -122,6 +122,9 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	        set xsec=`echo | awk '{ printf "%lf", '$xsec'*'$k_factor' }'`
 	        # Correct the number of events for negative weights (beware, corr factor might not be available yet!)
 	        set nevent=`das_client.py --query="dataset=$DATASET instance=prod/phys03 | grep dataset.nevents" | tail -1`
+		while ( $nevent == "[]" )
+		    set nevent=`das_client.py --query="dataset=$DATASET instance=prod/phys03 | grep dataset.nevents" | tail -1`
+		end
 	        set neg_corr=`grep $primary $TASKDIR/xsec_datasets.txt | awk '{ print $4 }'`
 	        set nevent=`echo | awk '{ printf "%10.0f", '$nevent'/'$neg_corr' }'`
 	        # Calculate lumi weight for 1 fb^-1
