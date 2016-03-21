@@ -6,12 +6,12 @@ Checkout Instructions (with B2GAnaFW)
 =====================================
 
 ```Shell
-setenv SCRAM_ARCH slc6_amd64_gcc491
-cmsrel CMSSW_7_4_15
-cd CMSSW_7_4_15/src
+setenv SCRAM_ARCH slc6_amd64_gcc493
+cmsrel CMSSW_7_6_3_patch2
+cd CMSSW_7_6_3_patch2/src
 cmsenv
-git cms-merge-topic ikrav:egm_id_7.4.12_v1
-git clone https://github.com/cmsb2g/B2GAnaFW Analysis/B2GAnaFW -b CMSSW_7_4_X_V8
+git clone https://github.com/dmajumder/JetToolbox JMEAnalysis/JetToolbox -b jetToolbox_763
+git clone https://github.com/cmsb2g/B2GAnaFW Analysis/B2GAnaFW -b CMSSW_7_6_X_V1
 git clone https://github.com/jkarancs/B2GTTrees Analysis/B2GTTrees
 scram b -j 20
 ```
@@ -19,21 +19,26 @@ scram b -j 20
 Running
 =======
 
+First copy JEC/JER db/txt files so you can run conveniently from the src directory
+```Shell
+cp Analysis/B2GAnaFW/test/Fall15_25nsV2_* .
+```
+
    * 1/test) MiniAOD -> Common B2G edm ntuple
 ```Shell
-cmsRun Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py sample="/store/data/Run2015D/JetHT/MINIAOD/PromptReco-v4/000/258/159/00000/0075E33B-3B6C-E511-BCC8-02163E01455C.root" outputLabel=B2GEDMNtuple_Data_25ns_PromptRecov4.root DataProcessing=Data25ns_PromptRecov4 wantSummary=False
+cmsRun Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py sample="file:/data/store/mc/RunIIFall15MiniAODv2/TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/00000/00547C97-2FCC-E511-8D75-002590DB91D2.root" outputLabel=B2GEDMNtuple_MC_25ns_76X.root DataProcessing=MC25ns_MiniAOD_76X wantSummary=False maxEvents=1000
 
-cmsRun Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py sample="/store/mc/RunIISpring15MiniAODv2/TTJets_HT-600to800_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/74X_mcRun2_asymptotic_v2-v1/10000/00ABB210-A66D-E511-914D-001E6739BB01.root" outputLabel=B2GEDMNtuple_MC_25ns_MiniAODv2.root DataProcessing=MC25ns_MiniAODv2 wantSummary=False
+cmsRun Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py sample="file:/data/store/data/Run2015D/JetHT/MINIAOD/16Dec2015-v1/00000/301A497D-70B0-E511-9630-002590D0AFA8.root" outputLabel=B2GEDMNtuple_Data_25ns_76X_JetHT.root DataProcessing=Data25ns_76X wantSummary=False maxEvents=1000
 ```
 
    * 2) Common B2G edm ntuple -> Add ExtraVars -> TTree ntuple
 ```Shell
-cmsRun Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py isData=True sample="file:B2GEDMNtuple_Data_25ns_PromptRecov4.root" outputLabel=B2GTTreeNtupleExtra_Data_25ns_PromptRecov4.root JECloc=Analysis/B2GTTrees/JECs/Summer15_25nsV6_DATA
+cmsRun Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py runOnGrid=False isData=False sample="file:B2GEDMNtuple_MC_25ns_76X.root" outputLabel=B2GTTreeNtupleExtra_MC_25ns_76X.root lheLabel="externalLHEProducer"
 
-cmsRun Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py isData=False sample="file:B2GEDMNtuple_MC_25ns_MiniAODv2.root" outputLabel=B2GTTreeNtupleExtra_MC_25ns_MiniAODv2.root JECloc=Analysis/B2GTTrees/JECs/Summer15_25nsV6_MC lheLabel="externalLHEProducer"
+cmsRun Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py runOnGrid=False isData=True sample="file:B2GEDMNtuple_Data_25ns_76X_JetHT.root" outputLabel=B2GTTreeNtupleExtra_Data_25ns_76X_JetHT.root
 ```
 
-CRAB3 Tools
+CRAB3 Tools (Recipe might need to be updated for 76X)
 ==========
 INFO: You can mass produce B2GEdmNtuples similar to multicrab
 
