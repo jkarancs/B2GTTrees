@@ -76,7 +76,7 @@ else
     set dry="1"
 endif
 
-set DATE=`date | sed "s; ;_;g;s;:;h;1;s;:;m;1"`
+set DATE=`date | cut -f2- -d" " | sed "s; ;_;g;s;:;h;1;s;:;m;1"`
 
 if ( `echo $cmd | grep "create" | wc -l` ) then
     if ( $#argv < 6 ) then
@@ -265,7 +265,7 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 
 else if ( `echo $cmd | grep "report" | wc -l` ) then
     if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
-    foreach dir ( `ls -ltrd $TASKDIR/* | grep "^d" | awk '{ print $NF }'`)
+    foreach dir ( `awk '{ print "'$TASKDIR'/crab_"$1 }' $TASKDIR/input_datasets.txt` )
         eval_or_echo "crab report -d $dir"
     end
 

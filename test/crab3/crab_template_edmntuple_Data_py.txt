@@ -3,6 +3,10 @@ config = Configuration()
 import os
 b2gana_test_dir = os.environ['CMSSW_BASE']+'/src/Analysis/B2GAnaFW/test/'
 
+# Input .db and .txt files for JEC/JER
+import glob
+input_files = glob.glob(b2gana_test_dir+'JEC_ERA*')
+
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
@@ -13,7 +17,7 @@ config.section_('JobType')
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = b2gana_test_dir+'b2gedmntuples_cfg.py'
 config.JobType.pyCfgParams = ['DataProcessing=DATAPROC', 'wantSummary=False']
-config.JobType.inputFiles = [b2gana_test_dir+'JEC_DB_FILE']
+config.JobType.inputFiles = input_files
 
 config.section_('Data')
 config.Data.outLFNDirBase = 'SE_USERDIR'

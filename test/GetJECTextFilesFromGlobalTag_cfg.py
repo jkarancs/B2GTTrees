@@ -92,6 +92,11 @@ if options.usePrivateSQLite:
                 tag = cms.string("JetCorrectorParametersCollection_"+options.era+"_AK8PFchs"),
                 label= cms.untracked.string("AK8PFchs")
                 ),
+            cms.PSet(
+                record = cms.string("JetCorrectionsRecord"),
+                tag = cms.string("JetCorrectorParametersCollection_"+options.era+"_AK8PFPuppi"),
+                label= cms.untracked.string("AK8PFPuppi")
+                ),
             )
         )
     process.es_prefer_jec = cms.ESPrefer("PoolDBESSource",'jec')

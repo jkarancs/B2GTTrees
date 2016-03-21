@@ -10,7 +10,7 @@ if ( `which par_source | grep "aliased to" | wc -l` == 0 ) then
 endif
 
 set RAND=`uuid | sed "s;-;_;g"`
-set DATE=`date | sed "s; ;_;g;s;:;h;1;s;:;m;1"`
+set DATE=`date | cut -f2- -d" " | sed "s; ;_;g;s;:;h;1;s;:;m;1"`
 
 set cmd=$1
 set script_opts=""

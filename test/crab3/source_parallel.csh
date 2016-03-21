@@ -24,30 +24,36 @@ endif
 set username=`whoami`
 set time=`date | sed "s;:;;g" | awk '{ printf "%d_%s_%d_%d\n",$6,$2,$3,$4 }'`
 set tempdir="parsource_tempdir_$time"
-#sed -i '/^$/d' $script # remove empty lines
-set nlines=`wc -l $script | awk '{ print $1 }'`
+set nlines=`sed '/^$/d' $script | wc -l`
 if ( $nlines ) then
     mkdir $tempdir
     touch $tempdir/pids.txt
-    set nrun="0"
+    # First copy each line of the script
     foreach n ( `seq 1 $nlines` )
-	sed -n $n'p' $script >! $tempdir/$n.csh
-	set last_20_id=`tail -$npar $tempdir/pids.txt | tr "\n" " "`
-	if ( `cat $tempdir/pids.txt | wc -l` ) set nrun=`ps $last_20_id | sed '1d' | wc -l`
+	sed '/^$/d' $script | sed -n $n'p' >! $tempdir/$n.csh
+    end
+    set nrun="0"
+    # Run each subscript separately in parallel
+    foreach n ( `seq 1 $nlines` )
+	# First check if the number of running jobs is less than <n_parallel>
+	# if needed wait for at least one job to finish before running the next
+	set last_50_id=`tail -50 $tempdir/pids.txt | tr "\n" " "`
+	if ( `cat $tempdir/pids.txt | wc -l` ) set nrun=`ps $last_50_id | sed '1d' | wc -l`
         while ( $nrun == $npar )
-            sleep 5
-	    set nrun=`ps $last_20_id | sed '1d' | wc -l`
+            sleep 5s
+	    set nrun=`ps $last_50_id | sed '1d' | wc -l`
 	    printf "\rRunning "$script", bkg jobs: %d, Progress: %"`expr "$nlines" : ".*"`"d/%d" $nrun `expr $n - $nrun - 1` $nlines
         end
+	# Submit next job in parallel
         ( source $tempdir/$n.csh >&! "$tempdir"/`printf "%06d" $n`.log &; echo $! >> $tempdir/pids.txt ) >& /dev/null
         printf "\rRunning "$script", bkg jobs: %d, Progress: %"`expr "$nlines" : ".*"`"d/%d" `expr $nrun + 1` `expr $n - $nrun - 1` $nlines
         sleep 0.2
     end
-    # Wait until all files are downloaded
-    set nrun=`ps $last_20_id | sed '1d' | wc -l`
+    # Finally wait until all jobs finished
+    set nrun=`ps $last_50_id | sed '1d' | wc -l`
     while ( $nrun )
 	sleep 5
-	set nrun=`ps $last_20_id | sed '1d' | wc -l`
+	set nrun=`ps $last_50_id | sed '1d' | wc -l`
         printf "\rRunning "$script", bkg jobs: %d, Progress: %"`expr "$nlines" : ".*"`"d/%d" $nrun `expr $nlines - $nrun` $nlines
     end
     printf "\rRunning "$script", bkg jobs: %d, Progress: %d/%d\n" $nrun $nlines $nlines
@@ -55,7 +61,7 @@ if ( $nlines ) then
     echo "Done. logfile: parsource_$time.log"
     rm -r $tempdir
     unset nrun
-    unset last_20_id
+    unset last_50_id
 endif
 unset script
 unset npar

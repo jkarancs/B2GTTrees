@@ -62,6 +62,8 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
   physObjects = iConfig.getParameter<std::vector<edm::ParameterSet> >("physicsObjects");
   for (auto pset : physObjects) if (!(isData && pset.getUntrackedParameter<bool>("mc_only", false))) {
     std::string label = pset.getUntrackedParameter<std::string >("label");
+    std::string key_label = pset.getUntrackedParameter< std::string >("key_label", "");
+    std::string prefix_in = pset.getUntrackedParameter<std::string >("prefix_in");
     std::string prefix_out = pset.getUntrackedParameter<std::string >("prefix_out");
     singleBool = pset.getUntrackedParameter<std::vector<std::string > >("singleB", std::vector<std::string >());
     singleInt = pset.getUntrackedParameter<std::vector<std::string > >("singleI", std::vector<std::string >());
@@ -72,44 +74,72 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
     singleDouble = pset.getUntrackedParameter<std::vector<std::string > >("singleD", std::vector<std::string >());
     vectorInt = pset.getUntrackedParameter<std::vector<std::string > >("vectorI", std::vector<std::string >());
     vectorFloat = pset.getUntrackedParameter<std::vector<std::string > >("vectorF", std::vector<std::string >());
-    std::string key_label = pset.getUntrackedParameter<std::string >("key_label", "");
     
     // Initialize single pset objects
     for (size_t i=0; i<singleBool.size(); ++i) {
+      std::string varname_in=prefix_in+singleBool[i];
+      std::string varname_in_nodash = varname_in; // Remove "_" from var name
+      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
+      edm::EDGetTokenT<bool>(consumes<bool>(edm::InputTag(label, varname_in_nodash)));
       std::string varname_out = prefix_out + singleBool[i];
       tree->Branch(varname_out.c_str(), &int_values[singleBool[i]+"_"+label]);
     }
     
     for (size_t i=0; i<singleInt.size(); ++i) {
+      std::string varname_in=prefix_in+singleInt[i];
+      std::string varname_in_nodash = varname_in; // Remove "_" from var name
+      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
+      edm::EDGetTokenT<int>(consumes<int>(edm::InputTag(label, varname_in_nodash)));
       std::string varname_out = prefix_out + singleInt[i];
       tree->Branch(varname_out.c_str(), &int_values[singleInt[i]+"_"+label]);
       if (singleInt[i].find("HLT_")==0) {
+	edm::EDGetTokenT<int>(consumes<int>(edm::InputTag(label, varname_in_nodash+"prescale")));
 	varname_out += "_prescale";
 	tree->Branch(varname_out.c_str(), &int_values[singleInt[i]+"_prescale_"+label]);
       }
     }
     
     for (size_t i=0; i<singleUInt.size(); ++i) {
+      std::string varname_in=prefix_in+singleUInt[i];
+      std::string varname_in_nodash = varname_in; // Remove "_" from var name
+      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
+      edm::EDGetTokenT<unsigned int>(consumes<unsigned int>(edm::InputTag(label, varname_in_nodash)));
       std::string varname_out = prefix_out + singleUInt[i];
       tree->Branch(varname_out.c_str(), &uint_values[singleUInt[i]+"_"+label]);
     }
     
     for (size_t i=0; i<singleULong.size(); ++i) {
+      std::string varname_in=prefix_in+singleULong[i];
+      std::string varname_in_nodash = varname_in; // Remove "_" from var name
+      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
+      edm::EDGetTokenT<unsigned long>(consumes<unsigned long>(edm::InputTag(label, varname_in_nodash)));
       std::string varname_out = prefix_out + singleULong[i];
       tree->Branch(varname_out.c_str(), &ulong_values[singleULong[i]+"_"+label]);
     }
     
     for (size_t i=0; i<singleULLong.size(); ++i) {
+      std::string varname_in=prefix_in+singleULLong[i];
+      std::string varname_in_nodash = varname_in; // Remove "_" from var name
+      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
+      edm::EDGetTokenT<unsigned long long>(consumes<unsigned long long>(edm::InputTag(label, varname_in_nodash)));
       std::string varname_out = prefix_out + singleULLong[i];
       tree->Branch(varname_out.c_str(), &ullong_values[singleULLong[i]+"_"+label]);
     }
     
     for (size_t i=0; i<singleFloat.size(); ++i) {
+      std::string varname_in=prefix_in+singleFloat[i];
+      std::string varname_in_nodash = varname_in; // Remove "_" from var name
+      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
+      edm::EDGetTokenT<float>(consumes<float>(edm::InputTag(label, varname_in_nodash)));
       std::string varname_out = prefix_out + singleFloat[i];
       tree->Branch(varname_out.c_str(), &float_values[singleFloat[i]+"_"+label]);
     }
     
     for (size_t i=0; i<singleDouble.size(); ++i) {
+      std::string varname_in=prefix_in+singleDouble[i];
+      std::string varname_in_nodash = varname_in; // Remove "_" from var name
+      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
+      edm::EDGetTokenT<double>(consumes<double>(edm::InputTag(label, varname_in_nodash)));
       std::string varname_out = prefix_out + singleDouble[i];
       tree->Branch(varname_out.c_str(), &double_values[singleDouble[i]+"_"+label]);
     }
@@ -124,6 +154,10 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
     }
 
     for (size_t i=0; i<vectorInt.size(); ++i) {
+      std::string varname_in=prefix_in+vectorInt[i];
+      std::string varname_in_nodash = varname_in; // Remove "_" from var name
+      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
+      edm::EDGetTokenT<std::vector<int> >(consumes<std::vector<int> >(edm::InputTag(label, varname_in_nodash)));
       std::string varname_out = prefix_out + vectorInt[i];
       if (prefix_out=="") {
         size_var = vectorInt[i].substr(0,vectorInt[i].find("_"))+"_size";
@@ -137,6 +171,10 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
     }
     
     for (size_t i=0; i<vectorFloat.size(); ++i) {
+      std::string varname_in=prefix_in+vectorFloat[i];
+      std::string varname_in_nodash = varname_in; // Remove "_" from var name
+      size_t f; while ((f=varname_in_nodash.find("_"))!=std::string::npos) varname_in_nodash.erase(f,1);
+      edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(label, varname_in_nodash)));
       std::string varname_out = prefix_out + vectorFloat[i];
       if (prefix_out=="") {
         size_var = vectorFloat[i].substr(0,vectorFloat[i].find("_"))+"_size";
@@ -150,6 +188,7 @@ B2GTTreeMaker::B2GTTreeMaker(const edm::ParameterSet& iConfig) {
     }
     
     // Adding keys
+    edm::EDGetTokenT<std::vector<std::vector<int> > >(consumes<std::vector<std::vector<int> > >(edm::InputTag(key_label, "")));
     if (key_label.size()) tree->Branch((prefix_out+"Keys").c_str(), &keys[label]);
   }
 }
@@ -159,6 +198,7 @@ void B2GTTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   
   for (auto pset : physObjects) if (!(isData && pset.getUntrackedParameter<bool>("mc_only", false))) {
     std::string label = pset.getUntrackedParameter< std::string >("label");
+    std::string key_label = pset.getUntrackedParameter< std::string >("key_label", "");
     std::string prefix_in = pset.getUntrackedParameter<std::string >("prefix_in");
     std::string prefix_out = pset.getUntrackedParameter<std::string >("prefix_out");
     singleBool = pset.getUntrackedParameter<std::vector<std::string > >("singleB", std::vector<std::string >()); 
@@ -170,7 +210,6 @@ void B2GTTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     singleDouble = pset.getUntrackedParameter<std::vector<std::string > >("singleD", std::vector<std::string >()); 
     vectorInt = pset.getUntrackedParameter<std::vector<std::string > >("vectorI", std::vector<std::string >()); 
     vectorFloat = pset.getUntrackedParameter<std::vector<std::string > >("vectorF", std::vector<std::string >()); 
-    std::string key_label = pset.getUntrackedParameter< std::string >("key_label", "");
     
     //Single ints
     for (size_t i=0; i<singleBool.size(); ++i) {

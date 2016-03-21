@@ -5,50 +5,6 @@
 #include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
 
-// JER Updated to:
-// https://twiki.cern.ch/twiki/bin/view/CMS/JetResolution?rev=41#JER_Scaling_factors_and_Uncertai
-double
-B2GEdmExtraVarProducer::getJER_(double eta)
-{
-  eta=fabs(eta);
-  if(eta>=0.0 && eta<0.8) return 1.061; // +-0.023
-  if(eta>=0.8 && eta<1.3) return 1.088; // +-0.029
-  if(eta>=1.3 && eta<1.9) return 1.106; // +-0.030   
-  if(eta>=1.9 && eta<2.5) return 1.126; // +-0.094 
-  if(eta>=2.5 && eta<3.0) return 1.343; // +-0.123 
-  if(eta>=3.0 && eta<3.2) return 1.303; // +-0.111 
-  if(eta>=3.2 && eta<5.0) return 1.320; // +-0.286 
-  return -1.;
-}
-
-double
-B2GEdmExtraVarProducer::getJERup_(double eta)
-{
-  eta=fabs(eta);
-  if(eta>=0.0 && eta<0.8) return 1.084;
-  if(eta>=0.8 && eta<1.3) return 1.117;
-  if(eta>=1.3 && eta<1.9) return 1.136;
-  if(eta>=1.9 && eta<2.5) return 1.220;
-  if(eta>=2.5 && eta<3.0) return 1.466;
-  if(eta>=3.0 && eta<3.2) return 1.414;
-  if(eta>=3.2 && eta<5.0) return 1.606;
-  return -1.;  
-}
-
-double
-B2GEdmExtraVarProducer::getJERdown_(double eta)
-{
-  eta=fabs(eta);
-  if(eta>=0.0 && eta<0.8) return 1.038;
-  if(eta>=0.8 && eta<1.3) return 1.059;
-  if(eta>=1.3 && eta<1.9) return 1.076;
-  if(eta>=1.9 && eta<2.5) return 1.032;
-  if(eta>=2.5 && eta<3.0) return 1.220;
-  if(eta>=3.0 && eta<3.2) return 1.192;
-  if(eta>=3.2 && eta<5.0) return 1.034;
-  return -1.;  
-}
-
 void B2GEdmExtraVarProducer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {
   
   if (!isData_) {
@@ -96,6 +52,104 @@ void B2GEdmExtraVarProducer::beginRun(edm::Run const& iRun, edm::EventSetup cons
   }
 }
 
+void B2GEdmExtraVarProducer::init_tokens_() {
+  edm::EDGetTokenT<std::vector<std::string> >(consumes<std::vector<std::string> >(edm::InputTag(trigger_label_, "triggerNameTree")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(trigger_label_, "triggerBitTree")));
+  edm::EDGetTokenT<std::vector<int> >(consumes<std::vector<int> >(edm::InputTag(trigger_label_, "triggerPrescaleTree")));
+  edm::EDGetTokenT<std::vector<std::string> >(consumes<std::vector<std::string> >(edm::InputTag(filter_label_,  "triggerNameTree")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(filter_label_,  "triggerBitTree")));
+  
+  edm::EDGetTokenT<double>(consumes<double>(edm::InputTag("fixedGridRhoFastjetAll", "")));
+  edm::EDGetTokenT<int>(consumes<int>(edm::InputTag(evt_label_, evt_prefix_+"npv")));
+  edm::EDGetTokenT<std::vector<int> >(consumes<std::vector<int> >(edm::InputTag(vtx_label_, vtx_prefix_+"ndof")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(vtx_label_, vtx_prefix_+"z")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(vtx_label_, vtx_prefix_+"rho")));
+  
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(met_label_, met_prefix_+"Pt")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(met_label_, met_prefix_+"Phi")));
+  
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"Pt")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"Eta")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"Phi")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"E")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"jecFactor0")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"jetArea")));
+  
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Pt")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Eta")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Phi")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"E")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"tau2")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"tau3")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"softDropMass")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"jecFactor0")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"jetArea")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"nSubJets")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex0")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex1")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex2")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex3")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"vSubjetIndex0")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"vSubjetIndex1")));
+  
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"Pt")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"Eta")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"Phi")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"E")));
+  
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"Pt")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"Eta")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"Phi")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"E")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"jecFactor0")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"jetArea")));
+  
+  edm::EDGetTokenT<std::vector<std::vector<int> > >(consumes<std::vector<std::vector<int> > >(edm::InputTag(AK4JetKeys_label_,"")));
+  edm::EDGetTokenT<std::vector<std::vector<int> > >(consumes<std::vector<std::vector<int> > >(edm::InputTag(AK8JetKeys_label_,"")));
+  edm::EDGetTokenT<std::vector<std::vector<int> > >(consumes<std::vector<std::vector<int> > >(edm::InputTag(AK8SubjetKeys_label_,"")));
+  edm::EDGetTokenT<std::vector<std::vector<int> > >(consumes<std::vector<std::vector<int> > >(edm::InputTag(CmsTTSubjetKeys_label_,"")));
+  
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"Pt")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"Eta")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"Phi")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"E")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"Charge")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"Key")));
+  
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(muons_label_, muons_prefix_+"Pt")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(muons_label_, muons_prefix_+"Eta")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(muons_label_, muons_prefix_+"Phi")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(muons_label_, muons_prefix_+"E")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(muons_label_, muons_prefix_+"Charge")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(muons_label_, muons_prefix_+"IsTightMuon")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(muons_label_, muons_prefix_+"Key")));
+  
+  if (!isData_) {
+    edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"Pt")));
+    edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"Eta")));
+    edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"Phi")));
+    edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"E")));
+    edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"Charge")));
+    edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"ID")));
+    edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"Status")));
+    edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"Mom0ID")));
+    edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"Mom0Status")));
+    edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"Mom1ID")));
+    edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"Mom1Status")));
+    edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"Dau0ID")));
+    edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"Dau0Status")));
+    edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"Dau1ID")));
+    edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"Dau1Status")));
+    
+    edm::EDGetTokenT<LHERunInfoProduct>(mayConsume<LHERunInfoProduct, edm::InRun>(edm::InputTag(lhe_label_, "")));
+
+    edm::EDGetTokenT<GenEventInfoProduct>(consumes<GenEventInfoProduct>(edm::InputTag("generator")));
+    edm::EDGetTokenT<LHEEventProduct>(consumes<LHEEventProduct>(edm::InputTag(lhe_label_, "")));
+  }
+
+  edm::EDGetTokenT<LHERunInfoProduct>(mayConsume<LHERunInfoProduct, edm::InRun>(edm::InputTag(lhe_label_, "")));
+}
+
 void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::EventSetup const& iSetup) {
   // Read variables from EdmNtuple
   iEvent.getByLabel(edm::InputTag(trigger_label_, "triggerNameTree"),      h_strings_["trigger_names"]);
@@ -126,10 +180,9 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"E"),               h_floats_["AK8_E"]);
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"tau2"),            h_floats_["AK8_tau2"]);
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"tau3"),            h_floats_["AK8_tau3"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"softDropMass"),      h_floats_["AK8_softDropMass"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"softDropMass"),    h_floats_["AK8_softDropMass"]);
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"jecFactor0"),      h_floats_["AK8_jecFactor0"]);
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"jetArea"),         h_floats_["AK8_jetArea"]);
-  
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"nSubJets"),        h_floats_["AK8_nSubJets"]);
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex0"), h_floats_["AK8_topSubjetIndex0"]);
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex1"), h_floats_["AK8_topSubjetIndex1"]);
@@ -137,7 +190,12 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex3"), h_floats_["AK8_topSubjetIndex3"]);
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"vSubjetIndex0"),   h_floats_["AK8_vSubjetIndex0"]);
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"vSubjetIndex1"),   h_floats_["AK8_vSubjetIndex1"]);
-
+  
+  iEvent.getByLabel(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"Pt"),              h_floats_["AK8Puppi_Pt"]);
+  iEvent.getByLabel(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"Eta"),             h_floats_["AK8Puppi_Eta"]);
+  iEvent.getByLabel(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"Phi"),             h_floats_["AK8Puppi_Phi"]);
+  iEvent.getByLabel(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"E"),               h_floats_["AK8Puppi_E"]);
+  
   iEvent.getByLabel(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"Pt"),         h_floats_["CmsTTSub_Pt"]);
   iEvent.getByLabel(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"Eta"),        h_floats_["CmsTTSub_Eta"]);
   iEvent.getByLabel(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"Phi"),        h_floats_["CmsTTSub_Phi"]);
@@ -291,6 +349,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       if (h_strings_["filter_names"]->at(i).find(filter)==0) filters_[filter] = i;
     std::cout<<"Filters found: "<<std::endl;
     for ( auto filter : filters_ ) std::cout<<filter.first<<std::endl;
+    //for (size_t i=0; i<nfilt_; ++i) std::cout<<h_strings_["filter_names"]->at(i)<<std::endl;
   }
   if (ntrig_!=h_strings_["trigger_names"]->size()) {
     ntrig_=h_strings_["trigger_names"]->size();
@@ -366,13 +425,15 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   
   size_t nele = h_floats_["ele_Pt"]->size();
   size_t nmu =  h_floats_["mu_Pt"]->size();
-  size_t njet = h_floats_["AK8_Pt"]->size();
   size_t njet_AK4 = h_floats_["AK4_Pt"]->size();
+  size_t njet_AK8 = h_floats_["AK8_Pt"]->size();
+  size_t njet_AK8Puppi = h_floats_["AK8Puppi_Pt"]->size();
   
   if (!isData_) {
+    size_t ngen =  h_floats_["gen_Pt"]->size();
     double gluino_mass = -9999;
     double lsp_mass = -9999;
-    for (size_t i=0, n=h_floats_["gen_Pt"]->size(); i<n; ++i) {
+    for (size_t i=0; i<ngen; ++i) {
       // Only saving b,t,W,l,nu
       if (abs(h_floats_["gen_ID"]->at(i))==5||abs(h_floats_["gen_ID"]->at(i))==6||
           (abs(h_floats_["gen_ID"]->at(i))>=11&&abs(h_floats_["gen_ID"]->at(i))<=16)
@@ -385,8 +446,8 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
         vector_int_["gen_Mom1Status"].push_back(h_floats_["gen_Mom1Status"]->at(i));		    /* gen_Mom1Status */
         vector_int_["gen_Dau0ID"].push_back(h_floats_["gen_Dau0ID"]->at(i));			    /* gen_Dau0ID */
         vector_int_["gen_Dau0Status"].push_back(h_floats_["gen_Dau0Status"]->at(i));		    /* gen_Dau0Status */
-        vector_int_["gen_Dau1ID"].push_back(h_floats_["gen_Dau0ID"]->at(i));			    /* gen_Dau1ID */
-        vector_int_["gen_Dau1Status"].push_back(h_floats_["gen_Dau0Status"]->at(i));		    /* gen_Dau1Status */
+        vector_int_["gen_Dau1ID"].push_back(h_floats_["gen_Dau1ID"]->at(i));			    /* gen_Dau1ID */
+        vector_int_["gen_Dau1Status"].push_back(h_floats_["gen_Dau1Status"]->at(i));		    /* gen_Dau1Status */
         vector_float_["gen_Pt"].push_back(h_floats_["gen_Pt"]->at(i));				    /* gen_Pt */
         vector_float_["gen_Eta"].push_back(h_floats_["gen_Eta"]->at(i));			    /* gen_Eta */
         vector_float_["gen_Phi"].push_back(h_floats_["gen_Phi"]->at(i));			    /* gen_Phi */
@@ -544,7 +605,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       size_t top_m_index = -1, top_closest_index = -1, jet_m_index = -1;
       for (size_t i=0; i<temp.size(); ++i) {
         TLorentzVector top = temp[i];
-        for (size_t j=0; j<njet; ++j) {
+        for (size_t j=0; j<njet_AK8; ++j) {
           TLorentzVector jet; jet.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(j), h_floats_["AK8_Eta"]->at(j),
           				     h_floats_["AK8_Phi"]->at(j), h_floats_["AK8_E"]->at(j));
           double DR = jet.DeltaR(top);
@@ -562,7 +623,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       if (matched_DR<0.8) {
         jet_gentop_index[jet_m_index] = top_m_index;
         temp.erase(temp.begin()+top_m_index);
-      } else if (njet) {
+      } else if (njet_AK8) {
         temp.erase(temp.begin()+top_closest_index);
       } else {
         temp.clear();
@@ -637,59 +698,114 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   // ---------------------
   // -      Jets         -
   // ---------------------
-
+  
   // NB: JEC/JER is already in new versions of B2G ntuples
-  // JEC Uncertainties
-  vector_float_["jetAK4_jecUncertainty"].assign(njet_AK4,-9999);
-  for (size_t iJet=0, nAK4jet=h_floats_["AK4_Pt"]->size(); iJet<nAK4jet; ++iJet) {
-    AK4_JetUncertainty_->setJetPt(h_floats_["AK4_Pt"]->at(iJet));
-    AK4_JetUncertainty_->setJetEta(h_floats_["AK4_Eta"]->at(iJet));
-    vector_float_["jetAK4_jecUncertainty"][iJet] = AK4_JetUncertainty_->getUncertainty(true);
-  }
-  vector_float_["jetAK8_jecUncertainty"].assign(njet,-9999);
-  for (size_t iJet=0, nAK8jet=h_floats_["AK8_Pt"]->size(); iJet<nAK8jet; ++iJet) {
-    AK8_JetUncertainty_->setJetPt(h_floats_["AK8_Pt"]->at(iJet));
-    AK8_JetUncertainty_->setJetEta(h_floats_["AK8_Eta"]->at(iJet));
-    vector_float_["jetAK8_jecUncertainty"][iJet] = AK8_JetUncertainty_->getUncertainty(true);
-  }
+  // Read jet correction parameters from DB
+  edm::ESHandle<JetCorrectorParametersCollection> JetCorrParColl_AK4, JetCorrParColl_AK8, JetCorrParColl_AK8Puppi;
+  iSetup.get<JetCorrectionsRecord>().get("AK4PFchs",   JetCorrParColl_AK4);
+  iSetup.get<JetCorrectionsRecord>().get("AK8PFchs",   JetCorrParColl_AK8);
+  iSetup.get<JetCorrectionsRecord>().get("AK4PFPuppi", JetCorrParColl_AK8Puppi);
+  // JEC Uncertainty
+  JetCorrectionUncertainty jecUnc_AK4((*JetCorrParColl_AK4)["Uncertainty"]);
+  JetCorrectionUncertainty jecUnc_AK8((*JetCorrParColl_AK8)["Uncertainty"]);
+  JetCorrectionUncertainty jecUnc_AK8Puppi((*JetCorrParColl_AK8Puppi)["Uncertainty"]);
 
   // JER
-  vector_float_["jetAK4_JER"].assign(njet_AK4,-9999);
-  vector_float_["jetAK4_JERup"].assign(njet_AK4,-9999);
-  vector_float_["jetAK4_JERdown"].assign(njet_AK4,-9999);
-  for (size_t iJet=0; iJet<njet_AK4; ++iJet) {
-    vector_float_["jetAK4_JER"][iJet] = getJER_(h_floats_["AK4_Eta"]->at(iJet));
-    vector_float_["jetAK4_JERup"][iJet] = getJERup_(h_floats_["AK4_Eta"]->at(iJet));
-    vector_float_["jetAK4_JERdown"][iJet] = getJERdown_(h_floats_["AK4_Eta"]->at(iJet));
-  }
-  vector_float_["jetAK8_JER"].assign(njet,-9999);
-  vector_float_["jetAK8_JERup"].assign(njet,-9999);
-  vector_float_["jetAK8_JERdown"].assign(njet,-9999);
-  for (size_t iJet=0; iJet<njet; ++iJet) {
-    vector_float_["jetAK8_JER"][iJet] = getJER_(h_floats_["AK8_Eta"]->at(iJet));
-    vector_float_["jetAK8_JERup"][iJet] = getJERup_(h_floats_["AK8_Eta"]->at(iJet));
-    vector_float_["jetAK8_JERdown"][iJet] = getJERdown_(h_floats_["AK8_Eta"]->at(iJet));
-  }
-
-  // GEN infos
-  vector_int_["jetAK8_HasNearGenTop"].assign(njet,-9999);
-  vector_int_["jetAK8_NearGenTopIsHadronic"].assign(njet,-9999);
-  vector_int_["jetAK8_NearGenWIsHadronic"].assign(njet,-9999);
-  vector_int_["jetAK8_NearGenWToENu"].assign(njet,-9999);
-  vector_int_["jetAK8_NearGenWToMuNu"].assign(njet,-9999);
-  vector_int_["jetAK8_NearGenWToTauNu"].assign(njet,-9999);
-  vector_float_["jetAK8_DRNearGenTop"].assign(njet,9999);
-  vector_float_["jetAK8_DRNearGenWFromTop"].assign(njet,9999);
-  vector_float_["jetAK8_DRNearGenBFromTop"].assign(njet,9999);
-  vector_float_["jetAK8_DRNearGenLepFromSLTop"].assign(njet,9999);
-  vector_float_["jetAK8_DRNearGenNuFromSLTop"].assign(njet,9999);
-  vector_float_["jetAK8_PtNearGenTop"].assign(njet,-9999);
-  vector_float_["jetAK8_PtNearGenBFromTop"].assign(njet,-9999);
-  vector_float_["jetAK8_PtNearGenWFromTop"].assign(njet,-9999);
-  vector_float_["jetAK8_PtNearGenLepFromSLTop"].assign(njet,-9999);
-  vector_float_["jetAK8_PtNearGenNuFromSLTop"].assign(njet,-9999);
+  // Twiki: https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyResolution#Scale_factors
+  // Recipe taken from: https://github.com/blinkseb/cmssw/blob/jer_fix_76x/JetMETCorrections/Modules/plugins/JetResolutionDemo.cc
+  JME::JetParameters jetParam;
+  JME::JetResolution resolution_AK4 = JME::JetResolution(JER_location_+"_PtResolution_AK4PFchs.txt");
+  JME::JetResolution resolution_AK8 = JME::JetResolution(JER_location_+"_PtResolution_AK8PFchs.txt");
+  JME::JetResolution resolution_AK8Puppi = JME::JetResolution(JER_location_+"_PtResolution_AK8PFPuppi.txt");
+  JME::JetResolutionScaleFactor res_sf_AK4 = JME::JetResolutionScaleFactor(JER_location_+"_SF_AK4PFchs.txt");
+  JME::JetResolutionScaleFactor res_sf_AK8 = JME::JetResolutionScaleFactor(JER_location_+"_SF_AK8PFchs.txt");
+  JME::JetResolutionScaleFactor res_sf_AK8Puppi = JME::JetResolutionScaleFactor(JER_location_+"_SF_AK8PFPuppi.txt");
   
-  if (!isData_) for (size_t i=0; i<njet; ++i) {
+  vector_float_["jetAK4_jecUncertainty"].assign(njet_AK4,-9999);
+  vector_float_["jetAK4_PtResolution"].assign(njet_AK4,-9999);
+  vector_float_["jetAK4_JERSF"].assign(njet_AK4,-9999);
+  vector_float_["jetAK4_JERSFDown"].assign(njet_AK4,-9999);
+  vector_float_["jetAK4_JERSFUp"].assign(njet_AK4,-9999);
+  for (size_t iJet=0; iJet<njet_AK4; ++iJet) {
+    jecUnc_AK4.setJetPt(h_floats_["AK4_Pt"]->at(iJet));
+    jecUnc_AK4.setJetEta(h_floats_["AK4_Eta"]->at(iJet));
+    jetParam.setJetPt(h_floats_["AK4_Pt"]->at(iJet)).setJetEta(h_floats_["AK4_Eta"]->at(iJet)).setRho(*h_double_["evt_rho"]);
+    vector_float_["jetAK4_jecUncertainty"][iJet] = jecUnc_AK4.getUncertainty(true);
+    vector_float_["jetAK4_PtResolution"][iJet] = resolution_AK4.getResolution(jetParam);
+    vector_float_["jetAK4_JERSF"][iJet]     = res_sf_AK4.getScaleFactor(jetParam);
+    vector_float_["jetAK4_JERSFDown"][iJet] = res_sf_AK4.getScaleFactor(jetParam, Variation::UP);
+    vector_float_["jetAK4_JERSFUp"][iJet]   = res_sf_AK4.getScaleFactor(jetParam, Variation::DOWN);
+  }
+  vector_float_["jetAK8_jecUncertainty"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8_PtResolution"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8_JERSF"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8_JERSFDown"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8_JERSFUp"].assign(njet_AK8,-9999);
+  for (size_t iJet=0; iJet<njet_AK8; ++iJet) {
+    jecUnc_AK8.setJetPt(h_floats_["AK8_Pt"]->at(iJet));
+    jecUnc_AK8.setJetEta(h_floats_["AK8_Eta"]->at(iJet));
+    jetParam.setJetPt(h_floats_["AK8_Pt"]->at(iJet)).setJetEta(h_floats_["AK8_Eta"]->at(iJet)).setRho(*h_double_["evt_rho"]);
+    vector_float_["jetAK8_jecUncertainty"][iJet] = jecUnc_AK8.getUncertainty(true);
+    vector_float_["jetAK8_PtResolution"][iJet] = resolution_AK8.getResolution(jetParam);
+    vector_float_["jetAK8_JERSF"][iJet]     = res_sf_AK8.getScaleFactor(jetParam);
+    vector_float_["jetAK8_JERSFDown"][iJet] = res_sf_AK8.getScaleFactor(jetParam, Variation::UP);
+    vector_float_["jetAK8_JERSFUp"][iJet]   = res_sf_AK8.getScaleFactor(jetParam, Variation::DOWN);
+  }
+  vector_float_["jetAK8Puppi_jecUncertainty"].assign(njet_AK8Puppi,-9999);
+  vector_float_["jetAK8Puppi_PtResolution"].assign(njet_AK8Puppi,-9999);
+  vector_float_["jetAK8Puppi_JERSF"].assign(njet_AK8Puppi,-9999);
+  vector_float_["jetAK8Puppi_JERSFDown"].assign(njet_AK8Puppi,-9999);
+  vector_float_["jetAK8Puppi_JERSFUp"].assign(njet_AK8Puppi,-9999);
+  for (size_t iJet=0; iJet<njet_AK8Puppi; ++iJet) {
+    jecUnc_AK8Puppi.setJetPt(h_floats_["AK8Puppi_Pt"]->at(iJet));
+    jecUnc_AK8Puppi.setJetEta(h_floats_["AK8Puppi_Eta"]->at(iJet));
+    jetParam.setJetPt(h_floats_["AK8Puppi_Pt"]->at(iJet)).setJetEta(h_floats_["AK8Puppi_Eta"]->at(iJet)).setRho(*h_double_["evt_rho"]);
+    vector_float_["jetAK8Puppi_jecUncertainty"][iJet] = jecUnc_AK8Puppi.getUncertainty(true);
+    vector_float_["jetAK8Puppi_PtResolution"][iJet] = resolution_AK8Puppi.getResolution(jetParam);
+    vector_float_["jetAK8Puppi_JERSF"][iJet]     = res_sf_AK8Puppi.getScaleFactor(jetParam);
+    vector_float_["jetAK8Puppi_JERSFDown"][iJet] = res_sf_AK8Puppi.getScaleFactor(jetParam, Variation::UP);
+    vector_float_["jetAK8Puppi_JERSFUp"][iJet]   = res_sf_AK8Puppi.getScaleFactor(jetParam, Variation::DOWN);
+  }
+  
+  // Jet Correctors (Recalculate after lepton cleaning, or do on-the-fly correction)
+  std::vector<JetCorrectorParameters> AK4_vPar;
+  AK4_vPar.push_back((*JetCorrParColl_AK4)["L1FastJet"]);
+  AK4_vPar.push_back((*JetCorrParColl_AK4)["L2Relative"]);
+  AK4_vPar.push_back((*JetCorrParColl_AK4)["L3Absolute"]);
+  if (isData_) AK4_vPar.push_back((*JetCorrParColl_AK4)["L2L3Residual"]);
+  FactorizedJetCorrector AK4_JetCorrector(AK4_vPar);
+  std::vector<JetCorrectorParameters> AK8_vPar;
+  AK8_vPar.push_back((*JetCorrParColl_AK8)["L1FastJet"]);
+  AK8_vPar.push_back((*JetCorrParColl_AK8)["L2Relative"]);
+  AK8_vPar.push_back((*JetCorrParColl_AK8)["L3Absolute"]);
+  if (isData_) AK8_vPar.push_back((*JetCorrParColl_AK8)["L2L3Residual"]);
+  FactorizedJetCorrector AK8_JetCorrector(AK8_vPar);
+  std::vector<JetCorrectorParameters> AK8Puppi_vPar;
+  //AK8Puppi_vPar.push_back((*JetCorrParColl_AK8Puppi)["L1FastJet"]);
+  //AK8Puppi_vPar.push_back((*JetCorrParColl_AK8Puppi)["L2Relative"]);
+  //AK8Puppi_vPar.push_back((*JetCorrParColl_AK8Puppi)["L3Absolute"]);
+  //if (isData_) AK8Puppi_vPar.push_back((*JetCorrParColl_AK8Puppi)["L2L3Residual"]);
+  //FactorizedJetCorrector AK8Puppi_JetCorrector(AK8Puppi_vPar);
+  
+  // GEN infos
+  vector_int_["jetAK8_HasNearGenTop"].assign(njet_AK8,-9999);
+  vector_int_["jetAK8_NearGenTopIsHadronic"].assign(njet_AK8,-9999);
+  vector_int_["jetAK8_NearGenWIsHadronic"].assign(njet_AK8,-9999);
+  vector_int_["jetAK8_NearGenWToENu"].assign(njet_AK8,-9999);
+  vector_int_["jetAK8_NearGenWToMuNu"].assign(njet_AK8,-9999);
+  vector_int_["jetAK8_NearGenWToTauNu"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8_DRNearGenTop"].assign(njet_AK8,9999);
+  vector_float_["jetAK8_DRNearGenWFromTop"].assign(njet_AK8,9999);
+  vector_float_["jetAK8_DRNearGenBFromTop"].assign(njet_AK8,9999);
+  vector_float_["jetAK8_DRNearGenLepFromSLTop"].assign(njet_AK8,9999);
+  vector_float_["jetAK8_DRNearGenNuFromSLTop"].assign(njet_AK8,9999);
+  vector_float_["jetAK8_PtNearGenTop"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8_PtNearGenBFromTop"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8_PtNearGenWFromTop"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8_PtNearGenLepFromSLTop"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8_PtNearGenNuFromSLTop"].assign(njet_AK8,-9999);
+  
+  if (!isData_) for (size_t i=0; i<njet_AK8; ++i) {
     TLorentzVector jet; jet.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(i), h_floats_["AK8_Eta"]->at(i),
 					 h_floats_["AK8_Phi"]->at(i), h_floats_["AK8_E"]->at(i));
     vector_int_["jetAK8_HasNearGenTop"][i]=0;
@@ -791,7 +907,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     float closest_jet_Area[3], closest_jet_jecFactor0[3];
     bool closest_jet_R08Cone[3];
     
-    for (size_t iJet=0, nAK4jet=h_floats_["AK4_Pt"]->size(); iJet<nAK4jet; ++iJet) {
+    for (size_t iJet=0; iJet<njet_AK4; ++iJet) {
       
       // ----------------- AK4 jet ----------------------
     
@@ -816,7 +932,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       }
     }
     
-    for (size_t iJet=0; iJet<njet; ++iJet) {
+    for (size_t iJet=0; iJet<njet_AK8; ++iJet) {
       
       // ----------------- AK8 jet ----------------------
       
@@ -909,7 +1025,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       
     } // End of AK8 Jet loop
     //std::cout<<"--> Mu["<<iEle<<"] "<<"jet/subjet-match="<<vector_int_["el_IsPartOfNearAK8Jet"][iEle]<<" "<<vector_int_["el_IsPartOfNearSubjet"][iEle]<<", MinDR="<<vector_float_["el_AK8JetV1DR"][iEle]<<" "<<vector_float_["el_SubjetV1DR"][iEle]<<std::endl;
-    
+   
     // Calculate Jet/SubJet pt fraction, Jet mass drop
     for (int iType=0; iType<3; ++iType) {
       std::string JetType = iType==0 ? "AK4Jet" : iType==1 ? "AK8Jet" : "Subjet";
@@ -929,23 +1045,24 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
 	  if (!isData_) cleaned1_jet *= closest_jet_jecFactor0[iType];
 	  // Step 2:
 	  cleaned1_jet -= ele;
+	  reco::Particle::LorentzVector rawP4(cleaned1_jet.Px(), cleaned1_jet.Py(), cleaned1_jet.Pz(), cleaned1_jet.E());
 	  // Step 3:
 	  if (closest_jet_R08Cone[iType]) {
-	    AK8_JetCorrector_->setJetEta(cleaned1_jet.Eta());
-	    AK8_JetCorrector_->setJetPt(cleaned1_jet.Perp());
-	    AK8_JetCorrector_->setJetE(cleaned1_jet.E());
-	    AK8_JetCorrector_->setJetA(closest_jet_Area[iType]);
-	    AK8_JetCorrector_->setRho(*h_double_["evt_rho"]);
-	    AK8_JetCorrector_->setNPV(*h_int_["evt_npv"]);
-	    cleaned1_jet *= AK8_JetCorrector_->getCorrection();
+	    AK8_JetCorrector.setJetEta(cleaned1_jet.Eta());
+	    AK8_JetCorrector.setJetPt(cleaned1_jet.Perp());
+	    AK8_JetCorrector.setJetE(cleaned1_jet.E());
+	    AK8_JetCorrector.setJetA(closest_jet_Area[iType]);
+	    AK8_JetCorrector.setRho(*h_double_["evt_rho"]);
+	    AK8_JetCorrector.setNPV(*h_int_["evt_npv"]);
+	    cleaned1_jet *= AK8_JetCorrector.getCorrection();
   	    } else {
-	    AK4_JetCorrector_->setJetEta(cleaned1_jet.Eta());
-	    AK4_JetCorrector_->setJetPt(cleaned1_jet.Perp());
-	    AK4_JetCorrector_->setJetE(cleaned1_jet.E());
-	    AK4_JetCorrector_->setJetA(closest_jet_Area[iType]);
-	    AK4_JetCorrector_->setRho(*h_double_["evt_rho"]);
-	    AK4_JetCorrector_->setNPV(*h_int_["evt_npv"]);
-	    cleaned1_jet *= AK4_JetCorrector_->getCorrection();
+	    AK4_JetCorrector.setJetEta(cleaned1_jet.Eta());
+	    AK4_JetCorrector.setJetPt(cleaned1_jet.Perp());
+	    AK4_JetCorrector.setJetE(cleaned1_jet.E());
+	    AK4_JetCorrector.setJetA(closest_jet_Area[iType]);
+	    AK4_JetCorrector.setRho(*h_double_["evt_rho"]);
+	    AK4_JetCorrector.setNPV(*h_int_["evt_npv"]);
+	    cleaned1_jet *= AK4_JetCorrector.getCorrection();
 	  }
           cleaned3_jet = cleaned2_jet = cleaned1_jet;
 	  // Step 4:
@@ -1035,7 +1152,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     float closest_jet_Area[3], closest_jet_jecFactor0[3];
     bool closest_jet_R08Cone[3];
     
-    for (size_t iJet=0, nAK4jet=h_floats_["AK4_Pt"]->size(); iJet<nAK4jet; ++iJet) {
+    for (size_t iJet=0; iJet<njet_AK4; ++iJet) {
       
       // ----------------- AK4 jet ----------------------
     
@@ -1060,7 +1177,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       }
     }
     
-    for (size_t iJet=0; iJet<njet; ++iJet) {
+    for (size_t iJet=0; iJet<njet_AK8; ++iJet) {
       
       // ----------------- AK8 jet ----------------------
       
@@ -1173,23 +1290,24 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
 	  if (!isData_) cleaned1_jet *= closest_jet_jecFactor0[iType];
 	  // Step 2:
 	  cleaned1_jet -= mu;
+	  reco::Particle::LorentzVector rawP4(cleaned1_jet.Px(), cleaned1_jet.Py(), cleaned1_jet.Pz(), cleaned1_jet.E());
 	  // Step 3:
 	  if (closest_jet_R08Cone[iType]) {
-	    AK8_JetCorrector_->setJetEta(cleaned1_jet.Eta());
-	    AK8_JetCorrector_->setJetPt(cleaned1_jet.Perp());
-	    AK8_JetCorrector_->setJetE(cleaned1_jet.E());
-	    AK8_JetCorrector_->setJetA(closest_jet_Area[iType]);
-	    AK8_JetCorrector_->setRho(*h_double_["evt_rho"]);
-	    AK8_JetCorrector_->setNPV(*h_int_["evt_npv"]);
-	    cleaned1_jet *= AK8_JetCorrector_->getCorrection();
+	    AK8_JetCorrector.setJetEta(cleaned1_jet.Eta());
+	    AK8_JetCorrector.setJetPt(cleaned1_jet.Perp());
+	    AK8_JetCorrector.setJetE(cleaned1_jet.E());
+	    AK8_JetCorrector.setJetA(closest_jet_Area[iType]);
+	    AK8_JetCorrector.setRho(*h_double_["evt_rho"]);
+	    AK8_JetCorrector.setNPV(*h_int_["evt_npv"]);
+	    cleaned1_jet *= AK8_JetCorrector.getCorrection();
   	    } else {
-	    AK4_JetCorrector_->setJetEta(cleaned1_jet.Eta());
-	    AK4_JetCorrector_->setJetPt(cleaned1_jet.Perp());
-	    AK4_JetCorrector_->setJetE(cleaned1_jet.E());
-	    AK4_JetCorrector_->setJetA(closest_jet_Area[iType]);
-	    AK4_JetCorrector_->setRho(*h_double_["evt_rho"]);
-	    AK4_JetCorrector_->setNPV(*h_int_["evt_npv"]);
-	    cleaned1_jet *= AK4_JetCorrector_->getCorrection();
+	    AK4_JetCorrector.setJetEta(cleaned1_jet.Eta());
+	    AK4_JetCorrector.setJetPt(cleaned1_jet.Perp());
+	    AK4_JetCorrector.setJetE(cleaned1_jet.E());
+	    AK4_JetCorrector.setJetA(closest_jet_Area[iType]);
+	    AK4_JetCorrector.setRho(*h_double_["evt_rho"]);
+	    AK4_JetCorrector.setNPV(*h_int_["evt_npv"]);
+	    cleaned1_jet *= AK4_JetCorrector.getCorrection();
 	  }
           cleaned3_jet = cleaned2_jet = cleaned1_jet;
 	  // Step 4:
@@ -1228,12 +1346,12 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   single_int_["evt_NTop"] = 0;
   single_float_["evt_HtTop"] = 0;
   single_float_["evt_Ht"] = 0;
-  vector_int_["jetAK8_PassTopTag"].assign(njet,-9999);
+  vector_int_["jetAK8_PassTopTag"].assign(njet_AK8,-9999);
   TLorentzVector top1_had;
   TLorentzVector top2_had;
   TLorentzVector top1_lep;
   TLorentzVector top2_lep;
-  for (size_t i=0; i<njet; ++i) {
+  for (size_t i=0; i<njet_AK8; ++i) {
     bool is_top = false;
     vector_int_["jetAK8_PassTopTag"][i] = 0;
     // Hadronic tops (Loose selection)
@@ -1320,7 +1438,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   
   // Select the best pair of jets (AK8, pt>40, |eta| < 3.0)
   std::vector<TLorentzVector> jets_AK8;
-  for (size_t i=0; i<h_floats_["AK8_Pt"]->size(); ++i) {
+  for (size_t i=0; i<njet_AK8; ++i) {
     if ((h_floats_["AK8_Pt"]->at(i) > 40) && (h_floats_["AK8_Eta"]->at(i) < 3)) {
       TLorentzVector jl;
       jl.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(i), h_floats_["AK8_Eta"]->at(i),
@@ -1328,10 +1446,21 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       jets_AK8.push_back(jl);
     }
   }
+
+  // Puppi jets
+  std::vector<TLorentzVector> jets_AK8Puppi;
+  for (size_t i=0; i<njet_AK8Puppi; ++i) {
+    if ((h_floats_["AK8Puppi_Pt"]->at(i) > 40) && (h_floats_["AK8Puppi_Eta"]->at(i) < 3)) {
+      TLorentzVector jl;
+      jl.SetPtEtaPhiE(h_floats_["AK8Puppi_Pt"]->at(i), h_floats_["AK8Puppi_Eta"]->at(i),
+                      h_floats_["AK8Puppi_Phi"]->at(i), h_floats_["AK8Puppi_E"]->at(i));
+      jets_AK8Puppi.push_back(jl);
+    }
+  }
   
   // Same for AK4 jets
   std::vector<TLorentzVector> jets_AK4;
-  for (size_t i=0; i<h_floats_["AK4_Pt"]->size(); ++i) {
+  for (size_t i=0; i<njet_AK4; ++i) {
     if ((h_floats_["AK4_Pt"]->at(i) > 40) && (h_floats_["AK4_Eta"]->at(i) < 3)) {
       TLorentzVector jl;
       jl.SetPtEtaPhiE(h_floats_["AK4_Pt"]->at(i), h_floats_["AK4_Eta"]->at(i),
@@ -1361,31 +1490,48 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   single_float_["evt_R"]   = -9999;
   single_float_["evt_R2"]  = -9999;
   if (jets_AK8.size() >= 2) {
-    if (h_floats_["AK4_Pt"]->size()<60) {
+    if (njet_AK4<60) {
       std::vector<TLorentzVector> hemis_AK8 = Razor::CombineJets(jets_AK8);
       single_float_["evt_MR"]  = Razor::CalcMR(hemis_AK8[0], hemis_AK8[1]);              /* evt_MR */
       single_float_["evt_MTR"] = Razor::CalcMTR(hemis_AK8[0], hemis_AK8[1], metl);       /* evt_MTR */
       single_float_["evt_R"]   = single_float_["evt_MTR"] / single_float_["evt_MR"];     /* evt_R */
       single_float_["evt_R2"]  = std::pow(single_float_["evt_R"], 2);                    /* evt_R2 */
     } else {
-      std::cout<<"Too many AK8: "<<jets_AK8.size()<<" "<<h_floats_["AK8_Pt"]->size()<<std::endl;
+      std::cout<<"Too many AK8: "<<jets_AK8.size()<<" "<<njet_AK8<<std::endl;
     }
   }
-
+  
+  // AK8 Puppi
+  single_float_["evt_AK8Puppi_MR"]  = -9999;
+  single_float_["evt_AK8Puppi_MTR"] = -9999;
+  single_float_["evt_AK8Puppi_R"]   = -9999;
+  single_float_["evt_AK8Puppi_R2"]  = -9999;
+  if (jets_AK8Puppi.size() >= 2) {
+    if (njet_AK4<60) {
+      std::vector<TLorentzVector> hemis_AK8Puppi = Razor::CombineJets(jets_AK8Puppi);
+      single_float_["evt_AK8Puppi_MR"]  = Razor::CalcMR(hemis_AK8Puppi[0], hemis_AK8Puppi[1]);                  /* evt_AK8Puppi_MR */
+      single_float_["evt_AK8Puppi_MTR"] = Razor::CalcMTR(hemis_AK8Puppi[0], hemis_AK8Puppi[1], metl);           /* evt_AK8Puppi_MTR */
+      single_float_["evt_AK8Puppi_R"]   = single_float_["evt_AK8Puppi_MTR"] / single_float_["evt_AK8Puppi_MR"]; /* evt_AK8Puppi_R */
+      single_float_["evt_AK8Puppi_R2"]  = std::pow(single_float_["evt_AK8Puppi_R"], 2);                         /* evt_AK8Puppi_R2 */
+    } else {
+      std::cout<<"Too many AK8Puppi: "<<jets_AK8Puppi.size()<<" "<<njet_AK8Puppi<<std::endl;
+    }
+  }
+  
   // AK4
   single_float_["evt_AK4_MR"]  = -9999;
   single_float_["evt_AK4_MTR"] = -9999;
   single_float_["evt_AK4_R"]   = -9999;
   single_float_["evt_AK4_R2"]  = -9999;
   if (jets_AK4.size() >= 2) {
-    if (h_floats_["AK4_Pt"]->size() <60) {
+    if (njet_AK4<60) {
       std::vector<TLorentzVector> hemis_AK4 = Razor::CombineJets(jets_AK4);
       single_float_["evt_AK4_MR"]  = Razor::CalcMR(hemis_AK4[0], hemis_AK4[1]);          /* evt_AK4_MR */
       single_float_["evt_AK4_MTR"] = Razor::CalcMTR(hemis_AK4[0], hemis_AK4[1], metl);   /* evt_AK4_MTR */
       single_float_["evt_AK4_R"]   = single_float_["evt_AK4_MTR"] / single_float_["evt_AK4_MR"]; /* evt_AK4_R */
       single_float_["evt_AK4_R2"]  = std::pow(single_float_["evt_AK4_R"], 2);            /* evt_AK4_R2 */
     } else {
-      std::cout<<"Too many AK4: "<<jets_AK4.size()<<" "<<h_floats_["AK4_Pt"]->size()<<std::endl;
+      std::cout<<"Too many AK4: "<<jets_AK4.size()<<" "<<njet_AK4<<std::endl;
     }
   }
 }

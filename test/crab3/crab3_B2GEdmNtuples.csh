@@ -89,7 +89,7 @@ else
     set dry="1"
 endif
 
-set DATE=`date | sed "s; ;_;g;s;:;h;1;s;:;m;1"`
+set DATE=`date | cut -f2- -d" " | sed "s; ;_;g;s;:;h;1;s;:;m;1"`
 
 if ( `echo $cmd | grep "create" | wc -l` ) then
     if ( $#argv < 6 ) then
@@ -105,7 +105,7 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
     if ( !(-f $TXT_FILE) ) then
 	echo "$TXT_FILE doesn't exist"; rm Usage.txt; exit
     endif
-    grep "/MINIAOD" $TXT_FILE >! $TASKDIR/input_datasets.txt
+    grep -v '^#' $TXT_FILE | grep "/MINIAOD" >! $TASKDIR/input_datasets.txt
     sed "s;TASKDIR;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_template_edmntuple_Data_py.txt
     sed "s;TASKDIR;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_edmntuple_MC_py.txt > $TASKDIR/crab_template_edmntuple_MC_py.txt
     set N=`cat $TASKDIR/input_datasets.txt | wc -l`
@@ -119,56 +119,29 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	set LATEST_50NS_GOLDEN_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/ | grep Collisions15_50ns_JSON | grep -v MuonPhys | grep -v Silver | tail -1`
 	set LATEST_25NS_GOLDEN_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/ | grep Collisions15_25ns_JSON | grep -v MuonPhys | grep -v Silver | tail -1`
 	set LATEST_25NS_SILVER_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/ | grep Collisions15_25ns_JSON | grep -v MuonPhys | grep Silver | tail -1`
-	# 50ns - Data (ReMiniAOD)
-	if ( `echo $PUBNAME2 | grep "Run2015B-05Oct2015" | wc -l` ) then
-	    set DATAPROC="Data50ns_MiniAODv2"
-	    set JEC_DB_FILE="Summer15_50nsV5_DATA.db"
-	    set JSON="$CERT_DIR/$LATEST_50NS_GOLDEN_JSON"
-	    set RUNS="1-999999"
-	else if ( `echo $PUBNAME2 | grep "Run2015C_50ns-05Oct2015" | wc -l`) then
-	    set DATAPROC="Data50ns_MiniAODv2"
-	    set JEC_DB_FILE="Summer15_50nsV5_DATA.db"
-	    set JSON="$CERT_DIR/$LATEST_50NS_GOLDEN_JSON"
-	    set RUNS="1-999999"
-	# 50ns - MC (ReMiniAOD)
-	else if ( `echo $PUBNAME2 | grep "RunIISpring15MiniAODv2-Asympt50ns" | wc -l ` ) then
-	    set DATAPROC="MC50ns_MiniAODv2"
-	    set JEC_DB_FILE="Summer15_50nsV5_MC.db"
 	# 25 ns - Data (ReReco)
-	else if ( `echo $PUBNAME2 | grep "Run2015C_25ns-05Oct2015" | wc -l`) then
-	    set DATAPROC="Data25ns_ReReco"
-	    set JEC_DB_FILE="Summer15_25nsV6_DATA.db"
+	if ( `echo $PUBNAME2 | grep "16Dec2015" | wc -l`) then
+	    set DATAPROC="Data25ns_76X"
+	    set JEC_ERA="Fall15_25nsV2_DATA"
 	    set JSON="$CERT_DIR/$LATEST_25NS_SILVER_JSON"
 	    set RUNS="1-999999"
-	# 25 ns - Data (ReMiniAOD)
-	else if ( `echo $PUBNAME2 | grep "Run2015D-05Oct2015" | wc -l`) then
-	    set DATAPROC="Data25ns_MiniAODv2"
-	    set JEC_DB_FILE="Summer15_25nsV6_DATA.db"
-	    set JSON="$CERT_DIR/$LATEST_25NS_SILVER_JSON"
-	    set RUNS="1-999999"
-	# 25 ns - Data (PromptReco)
-	else if ( `echo $PUBNAME2 | grep "Run2015D-PromptReco-v4" | wc -l`) then
-	    set DATAPROC="Data25ns_PromptRecov4"
-	    set JEC_DB_FILE="Summer15_25nsV6_DATA.db"
-	    set JSON="$CERT_DIR/$LATEST_25NS_SILVER_JSON"
-	    set RUNS="1-999999"
-	# 25 ns - MC FastSim
-	else if ( `echo $PUBNAME2 | grep "RunIISpring15MiniAODv2-FastAsympt25ns" | wc -l` ) then
-	    set DATAPROC="MC25ns_MiniAODv2_FastSim"
-	    set JEC_DB_FILE="MCRUN2_74_V9.db"
+	# 25 ns - MC FastSim (currently doesn't work
+	#else if ( `echo $PUBNAME2 | grep "RunIISpring15MiniAODv2-FastAsympt25ns" | wc -l` ) then
+	#    set DATAPROC="MC25ns_MiniAODv2_FastSim"
+	#    set JEC_ERA="MCRUN2_74_V9"
 	# 25 ns - MC FullSim (ReMiniAOD)
-	else if ( `echo $PUBNAME2 | grep "RunIISpring15MiniAODv2" | wc -l` ) then
-	    set DATAPROC="MC25ns_MiniAODv2"
-	    set JEC_DB_FILE="Summer15_25nsV6_MC.db"
+	else if ( `echo $PUBNAME2 | grep "RunIIFall15MiniAODv2" | wc -l` ) then
+	    set DATAPROC="MC25ns_MiniAOD_76X"
+	    set JEC_ERA="Fall15_25nsV2_MC"
 	else
 	    echo "ERROR - Dataset not defined (probably because not using latest): "$DATASET
 	    rm -r $TASKDIR Usage.txt
 	    exit
 	endif
 	if ( $isData ) then
-	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME"_"$PUBNAME2;;s;DATASET;$DATASET;;s;DATAPROC;$DATAPROC;;s;JEC_DB_FILE;$JEC_DB_FILE;;s;JSON;$JSON;;s;RUNS;$RUNS;" $TASKDIR/crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_$SHORT.py
+	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME"_"$PUBNAME2;;s;DATASET;$DATASET;;s;DATAPROC;$DATAPROC;;s;JEC_ERA;$JEC_ERA;;s;JSON;$JSON;;s;RUNS;$RUNS;" $TASKDIR/crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_$SHORT.py
 	else
-	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME"_"$PUBNAME2;;s;DATASET;$DATASET;;s;DATAPROC;$DATAPROC;;s;JEC_DB_FILE;$JEC_DB_FILE;" $TASKDIR/crab_template_edmntuple_MC_py.txt > $TASKDIR/crab_$SHORT.py
+	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME"_"$PUBNAME2;;s;DATASET;$DATASET;;s;DATAPROC;$DATAPROC;;s;JEC_ERA;$JEC_ERA;" $TASKDIR/crab_template_edmntuple_MC_py.txt > $TASKDIR/crab_$SHORT.py
 	endif
     end
     rm $TASKDIR/crab_template_edmntuple_Data_py.txt $TASKDIR/crab_template_edmntuple_MC_py.txt
@@ -281,6 +254,30 @@ else if ( `echo $cmd | grep "get_datasets" | wc -l` ) then
     end
     cat EdmNtuple_"$TASKNAME"_input.txt
 
+else if ( `echo $cmd | grep "get_lumi" | wc -l` ) then
+    touch $TASKDIR/get_luminosity_$TASKNAME.csh
+    mkdir -p $TASKDIR/data_lumi_summaries_$TASKNAME
+    set N=`cat $TASKDIR/input_datasets.txt | wc -l`
+    foreach i ( `seq 1 $N` )
+        set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
+        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	set isData=`echo $in_dataset | grep 'Run2015' | wc -l`
+	if ( ! -e $TASKDIR/crab_$short/results/lumiSummary.json ) then
+	    #crab report --dbs=yes -d $TASKDIR/crab_$short
+	endif
+	if ( $isData ) then
+	    cp $TASKDIR/crab_$short/results/lumiSummary.json $TASKDIR/data_lumi_summaries_$TASKNAME/$short.json
+	    echo "echo $short "\`"brilcalc lumi --normtag /afs/cern.ch/user/l/lumipro/public/normtag_file/OfflineNormtagV2.json -i data_lumi_summaries_$TASKNAME/$short.json | tail -2 | head -1 | awk '{ printf "\""%1.3f pb^-1\\n"\"", "\$"(NF-1)/1000000.0 }'"\`>> $TASKDIR/get_luminosity_$TASKNAME.csh
+	endif
+    end
+    echo "\n------\n"
+    echo "Run these commands to get luminosity: \n"
+    echo "scp -r $TASKDIR/data_lumi_summaries_$TASKNAME $TASKDIR/get_luminosity_$TASKNAME.csh "`whoami`"@lxplus.cern.ch:~/"
+    echo "ssh lxplus.cern.ch"
+    echo "setenv PATH $HOME/.local/bin:/afs/cern.ch/cms/lumi/brilconda-1.0.3/bin:$PATH"
+    echo "pip install --install-option="--prefix=$HOME/.local" brilws"
+    echo "source get_luminosity_$TASKNAME.csh"
+
 else if ( `echo $cmd | grep "checkup" | wc -l` ) then
     set N=`cat $TASKDIR/input_datasets.txt | wc -l`
     foreach i ( `seq 1 $N` )
@@ -380,7 +377,7 @@ else if ( `echo $cmd | grep "find_missing" | wc -l` ) then
 	if ( $missing != "" ) echo "crab resubmit -d $TASKDIR/crab_$short --wait --force --jobids=$missing"
     end
 
-else if ( `echo $cmd | grep "cancel" | wc -l` ) then
+else if ( `echo $cmd | grep "delete" | wc -l` ) then
     set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
     set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
     set N=`cat $TASKDIR/input_datasets.txt | wc -l`

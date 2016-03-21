@@ -3,10 +3,15 @@
 #include "FWCore/Framework/interface/Run.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/InputTag.h"
+#include "FWCore/Framework/interface/ESHandle.h"
 #include "DataFormats/Common/interface/Handle.h"
 #include "DataFormats/Math/interface/LorentzVector.h"
+#include "FWCore/Framework/interface/DependentRecordImplementation.h"
 
-// JEC
+// JEC/JER
+#include "JetMETCorrections/Modules/interface/JetResolution.h"
+#include "JetMETCorrections/JetCorrector/interface/JetCorrector.h"
+#include "JetMETCorrections/Objects/interface/JetCorrectionsRecord.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
 #include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
@@ -23,7 +28,7 @@ private:
   
   // Input
   bool isData_;
-  std::string JEC_location_;
+  std::string JER_location_;
   
   double cross_section_;
   double num_events_;
@@ -50,11 +55,16 @@ private:
   std::string AK8Jets_prefix_;
   std::string AK8Subjets_label_;
   std::string AK8Subjets_prefix_;
+  std::string AK8PuppiJets_label_;
+  std::string AK8PuppiJets_prefix_;
+  std::string AK8PuppiSubjets_label_;
+  std::string AK8PuppiSubjets_prefix_;
   std::string CmsTTSubjets_label_;
   std::string CmsTTSubjets_prefix_;
   std::string AK4JetKeys_label_;
   std::string AK8JetKeys_label_;
   std::string AK8SubjetKeys_label_;
+  std::string AK8PuppiJetKeys_label_;
   std::string CmsTTSubjetKeys_label_;
     
   // Handles
@@ -78,21 +88,19 @@ private:
   size_t nfilt_, ntrig_;
   
   // JEC
-  FactorizedJetCorrector *AK4_JetCorrector_, *AK8_JetCorrector_;
-  JetCorrectionUncertainty *AK4_JetUncertainty_, *AK8_JetUncertainty_;
+  //FactorizedJetCorrector *AK4_JetCorrector_, *AK8_JetCorrector_, *AK8Puppi_JetCorrector_;
+  //JetCorrectionUncertainty *AK4_JetUncertainty_, *AK8_JetUncertainty_, *AK8Puppi_JetUncertainty_;
 
-  double getJER_(double);
-  double getJERup_(double);
-  double getJERdown_(double);
-  
   // LHE/GEN stuff
   int lha_pdf_id_;
+
+  void init_tokens_();
 };
 
 
 B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(edm::ParameterSet const& iConfig) :
   isData_(iConfig.getUntrackedParameter<bool>("isData", false)),
-  JEC_location_(iConfig.getUntrackedParameter<std::string>("JEC_location")),
+  JER_location_(iConfig.getUntrackedParameter<std::string>("JER_location")),
   cross_section_(iConfig.getUntrackedParameter<double>("cross_section",0)),
   num_events_(iConfig.getUntrackedParameter<double>("num_events",0)),
   lumi_weight_(iConfig.getUntrackedParameter<double>("lumi_weight",1)),
@@ -117,11 +125,16 @@ B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(edm::ParameterSet const& iConfig)
   AK8Jets_prefix_(iConfig.getUntrackedParameter<std::string>("AK8Jets_prefix")),
   AK8Subjets_label_(iConfig.getUntrackedParameter<std::string>("AK8Subjets_label")),
   AK8Subjets_prefix_(iConfig.getUntrackedParameter<std::string>("AK8Subjets_prefix")),
+  AK8PuppiJets_label_(iConfig.getUntrackedParameter<std::string>("AK8PuppiJets_label")),
+  AK8PuppiJets_prefix_(iConfig.getUntrackedParameter<std::string>("AK8PuppiJets_prefix")),
+  AK8PuppiSubjets_label_(iConfig.getUntrackedParameter<std::string>("AK8PuppiSubjets_label")),
+  AK8PuppiSubjets_prefix_(iConfig.getUntrackedParameter<std::string>("AK8PuppiSubjets_prefix")),
   CmsTTSubjets_label_(iConfig.getUntrackedParameter<std::string>("CmsTTSubjets_label")),
   CmsTTSubjets_prefix_(iConfig.getUntrackedParameter<std::string>("CmsTTSubjets_prefix")),
   AK4JetKeys_label_(iConfig.getUntrackedParameter<std::string>("AK4JetKeys_label")),
   AK8JetKeys_label_(iConfig.getUntrackedParameter<std::string>("AK8JetKeys_label")),
   AK8SubjetKeys_label_(iConfig.getUntrackedParameter<std::string>("AK8SubjetKeys_label")),
+  AK8PuppiJetKeys_label_(iConfig.getUntrackedParameter<std::string>("AK8PuppiJetKeys_label")),
   CmsTTSubjetKeys_label_(iConfig.getUntrackedParameter<std::string>("CmsTTSubjetKeys_label")),
   singleI_(iConfig.getUntrackedParameter<std::vector<std::string> >("singleI")),
   singleF_(iConfig.getUntrackedParameter<std::vector<std::string> >("singleF")),
@@ -150,30 +163,11 @@ B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(edm::ParameterSet const& iConfig)
     produces<std::vector<float> >(nameVF);
   }
   
-  // https://twiki.cern.ch/twiki/bin/view/CMS/JECDataMC#Jet_Energy_Corrections
-  // Load the JetCorrectorParameter objects into a vector, IMPORTANT: THE ORDER MATTERS HERE !!!! 
-  std::vector<JetCorrectorParameters> AK4_vPar, AK8_vPar;
-  AK4_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L1FastJet_AK4PFchs.txt")));
-  AK4_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L2Relative_AK4PFchs.txt")));
-  AK4_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L3Absolute_AK4PFchs.txt")));
-  if (isData_)
-    AK4_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L2L3Residual_AK4PFchs.txt")));
-  
-  AK8_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L1FastJet_AK8PFchs.txt")));
-  AK8_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L2Relative_AK8PFchs.txt")));
-  AK8_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L3Absolute_AK8PFchs.txt")));
-  if (isData_)
-    AK8_vPar.push_back(*(new JetCorrectorParameters(JEC_location_+"_L2L3Residual_AK8PFchs.txt")));
-  
-  AK4_JetCorrector_ = new FactorizedJetCorrector(AK4_vPar);
-  AK8_JetCorrector_ = new FactorizedJetCorrector(AK8_vPar);
-  
-  // JEC Uncertainties
-  AK4_JetUncertainty_ = new JetCorrectionUncertainty(JEC_location_+"_Uncertainty_AK4PFchs.txt");
-  AK8_JetUncertainty_ = new JetCorrectionUncertainty(JEC_location_+"_Uncertainty_AK8PFchs.txt");
-
   nfilt_=ntrig_=0;
   lha_pdf_id_ = -9999;
+  
+  // initialize tokens
+  init_tokens_();
 }
 
 void B2GEdmExtraVarProducer::produce(edm::Event& iEvent, edm::EventSetup const& iSetup) {

@@ -21,6 +21,12 @@ public:
     h_totweight_ = fs->make<TH1D>("totweight",";Sum of Weights", 1,0,1);
     h_totweight_T1tttt_ = fs->make<TH2D>("h_totweight_T1tttt","Total N_Event;M_{#tilde{g}} (GeV);M_{#tilde{#chi}^{0}} (GeV);Total Weight", 201,-12.5,5012.5, 201,-12.5,5012.5);
     h_xsec_T1tttt_ = fs->make<TH2D>("h_xsec_T1tttt","Cross-section (pb);M_{#tilde{g}} (GeV);M_{#tilde{#chi}^{0}} (GeV);Cross-section (pb)", 201,-12.5,5012.5, 201,-12.5,5012.5);  
+
+    edm::EDGetTokenT<int>(mayConsume<int>(edm::InputTag("eventUserData", "puNtrueInt")));
+    edm::EDGetTokenT<float>(mayConsume<float>(edm::InputTag("extraVar", "evtGenWeight")));
+    edm::EDGetTokenT<float>(mayConsume<float>(edm::InputTag("extraVar", "SUSYGluinoMass")));
+    edm::EDGetTokenT<float>(mayConsume<float>(edm::InputTag("extraVar", "SUSYLSPMass")));
+    edm::EDGetTokenT<float>(mayConsume<float>(edm::InputTag("extraVar", "evtXSec")));
   }
 
 private:
