@@ -10,8 +10,12 @@ setenv SCRAM_ARCH slc6_amd64_gcc493
 cmsrel CMSSW_7_6_3_patch2
 cd CMSSW_7_6_3_patch2/src
 cmsenv
+git cms-init
+git remote add btv-cmssw https://github.com/cms-btv-pog/cmssw.git
+git fetch --tags btv-cmssw
+git cms-merge-topic cms-btv-pog:fixTMVAEvaluatorMemoryProblem-from-CMSSW_7_6_3 
 git clone https://github.com/dmajumder/JetToolbox JMEAnalysis/JetToolbox -b jetToolbox_763
-git clone https://github.com/cmsb2g/B2GAnaFW Analysis/B2GAnaFW -b CMSSW_7_6_X_V1
+git clone https://github.com/cmsb2g/B2GAnaFW Analysis/B2GAnaFW -b v7.6.x_v1.2
 git clone https://github.com/jkarancs/B2GTTrees Analysis/B2GTTrees
 scram b -j 20
 ```
@@ -26,9 +30,9 @@ cp Analysis/B2GAnaFW/test/Fall15_25nsV2_* .
 
    * 1/test) MiniAOD -> Common B2G edm ntuple
 ```Shell
-cmsRun Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py sample="file:/data/store/mc/RunIIFall15MiniAODv2/TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/00000/00547C97-2FCC-E511-8D75-002590DB91D2.root" outputLabel=B2GEDMNtuple_MC_25ns_76X.root DataProcessing=MC25ns_MiniAOD_76X wantSummary=False maxEvents=1000
+cmsRun Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py sample="/store/mc/RunIIFall15MiniAODv2/TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/00000/00547C97-2FCC-E511-8D75-002590DB91D2.root" outputLabel=B2GEDMNtuple_MC_25ns_76X.root DataProcessing=MC25ns_MiniAOD_76X wantSummary=False maxEvents=1000
 
-cmsRun Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py sample="file:/data/store/data/Run2015D/JetHT/MINIAOD/16Dec2015-v1/00000/301A497D-70B0-E511-9630-002590D0AFA8.root" outputLabel=B2GEDMNtuple_Data_25ns_76X_JetHT.root DataProcessing=Data25ns_76X wantSummary=False maxEvents=1000
+cmsRun Analysis/B2GAnaFW/test/b2gedmntuples_cfg.py sample="/store/data/Run2015D/JetHT/MINIAOD/16Dec2015-v1/00000/301A497D-70B0-E511-9630-002590D0AFA8.root" outputLabel=B2GEDMNtuple_Data_25ns_76X_JetHT.root DataProcessing=Data25ns_76X wantSummary=False maxEvents=1000
 ```
 
    * 2) Common B2G edm ntuple -> Add ExtraVars -> TTree ntuple
