@@ -4,10 +4,9 @@ import os
 
 # Default settings: add all variables from b2gedmntuples_cff
 # Set to false, and define your own lists (eg. comment out unused vairables)
-# Currently cannot import all Puppi vars (not in the same config as in below's import)
 getVariablesFromConfig = False
 
-from Analysis.B2GAnaFW.b2gedmntuples_cff import metFull, genPart, electrons, muons, photons, photonjets, jetsAK4, jetsAK4NoHF, jetsAK8CHS, subjetsAK8CHS, subjetsCmsTopTag, genJetsAK8, genJetsAK8SoftDrop, eventInfo # metNoHF off since 76X
+from Analysis.B2GAnaFW.b2gedmntuples_cff import metFull, genPart, electrons, muons, photons, photonjets, jetsAK4CHS, jetsAK4Puppi, jetsAK8CHS, subjetsAK8CHS, jetsAK8Puppi, subjetsAK8Puppi, genJetsAK8, genJetsAK8SoftDrop, eventInfo # metNoHF, subjetsCmsTopTag off since 76X
 
 if getVariablesFromConfig:
     
@@ -35,7 +34,7 @@ if getVariablesFromConfig:
     for pset in muons.variables:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
         muons_var.append(s)
-
+    
     photons_var = cms.untracked.vstring()
     for pset in photons.variables:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
@@ -46,43 +45,52 @@ if getVariablesFromConfig:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
         photonjets_var.append(s)
     
-    jetsAK4_var = cms.untracked.vstring()
-    for pset in jetsAK4.variables:
+    jetsAK4CHS_var = cms.untracked.vstring()
+    for pset in jetsAK4CHS.variables:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
-        jetsAK4_var.append(s)
+        jetsAK4CHS_var.append(s)
     
-    jetsAK4NoHF_var = cms.untracked.vstring()
-    for pset in jetsAK4NoHF.variables:
+    jetsAK4Puppi_var = cms.untracked.vstring()
+    for pset in jetsAK4Puppi.variables:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
-        jetsAK4NoHF_var.append(s)
+        jetsAK4Puppi_var.append(s)
     
     jetsAK8CHS_var = cms.untracked.vstring()
     for pset in jetsAK8CHS.variables:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
         jetsAK8CHS_var.append(s)
     
+    jetsAK8Puppi_var = cms.untracked.vstring()
+    for pset in jetsAK8Puppi.variables:
+        s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
+        jetsAK8Puppi_var.append(s)
+    
     subjetsAK8CHS_var = cms.untracked.vstring()
     for pset in subjetsAK8CHS.variables:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
         subjetsAK8CHS_var.append(s)
     
-    subjetsCmsTopTag_var = cms.untracked.vstring()
-    for pset in subjetsCmsTopTag.variables:
+    subjetsAK8Puppi_var = cms.untracked.vstring()
+    for pset in subjetsAK8Puppi.variables:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
-        subjetsCmsTopTag_var.append(s)
+        subjetsAK8Puppi_var.append(s)
+    
+    #subjetsCmsTopTag_var = cms.untracked.vstring()
+    #for pset in subjetsCmsTopTag.variables:
+    #    s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
+    #    subjetsCmsTopTag_var.append(s)
     
     genJetsAK8_var = cms.untracked.vstring()
     for pset in genJetsAK8.variables:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
         genJetsAK8_var.append(s)
-
+    
     genJetsAK8SoftDrop_var = cms.untracked.vstring()
     for pset in genJetsAK8SoftDrop.variables:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
         genJetsAK8SoftDrop_var.append(s)
-
 else:
-    # Currrent B2GAnaFW ver: 10 Nov (v7.4.x_v8.4 ntuple version)
+    # Currrent B2GAnaFW ver: 01 Apr (v7.6.x_v1.1 ntuple version)
     metNoHF_var = cms.untracked.vstring(
         "Pt",
         "Px",
@@ -224,7 +232,8 @@ else:
     
     jetVars = cms.untracked.vstring(
         "CSVv2",
-        "DoubleB",
+        "DoubleBAK8",
+        "DoubleBCA15",
         "CMVAv2",
         "CvsL",
         "CvsB",
@@ -272,6 +281,9 @@ else:
         "jecFactor0",
         "jecFactorL3Absolute",
         "jetArea",
+        "nSV",
+        "SV0mass",
+        "SV1mass",
     )
     
     jetVarsForSys = cms.untracked.vstring(
@@ -300,10 +312,10 @@ else:
     jetAK8Vars = cms.untracked.vstring(
         "vSubjetIndex0",
         "vSubjetIndex1",
-        "topSubjetIndex0",
-        "topSubjetIndex1",
-        "topSubjetIndex2",
-        "topSubjetIndex3",
+        #"topSubjetIndex0",
+        #"topSubjetIndex1",
+        #"topSubjetIndex2",
+        #"topSubjetIndex3",
         "tau1",
         "tau2",
         "tau3",
@@ -311,19 +323,19 @@ else:
         "trimmedMass",
         "prunedMass",
         "filteredMass",
-        "topMass",
-        "wMass",
-        "nSubJets",
-        "minmass",
+        #"topMass",
+        #"wMass",
+        #"nSubJets",
+        #"minmass",
     )
 
     jetToolboxAK8Vars = cms.untracked.vstring(
         "vSubjetIndex0",
         "vSubjetIndex1",
-        "topSubjetIndex0",
-        "topSubjetIndex1",
-        "topSubjetIndex2",
-        "topSubjetIndex3",
+        #"topSubjetIndex0",
+        #"topSubjetIndex1",
+        #"topSubjetIndex2",
+        #"topSubjetIndex3",
         "tau1",
         "tau2",
         "tau3",
@@ -331,10 +343,10 @@ else:
         "trimmedMass",
         "prunedMass",
         "filteredMass",
-        "topMass",
-        "wMass",
-        "nSubJets",
-        "minmass",
+        #"topMass",
+        #"wMass",
+        #"nSubJets",
+        #"minmass",
     )
     
     jetToolboxAK8PuppiVars = cms.untracked.vstring(
@@ -362,32 +374,32 @@ else:
     
     photonjets_var = copy.deepcopy(photonjetVars)
     
-    jetsAK4_var      = copy.deepcopy(basicVars)
-    jetsAK4_var     += jetVars
-    jetsAK4_var     += qglVars
-    jetsAK4_var     += jetVarsForSys
+    jetsAK4CHS_var      = copy.deepcopy(basicVars)
+    jetsAK4CHS_var     += jetVars
+    jetsAK4CHS_var     += qglVars
+    jetsAK4CHS_var     += jetVarsForSys
     
-    jetsAK4NoHF_var  = copy.deepcopy(basicVars)
-    jetsAK4NoHF_var += jetVarsJEC
-    jetsAK4NoHF_var += qglVars
+    jetsAK4Puppi_var    = copy.deepcopy(basicVars)
+    jetsAK4Puppi_var   += jetVars
+    jetsAK4Puppi_var   += jetVarsForSys
     
-    jetsAK8CHS_var       = copy.deepcopy(basicVars)
-    jetsAK8CHS_var      += jetVars
-    jetsAK8CHS_var      += jetVarsForSys
-    jetsAK8CHS_var      += jetToolboxAK8Vars
+    jetsAK8CHS_var      = copy.deepcopy(basicVars)
+    jetsAK8CHS_var     += jetVars
+    jetsAK8CHS_var     += jetVarsForSys
+    jetsAK8CHS_var     += jetToolboxAK8Vars
     
-    jetsAK8Puppi_var  = copy.deepcopy(basicVars)
-    jetsAK8Puppi_var += jetVars
-    jetsAK8Puppi_var += jetVarsForSys
-    jetsAK8Puppi_var += jetToolboxAK8PuppiVars
+    jetsAK8Puppi_var    = copy.deepcopy(basicVars)
+    jetsAK8Puppi_var   += jetVars
+    jetsAK8Puppi_var   += jetVarsForSys
+    jetsAK8Puppi_var   += jetToolboxAK8PuppiVars
     
-    subjetsAK8CHS_var  = copy.deepcopy(basicVars)
-    subjetsAK8CHS_var += jetVars
+    subjetsAK8CHS_var   = copy.deepcopy(basicVars)
+    subjetsAK8CHS_var  += jetVars
     
-    subjetsAK8Puppi_var  = copy.deepcopy(subjetsAK8CHS_var)
+    subjetsAK8Puppi_var = copy.deepcopy(subjetsAK8CHS_var)
     
-    subjetsCmsTopTag_var  = copy.deepcopy(basicVars)
-    subjetsCmsTopTag_var += jetVars
+    #subjetsCmsTopTag_var  = copy.deepcopy(basicVars)
+    #subjetsCmsTopTag_var += jetVars
     
     genJetsAK8_var = copy.deepcopy(basicVars)
     
@@ -492,20 +504,20 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
         #),
         # AK4 Jets
         cms.PSet(
-            label = cms.untracked.string("jetsAK4"),
-            key_label = cms.untracked.string("jetKeysAK4"),
-            prefix_in = jetsAK4.prefix,
+            label = cms.untracked.string("jetsAK4CHS"),
+            key_label = cms.untracked.string("jetKeysAK4CHS"),
+            prefix_in = jetsAK4CHS.prefix,
             prefix_out = cms.untracked.string("jetAK4_"),
-            vectorF = jetsAK4_var,
+            vectorF = jetsAK4CHS_var,
         ),
-        # AK4 Jets (No HF) - Currently not saved in V6.1
-        #cms.PSet(
-        #    label = cms.untracked.string("jetsAK4NoHF"),
-        #    key_label = cms.untracked.string("jetKeysAK4NoHF"),
-        #    prefix_in = jetsAK4.prefix,
-        #    prefix_out = cms.untracked.string("jetAK4_NoHF_"),
-        #    vectorF = jetsAK4_var,
-        #),
+        # AK4 Puppi Jets
+        cms.PSet(
+            label = cms.untracked.string("jetsAK4Puppi"),
+            key_label = cms.untracked.string("jetKeysAK4Puppi"),
+            prefix_in = jetsAK4Puppi.prefix,
+            prefix_out = cms.untracked.string("jetAK4Puppi_"),
+            vectorF = jetsAK4Puppi_var,
+        ),
         # AK8 CHS Jets
         cms.PSet(
             label = cms.untracked.string("jetsAK8CHS"),
@@ -518,7 +530,7 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
         cms.PSet(
             label = cms.untracked.string("jetsAK8Puppi"),
             key_label = cms.untracked.string("jetKeysAK8Puppi"),
-            prefix_in = cms.untracked.string("jetAK8Puppi"),
+            prefix_in = jetsAK8Puppi.prefix,
             prefix_out = cms.untracked.string("jetAK8Puppi_"),
             vectorF = jetsAK8Puppi_var,
         ),
@@ -534,18 +546,18 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
         cms.PSet(
             label = cms.untracked.string("subjetsAK8Puppi"),
             key_label = cms.untracked.string("subjetKeysAK8Puppi"),
-            prefix_in = cms.untracked.string("subjetAK8Puppi"),
+            prefix_in = subjetsAK8Puppi.prefix,
             prefix_out = cms.untracked.string("subjetAK8Puppi_"),
             vectorF = subjetsAK8Puppi_var,
         ),
         # Subjets of CMS Top-tag Jets
-        cms.PSet(
-            label = cms.untracked.string("subjetsCmsTopTag"),
-            key_label = cms.untracked.string("subjetsCmsTopTagKeys"),
-            prefix_in = subjetsCmsTopTag.prefix,
-            prefix_out = cms.untracked.string("subjetsCmsTopTag_"),
-            vectorF = subjetsCmsTopTag_var,
-        ),
+        #cms.PSet(
+        #    label = cms.untracked.string("subjetsCmsTopTag"),
+        #    key_label = cms.untracked.string("subjetsCmsTopTagKeys"),
+        #    prefix_in = subjetsCmsTopTag.prefix,
+        #    prefix_out = cms.untracked.string("subjetsCmsTopTag_"),
+        #    vectorF = subjetsCmsTopTag_var,
+        #),
         # AK8 Gen jets
         #cms.PSet(
         #    label = cms.untracked.string("genJetsAK8"),

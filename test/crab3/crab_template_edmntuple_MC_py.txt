@@ -23,11 +23,11 @@ config.section_('Data')
 config.Data.outLFNDirBase = 'SE_USERDIR'
 config.Data.inputDataset = 'DATASET'
 config.Data.inputDBS = 'global'
-config.Data.publishDBS = 'phys03'
-config.Data.publication = True
-config.Data.outputDatasetTag = 'PUBNAME'
 config.Data.splitting = 'FileBased'
 config.Data.unitsPerJob = 1
+config.Data.publication = True
+config.Data.outputDatasetTag = 'PUBNAME' # outLFNDirBase/primary_dataset/outputDatasetTag/timestamp/000X/
+config.Data.publishDBS = 'phys03'
 
 
 

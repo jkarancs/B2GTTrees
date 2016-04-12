@@ -85,10 +85,10 @@ void B2GEdmExtraVarProducer::init_tokens_() {
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"jecFactor0")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"jetArea")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"nSubJets")));
-  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex0")));
-  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex1")));
-  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex2")));
-  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex3")));
+  //edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex0")));
+  //edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex1")));
+  //edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex2")));
+  //edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex3")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"vSubjetIndex0")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"vSubjetIndex1")));
   
@@ -97,17 +97,16 @@ void B2GEdmExtraVarProducer::init_tokens_() {
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"Phi")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"E")));
   
-  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"Pt")));
-  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"Eta")));
-  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"Phi")));
-  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"E")));
-  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"jecFactor0")));
-  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"jetArea")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"Pt")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"Eta")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"Phi")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"E")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"jecFactor0")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"jetArea")));
   
   edm::EDGetTokenT<std::vector<std::vector<int> > >(consumes<std::vector<std::vector<int> > >(edm::InputTag(AK4JetKeys_label_,"")));
   edm::EDGetTokenT<std::vector<std::vector<int> > >(consumes<std::vector<std::vector<int> > >(edm::InputTag(AK8JetKeys_label_,"")));
   edm::EDGetTokenT<std::vector<std::vector<int> > >(consumes<std::vector<std::vector<int> > >(edm::InputTag(AK8SubjetKeys_label_,"")));
-  edm::EDGetTokenT<std::vector<std::vector<int> > >(consumes<std::vector<std::vector<int> > >(edm::InputTag(CmsTTSubjetKeys_label_,"")));
   
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"Pt")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"Eta")));
@@ -184,10 +183,10 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"jecFactor0"),      h_floats_["AK8_jecFactor0"]);
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"jetArea"),         h_floats_["AK8_jetArea"]);
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"nSubJets"),        h_floats_["AK8_nSubJets"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex0"), h_floats_["AK8_topSubjetIndex0"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex1"), h_floats_["AK8_topSubjetIndex1"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex2"), h_floats_["AK8_topSubjetIndex2"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex3"), h_floats_["AK8_topSubjetIndex3"]);
+  //iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex0"), h_floats_["AK8_topSubjetIndex0"]);
+  //iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex1"), h_floats_["AK8_topSubjetIndex1"]);
+  //iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex2"), h_floats_["AK8_topSubjetIndex2"]);
+  //iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex3"), h_floats_["AK8_topSubjetIndex3"]);
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"vSubjetIndex0"),   h_floats_["AK8_vSubjetIndex0"]);
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"vSubjetIndex1"),   h_floats_["AK8_vSubjetIndex1"]);
   
@@ -196,17 +195,16 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   iEvent.getByLabel(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"Phi"),             h_floats_["AK8Puppi_Phi"]);
   iEvent.getByLabel(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"E"),               h_floats_["AK8Puppi_E"]);
   
-  iEvent.getByLabel(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"Pt"),         h_floats_["CmsTTSub_Pt"]);
-  iEvent.getByLabel(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"Eta"),        h_floats_["CmsTTSub_Eta"]);
-  iEvent.getByLabel(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"Phi"),        h_floats_["CmsTTSub_Phi"]);
-  iEvent.getByLabel(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"E"),          h_floats_["CmsTTSub_E"]);
-  iEvent.getByLabel(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"jecFactor0"), h_floats_["CmsTTSub_jecFactor0"]);
-  iEvent.getByLabel(edm::InputTag(CmsTTSubjets_label_, CmsTTSubjets_prefix_+"jetArea"),    h_floats_["CmsTTSub_jetArea"]);
+  iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"Pt"),         h_floats_["AK8Sub_Pt"]);
+  iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"Eta"),        h_floats_["AK8Sub_Eta"]);
+  iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"Phi"),        h_floats_["AK8Sub_Phi"]);
+  iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"E"),          h_floats_["AK8Sub_E"]);
+  iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"jecFactor0"), h_floats_["AK8Sub_jecFactor0"]);
+  iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"jetArea"),    h_floats_["AK8Sub_jetArea"]);
   
   iEvent.getByLabel(edm::InputTag(AK4JetKeys_label_),      h_keys_["AK4"]);
   iEvent.getByLabel(edm::InputTag(AK8JetKeys_label_),      h_keys_["AK8"]);
   iEvent.getByLabel(edm::InputTag(AK8SubjetKeys_label_),   h_keys_["AK8Sub"]);
-  iEvent.getByLabel(edm::InputTag(CmsTTSubjetKeys_label_), h_keys_["CmsTTSub"]);
   
   iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"Pt"),     h_floats_["ele_Pt"]);
   iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"Eta"),    h_floats_["ele_Eta"]);
@@ -699,17 +697,19 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   // -      Jets         -
   // ---------------------
   
-  // NB: JEC/JER is already in new versions of B2G ntuples
+  
   // Read jet correction parameters from DB
   edm::ESHandle<JetCorrectorParametersCollection> JetCorrParColl_AK4, JetCorrParColl_AK8, JetCorrParColl_AK8Puppi;
   iSetup.get<JetCorrectionsRecord>().get("AK4PFchs",   JetCorrParColl_AK4);
   iSetup.get<JetCorrectionsRecord>().get("AK8PFchs",   JetCorrParColl_AK8);
   iSetup.get<JetCorrectionsRecord>().get("AK4PFPuppi", JetCorrParColl_AK8Puppi);
   // JEC Uncertainty
+  // NB: JEC/JER variables are already there in the new versions of B2G ntuples
+  /*
   JetCorrectionUncertainty jecUnc_AK4((*JetCorrParColl_AK4)["Uncertainty"]);
   JetCorrectionUncertainty jecUnc_AK8((*JetCorrParColl_AK8)["Uncertainty"]);
   JetCorrectionUncertainty jecUnc_AK8Puppi((*JetCorrParColl_AK8Puppi)["Uncertainty"]);
-
+  
   // JER
   // Twiki: https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyResolution#Scale_factors
   // Recipe taken from: https://github.com/blinkseb/cmssw/blob/jer_fix_76x/JetMETCorrections/Modules/plugins/JetResolutionDemo.cc
@@ -766,6 +766,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     vector_float_["jetAK8Puppi_JERSFDown"][iJet] = res_sf_AK8Puppi.getScaleFactor(jetParam, Variation::UP);
     vector_float_["jetAK8Puppi_JERSFUp"][iJet]   = res_sf_AK8Puppi.getScaleFactor(jetParam, Variation::DOWN);
   }
+  */
   
   // Jet Correctors (Recalculate after lepton cleaning, or do on-the-fly correction)
   std::vector<JetCorrectorParameters> AK4_vPar;
@@ -841,7 +842,6 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   // ---------------------
   // - Lepton Selection  -
   // ---------------------
-  
   vector_float_["el_DRNearGenEleFromSLTop"].assign(nele,9999);
   vector_float_["el_PtNearGenEleFromSLTop"].assign(nele,-9999);
   vector_float_["el_PtNearGenTop"].assign(nele,-9999);
@@ -901,7 +901,8 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     // ------------------------------------------------------------------------
     //                       Lepton-Jet Disambiguation
     
-    const bool SoftDrop = 0; // 1: use W-like SoftDrop subjets (max 2 subjet) or 0: top-like subjets (2-4)
+    // CMS Top-tag subjets currently not used in B2G ntuples, SoftDrop subjets are available only
+    const bool SoftDrop = 1; // 1: use W-like SoftDrop subjets (max 2 subjet) or 0: top-like subjets (2-4)
     const bool print_keys = 0;
     TLorentzVector closest_jet[3], prev_jet[3];
     float closest_jet_Area[3], closest_jet_jecFactor0[3];
@@ -990,7 +991,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
 	  ++nSubjet;
 	  TLorentzVector subjet;
 	  // If SubJet doesn't exist, treat AK8 jet as a subjet
-	  std::string prefix = iSubjet!=(size_t)-1 ? "CmsTTSub_" : "AK8_";
+	  std::string prefix = iSubjet==(size_t)-1 ? "AK8_" : SoftDrop ? "AK8Sub_" : "CmsTTSub_";
 	  size_t index = iSubjet!=(size_t)-1 ? iSubjet : iJet;
 	  subjet.SetPtEtaPhiE(h_floats_[prefix+"Pt"]->at(index), h_floats_[prefix+"Eta"]->at(index),
 			      h_floats_[prefix+"Phi"]->at(index), h_floats_[prefix+"E"]->at(index));
@@ -1005,7 +1006,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
 	    vector_float_["el_SubjetV1DR"][iEle] = DR_subjet;
 	    // Check if lepton is part of the subjet
 	    vector_int_["el_IsPartOfNearSubjet"][iEle] = 0;
-	    std::vector<int> subjet_keys = iSubjet!=(size_t)-1 ? h_keys_[SoftDrop? "AK8Sub" : "CmsTTSub"]->at(iSubjet) : AK8Keys;
+	    std::vector<int> subjet_keys = iSubjet!=(size_t)-1 ? h_keys_[SoftDrop ? "AK8Sub" : "CmsTTSub"]->at(iSubjet) : AK8Keys;
 	    nSubjetKeys += subjet_keys.size();
 	    for (size_t iKey=0, nKey=subjet_keys.size(); iKey<nKey; ++iKey)
 	      if (h_floats_["ele_Key"]->at(iEle)==subjet_keys[iKey])
@@ -1146,7 +1147,8 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     // ------------------------------------------------------------------------
     //                       Lepton-Jet Disambiguation
     
-    const bool SoftDrop = 0; // 1: use W-like SoftDrop subjets (max 2 subjet) or 0: top-like subjets (2-4)
+    // CMS Top-tag subjets currently not used in B2G ntuples, SoftDrop subjets are available only
+    const bool SoftDrop = 1; // 1: use W-like SoftDrop subjets (max 2 subjet) or 0: top-like subjets (2-4)
     const bool print_keys = 0;
     TLorentzVector closest_jet[3], prev_jet[3];
     float closest_jet_Area[3], closest_jet_jecFactor0[3];
@@ -1235,7 +1237,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
 	  ++nSubjet;
 	  TLorentzVector subjet;
 	  // If SubJet doesn't exist, treat AK8 jet as a subjet
-	  std::string prefix = iSubjet!=(size_t)-1 ? "CmsTTSub_" : "AK8_";
+	  std::string prefix = iSubjet==(size_t)-1 ? "AK8_" : SoftDrop ? "AK8Sub_" : "CmsTTSub_";
 	  size_t index = iSubjet!=(size_t)-1 ? iSubjet : iJet;
 	  subjet.SetPtEtaPhiE(h_floats_[prefix+"Pt"]->at(index), h_floats_[prefix+"Eta"]->at(index),
 			      h_floats_[prefix+"Phi"]->at(index), h_floats_[prefix+"E"]->at(index));

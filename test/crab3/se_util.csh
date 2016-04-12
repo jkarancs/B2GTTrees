@@ -96,6 +96,8 @@ foreach arg ( $rest_args )
         set arg1="$arg"
     else if ( $narg == "2" ) then
         set arg2="$arg"
+    else if ( $narg == "3" ) then
+        set arg3="$arg"
     endif
 end
 
@@ -324,21 +326,29 @@ else if ( $cmd == "set-perm" ) then
 
 else if ( $cmd == "mis" ) then
     eval "$se_ls $arg1" | sed 's;_; ;g;s;\.root;;' | awk '{ print $NF }' | sort | uniq > jobnums_$RAND.txt
-    set N=1
     if ( $narg < 2 ) then
 	echo "Need more arguments, Use:"
 	echo "se mis <se_dir> Njobs"
+	echo "se mis <se_dir> iJobBeg iJobEnd"
     else
-        while ( $N <= $arg2 )
-            set n=`cat jobnums_$RAND.txt | grep '^'$N'$'`
+	if ( $#argv == 2 ) then
+	    set BEG=1
+	    set END=$arg2
+	else
+	    set BEG=$arg2
+	    set END=$arg3
+	endif
+        while ( $BEG <= $END )
+            set n=`cat jobnums_$RAND.txt | grep '^'$BEG'$'`
             if ( .$n == . ) then
-                echo -n $N","
+                echo -n $BEG","
             endif
-            set N = `expr $N + 1`
+            set BEG = `expr $BEG + 1`
         end
-        echo
-        rm jobnums_$RAND.txt
-        unset N
+	echo
+	rm jobnums_$RAND.txt
+	unset BEG
+	unset END
     endif
 
 else if ( $cmd == "dl" ) then # specify output directory

@@ -82,10 +82,17 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
     if ( $#argv < 6 ) then
 	cat Usage.txt; rm Usage.txt; exit
     endif
-    set INPUT_FILE=$3
-    set XSEC_FILE=$4
-    set SE_SITE=$5
-    set SE_USERDIR=$6
+    set TAG=$3
+    set INPUT_FILE=$4
+    set XSEC_FILE=$5
+    set SE_SITE=$6
+    set SE_USERDIR=$7
+    set APPLY_JSON="0"
+    set CERT_DIR="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/Reprocessing"
+    set LATEST_50NS_GOLDEN_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Reprocessing/ | grep Collisions15_50ns_JSON | grep -v MuonPhys | grep -v Silver | tail -1`
+    set LATEST_25NS_GOLDEN_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Reprocessing/ | grep Collisions15_25ns_JSON | grep -v MuonPhys | grep -v Silver | tail -1`
+    set LATEST_25NS_SILVER_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Reprocessing/ | grep Collisions15_25ns_JSON | grep -v MuonPhys | grep Silver | tail -1`
+    set JSON="$LATEST_25NS_GOLDEN_JSON"
     if (-d $TASKDIR ) then
 	echo "Error: task directory: "$TASKDIR" already exists. exiting..."
 	exit
@@ -97,35 +104,37 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
     if ( !(-f $INPUT_FILE) ) then
 	echo "$INPUT_FILE doesn't exist"; exit
     endif
-    cp $INPUT_FILE $TASKDIR/input_datasets.txt
+    grep -v '^#' $INPUT_FILE >! $TASKDIR/input_datasets.txt
     cp $XSEC_FILE $TASKDIR/xsec_datasets.txt
     sed "s;TASKDIR;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_ttreentuple_py.txt > $TASKDIR/crab_template_ttreentuple_py.txt
     set N=`grep "/" $TASKDIR/input_datasets.txt | wc -l`
     foreach i ( `seq 1 $N` )
 	set SHORT=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
 	set DATASET=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
+	set parent=`das_client --query="parent dataset=$DATASET instance=prod/phys03" | tail -1`
 	set primary=`echo $DATASET | sed "s;/; ;g" | awk '{ print $1 }'`
-	set isData=`echo $DATASET | grep 'Run2015' | wc -l`
+	set PROCESSED_DS_NAME=`echo $parent | sed "s;/; ;g" | awk '{ print $2 }'`
+	set isData=`echo $DATASET | grep -E 'Run2015|Run2016' | wc -l`
 	set LHELABEL="externalLHEProducer"
 	if ( $isData ) then
 	    set WEIGHT=1
 	else
 	    if ( ! `echo $primary | grep SMS | wc -l` ) then
-	        set xsec=`grep $primary $TASKDIR/xsec_datasets.txt | awk '{ print $2 }'`
+	        set xsec=`grep "^$primary" $TASKDIR/xsec_datasets.txt | awk '{ print $2 }'`
 	        if ( $xsec == "" ) then
 	            echo "Error: Cross-section is missing for $primary, exiting..."
 	            rm -r $TASKDIR
 	            exit
 	        endif
 	        # Multiply cross-section with k-factor
-	        set k_factor=`grep $primary $TASKDIR/xsec_datasets.txt | awk '{ print $3 }'`
+	        set k_factor=`grep "^$primary" $TASKDIR/xsec_datasets.txt | awk '{ print $3 }'`
 	        set xsec=`echo | awk '{ printf "%lf", '$xsec'*'$k_factor' }'`
 	        # Correct the number of events for negative weights (beware, corr factor might not be available yet!)
-	        set nevent=`das_client.py --query="dataset=$DATASET instance=prod/phys03 | grep dataset.nevents" | tail -1`
+	        set nevent=`das_client --query="dataset=$DATASET instance=prod/phys03 | grep dataset.nevents" | tail -1`
 		while ( $nevent == "[]" )
-		    set nevent=`das_client.py --query="dataset=$DATASET instance=prod/phys03 | grep dataset.nevents" | tail -1`
+		    set nevent=`das_client --query="dataset=$DATASET instance=prod/phys03 | grep dataset.nevents" | tail -1`
 		end
-	        set neg_corr=`grep $primary $TASKDIR/xsec_datasets.txt | awk '{ print $4 }'`
+	        set neg_corr=`grep "^$primary" $TASKDIR/xsec_datasets.txt | awk '{ print $4 }'`
 	        set nevent=`echo | awk '{ printf "%10.0f", '$nevent'/'$neg_corr' }'`
 	        # Calculate lumi weight for 1 fb^-1
 	        set lumiWeight=`echo | awk '{ printf "%lf", 1000*'$xsec'/'$nevent' }'`
@@ -138,28 +147,28 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 		set LHELABEL="source"
 	    endif
 	endif
-	set MIDNAME=`echo $DATASET | sed "s;/; ;g" | awk '{ print $2 }'`
-	# 50ns
-	if ( `echo $MIDNAME | grep "Run2015B" | wc -l` || `echo $MIDNAME | grep "Run2015C_50ns" | wc -l`  ) then
-	    set JECNAME="Summer15_50nsV5_DATA"
+	# 25 ns - Data (ReReco)
+	if ( `echo $PROCESSED_DS_NAME | grep "16Dec2015" | wc -l`) then
 	    set ISDATA="True"
-	else if ( `echo $MIDNAME | grep "Asympt50ns" | wc -l` ) then
-	    set JECNAME="Summer15_50nsV5_MC"
+	    set JEC_ERA="Fall15_25nsV2_DATA"
+	# 25 ns - MC FastSim (currently doesn't work)
+	#else if ( `echo $PROCESSED_DS_NAME | grep "RunIISpring15MiniAODv2-FastAsympt25ns" | wc -l` ) then
+	#    set ISDATA="False"
+	#    set JEC_ERA="MCRUN2_74_V9"
+	# 25 ns - MC FullSim (ReMiniAOD)
+	else if ( `echo $PROCESSED_DS_NAME | grep "RunIIFall15MiniAODv2" | wc -l` ) then
 	    set ISDATA="False"
-	# 25ns
-	else if ( `echo $MIDNAME | grep "Run2015C_25ns" | wc -l` || `echo $MIDNAME | grep "Run2015D" | wc -l` ) then
-	    set JECNAME="Summer15_25nsV6_DATA"
-	    set ISDATA="True"
-	else if ( `echo $MIDNAME | grep "RunIISpring15MiniAODv2-FastAsympt25ns" | wc -l` ) then	    
-	    set JECNAME="MCRUN2_74_V9"
-	    set ISDATA="False"
-	else if ( `echo $MIDNAME | grep "RunIISpring15" | wc -l` ) then	    
-	    set JECNAME="Summer15_25nsV6_MC"
-	    set ISDATA="False"
+	    set JEC_ERA="Fall15_25nsV2_MC"
+	else
+	    echo "ERROR - Dataset not defined (probably because not using latest): "$DATASET
+	    rm -r $TASKDIR Usage.txt
+	    exit
 	endif
-	sed "s;TASKNAME;$SHORT;;s;DATASET;$DATASET;;s;JECNAME;$JECNAME;;s;LHELABEL;$LHELABEL;;s;ISDATA;$ISDATA;;" $TASKDIR/crab_template_ttreentuple_py.txt > $TASKDIR/crab_$SHORT.py
+	sed "s;TASKNAME;$SHORT;;s;DATASET;$DATASET;;s;PUBNAME;$TAG"_"$PROCESSED_DS_NAME;;s;JEC_ERA;$JEC_ERA;;s;LHELABEL;$LHELABEL;;s;ISDATA;$ISDATA;;" $TASKDIR/crab_template_ttreentuple_py.txt > $TASKDIR/crab_$SHORT.py
 	if ( ! $isData ) then
 	    sed -i "s;xsec=0;xsec=$xsec;;s;nevent=0;nevent=$nevent;;s;lumiWeight=1.0;lumiWeight=$lumiWeight;" $TASKDIR/crab_$SHORT.py
+	else if ( $APPLY_JSON ) then
+	    sed -i "31s;^"\$";config.Data.lumiMask = '$CERT_DIR/$JSON';" $TASKDIR/crab_$SHORT.py
 	endif
     end
     rm $TASKDIR/crab_template_ttreentuple_py.txt

@@ -95,10 +95,15 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
     if ( $#argv < 6 ) then
 	cat Usage.txt; rm Usage.txt; exit
     endif
-    set PUBNAME=$3
+    set TAG=$3
     set TXT_FILE=$4
     set SE_SITE=$5
     set SE_USERDIR=$6
+    set CERT_DIR="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/Reprocessing"
+    set LATEST_50NS_GOLDEN_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Reprocessing/ | grep Collisions15_50ns_JSON | grep -v MuonPhys | grep -v Silver | tail -1`
+    set LATEST_25NS_GOLDEN_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Reprocessing/ | grep Collisions15_25ns_JSON | grep -v MuonPhys | grep -v Silver | tail -1`
+    set LATEST_25NS_SILVER_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Reprocessing/ | grep Collisions15_25ns_JSON | grep -v MuonPhys | grep Silver | tail -1`
+    set JSON="$LATEST_25NS_SILVER_JSON"
     mkdir $TASKDIR
     echo "SE_SITE "$SE_SITE >! $TASKDIR/config.txt
     echo "SE_USERDIR "$SE_USERDIR >> $TASKDIR/config.txt
@@ -113,24 +118,19 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	set line=`sed -n "$i"p $TASKDIR/input_datasets.txt`
 	set SHORT=`echo $line | awk '{ print $1 }'`
 	set DATASET=`echo $line | awk '{ print $2 }'`
-	set PUBNAME2=`echo $DATASET | sed "s;/; ;g" | awk '{ print $2 }'`
+	set PROCESSED_DS_NAME=`echo $DATASET | sed "s;/; ;g" | awk '{ print $2 }'`
 	set isData=`echo $DATASET | grep 'MINIAOD$' | wc -l`
-	set CERT_DIR="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV"
-	set LATEST_50NS_GOLDEN_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/ | grep Collisions15_50ns_JSON | grep -v MuonPhys | grep -v Silver | tail -1`
-	set LATEST_25NS_GOLDEN_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/ | grep Collisions15_25ns_JSON | grep -v MuonPhys | grep -v Silver | tail -1`
-	set LATEST_25NS_SILVER_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/ | grep Collisions15_25ns_JSON | grep -v MuonPhys | grep Silver | tail -1`
 	# 25 ns - Data (ReReco)
-	if ( `echo $PUBNAME2 | grep "16Dec2015" | wc -l`) then
+	if ( `echo $PROCESSED_DS_NAME | grep "16Dec2015" | wc -l`) then
 	    set DATAPROC="Data25ns_76X"
 	    set JEC_ERA="Fall15_25nsV2_DATA"
-	    set JSON="$CERT_DIR/$LATEST_25NS_SILVER_JSON"
 	    set RUNS="1-999999"
-	# 25 ns - MC FastSim (currently doesn't work
-	#else if ( `echo $PUBNAME2 | grep "RunIISpring15MiniAODv2-FastAsympt25ns" | wc -l` ) then
+	# 25 ns - MC FastSim (currently doesn't work)
+	#else if ( `echo $PROCESSED_DS_NAME | grep "RunIISpring15MiniAODv2-FastAsympt25ns" | wc -l` ) then
 	#    set DATAPROC="MC25ns_MiniAODv2_FastSim"
 	#    set JEC_ERA="MCRUN2_74_V9"
 	# 25 ns - MC FullSim (ReMiniAOD)
-	else if ( `echo $PUBNAME2 | grep "RunIIFall15MiniAODv2" | wc -l` ) then
+	else if ( `echo $PROCESSED_DS_NAME | grep "RunIIFall15MiniAODv2" | wc -l` ) then
 	    set DATAPROC="MC25ns_MiniAOD_76X"
 	    set JEC_ERA="Fall15_25nsV2_MC"
 	else
@@ -139,9 +139,9 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	    exit
 	endif
 	if ( $isData ) then
-	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME"_"$PUBNAME2;;s;DATASET;$DATASET;;s;DATAPROC;$DATAPROC;;s;JEC_ERA;$JEC_ERA;;s;JSON;$JSON;;s;RUNS;$RUNS;" $TASKDIR/crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_$SHORT.py
+	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$TAG"_"$PROCESSED_DS_NAME;;s;DATASET;$DATASET;;s;DATAPROC;$DATAPROC;;s;JEC_ERA;$JEC_ERA;;s;JSON;$CERT_DIR/$JSON;;s;RUNS;$RUNS;" $TASKDIR/crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_$SHORT.py
 	else
-	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$PUBNAME"_"$PUBNAME2;;s;DATASET;$DATASET;;s;DATAPROC;$DATAPROC;;s;JEC_ERA;$JEC_ERA;" $TASKDIR/crab_template_edmntuple_MC_py.txt > $TASKDIR/crab_$SHORT.py
+	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$TAG"_"$PROCESSED_DS_NAME;;s;DATASET;$DATASET;;s;DATAPROC;$DATAPROC;;s;JEC_ERA;$JEC_ERA;" $TASKDIR/crab_template_edmntuple_MC_py.txt > $TASKDIR/crab_$SHORT.py
 	endif
     end
     rm $TASKDIR/crab_template_edmntuple_Data_py.txt $TASKDIR/crab_template_edmntuple_MC_py.txt
@@ -155,7 +155,9 @@ else if ( `echo $cmd | grep "submit" | wc -l` ) then
     end
 
 else if ( `echo $cmd | grep "status" | wc -l` ) then
-    foreach short ( `awk '{ print $1 }' $TASKDIR/input_datasets.txt` )
+    set N=`cat $TASKDIR/input_datasets.txt | wc -l`
+    foreach i ( `seq 1 $N` )
+        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
 	set dir=`echo $TASKDIR"/crab_"$short`
 	if ( ! -d $dir ) then
 	    set Status="MISSING"
@@ -165,7 +167,8 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	    if ( `ls $TASKDIR/status/$short | grep ".txt" | wc -l` ) then
 		set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
 		set Status=`grep "Task status:" $status_txt | awk '{ print $3 }'`
-		if ( $Status != "COMPLETED" ) then
+		set nfailpub=`grep "Publication status:" -A 5 $status_txt | grep "failed.*\%.*\(" | wc -l`
+		if ( $Status != "COMPLETED" || $nfailpub != 0 ) then
 		    crab status -d $dir >! $TASKDIR/status/$short/$DATE.txt
 		endif
             else
@@ -179,7 +182,13 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	    endif
 	endif
         printf "%-70s %s\n" $dir $Status
-	if ( $Status == "MISSING" ) then
+	set nfail=`grep "failed.*\%.*\(" $status_txt | wc -l`
+	set nfailpub=`grep "Publication status:" -A 5 $status_txt | grep "failed.*\%.*\(" | wc -l`
+	if ( $Status == "COMPLETED" && $nfailpub != 0 ) then
+	    echo "  -> Resubmitting failed publication jobs ...\n"
+	    crab resubmit -d $dir --publication
+	    echo
+	else if ( $Status == "MISSING" ) then
 	    echo "  -> Task is not found (not yet submitted?). Submitting ...\n"
 	    crab submit -c $dir.py
 	    echo
@@ -210,11 +219,55 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	#    echo
         else if ( `echo $Status | grep COMPLETED | wc -l` == 0 ) then
 	    grep "%.*\(.*\)" $status_txt
-            if ( `grep "failed.*\%.*\(" $status_txt | wc -l` == 1 ) then
-        	echo "  -> Resubmitting failed jobs ...\n"
-        	crab resubmit -d $dir
+            if ( $nfail != 0 ) then
+		if ( $nfail != $nfailpub ) then
+		    echo "  -> Resubmitting failed jobs ...\n"
+		    crab resubmit -d $dir
+		else
+		    echo "  -> Resubmitting failed publication jobs ...\n"
+		    #crab resubmit -d $dir --publication
+		endif
 		echo
-            endif
+	    else
+		# Get more info about tasks not failing but near completion
+		echo "More info about task:"
+	        set percent=`grep "finished" $status_txt | head -1 | sed "s;\.; ;g" | awk '{ print $2 }'`
+	        if ( $percent == "status:" ) set percent=`grep "finished" $status_txt | head -1 | sed "s;\.; ;g" | awk '{ print $4 }'`
+	        if ( $percent == "" ) set percent=0
+	        if ( $percent > 90 ) then
+                    set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
+                    set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
+	            set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
+	            set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
+                    set pubname=`grep outputDatasetTag $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
+                    set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
+	            set njobs=`grep ".*\%.*\(.*\)" $status_txt | tail -1 | sed "s;/; ;g;s;); ;g"| awk '{ print $NF }'`
+	            touch missing.txt
+                    foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp` )
+	                set BEG=`expr $thousand \* 1000`
+	                set END=`expr $BEG + 999`
+	                if ( "$BEG" == 0 ) set BEG=1
+	                if ( $njobs < $END ) set END=$njobs
+                        set missing=`se mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand $BEG $END`
+	                if ( `echo $missing | grep '^$' | wc -l` != 1 ) echo $missing >> missing.txt
+                    end
+	            if ( `cat missing.txt | wc -l` ) then
+	                echo -n "-  Found missing jobs: "; cat missing.txt
+	            else
+	                echo "-  No jobs are missing on the SE"
+	                set out_dataset=`grep 'Output dataset:' $TASKDIR/status/$short/*.txt | grep $primary_dataset | awk '{ print $NF }' | tail -1`
+	                set npub=`das_client --query "dataset=$out_dataset instance=prod/phys03 | grep dataset.nfiles" | tail -1`
+	                if ( "$npub" != "$njobs" ) then
+	                    echo "- "`expr $njobs - $npub`" files still need to be published in DAS"
+			    crab resubmit -d $dir --publication
+	                else
+	                    echo "- All files are published --> Changing task status to COMPLETED"
+	                    sed -i 's;^\(Task status:\).*[A-Z]*$;\1                    COMPLETED;' $status_txt
+	                endif
+	            endif
+	            rm missing.txt
+	        endif
+	    endif
         endif
     end
 
@@ -255,26 +308,29 @@ else if ( `echo $cmd | grep "get_datasets" | wc -l` ) then
     cat EdmNtuple_"$TASKNAME"_input.txt
 
 else if ( `echo $cmd | grep "get_lumi" | wc -l` ) then
-    touch $TASKDIR/get_luminosity_$TASKNAME.csh
+    set NORMTAG="/afs/cern.ch/user/l/lumipro/public/normtag_file/moriond16_normtag.json"
     mkdir -p $TASKDIR/data_lumi_summaries_$TASKNAME
+    if ( -e $TASKDIR/get_luminosity_$TASKNAME.csh ) rm $TASKDIR/get_luminosity_$TASKNAME.csh
     set N=`cat $TASKDIR/input_datasets.txt | wc -l`
     foreach i ( `seq 1 $N` )
         set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
         set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
 	set isData=`echo $in_dataset | grep 'Run2015' | wc -l`
-	if ( ! -e $TASKDIR/crab_$short/results/lumiSummary.json ) then
-	    #crab report --dbs=yes -d $TASKDIR/crab_$short
-	endif
 	if ( $isData ) then
-	    cp $TASKDIR/crab_$short/results/lumiSummary.json $TASKDIR/data_lumi_summaries_$TASKNAME/$short.json
-	    echo "echo $short "\`"brilcalc lumi --normtag /afs/cern.ch/user/l/lumipro/public/normtag_file/OfflineNormtagV2.json -i data_lumi_summaries_$TASKNAME/$short.json | tail -2 | head -1 | awk '{ printf "\""%1.3f pb^-1\\n"\"", "\$"(NF-1)/1000000.0 }'"\`>> $TASKDIR/get_luminosity_$TASKNAME.csh
+	    if ( ! -e $TASKDIR/crab_$short/results/processedLumis.json ) then
+	        crab report -d $TASKDIR/crab_$short
+	    endif
+	    cp $TASKDIR/crab_$short/results/processedLumis.json $TASKDIR/data_lumi_summaries_$TASKNAME/$short.json
+	    cp $TASKDIR/crab_$short/results/lumisToProcess.json $TASKDIR/data_lumi_summaries_$TASKNAME/"$short"_input.json
+	    echo "echo '$short processed '"\`"brilcalc lumi --normtag $NORMTAG -i data_lumi_summaries_$TASKNAME/$short.json | grep -A 2 totrecorded | tail -1 | awk '{ printf "\""%1.3f pb^-1\\n"\"", "\$"(NF-1)/1000000.0 }'"\`>>! $TASKDIR/get_luminosity_$TASKNAME.csh
+	    echo "echo '$short input     '"\`"brilcalc lumi --normtag $NORMTAG -i data_lumi_summaries_$TASKNAME/"$short"_input.json | grep -A 2 totrecorded | tail -1 | awk '{ printf "\""%1.3f pb^-1\\n"\"", "\$"(NF-1)/1000000.0 }'"\`>>! $TASKDIR/get_luminosity_$TASKNAME.csh
 	endif
     end
     echo "\n------\n"
     echo "Run these commands to get luminosity: \n"
     echo "scp -r $TASKDIR/data_lumi_summaries_$TASKNAME $TASKDIR/get_luminosity_$TASKNAME.csh "`whoami`"@lxplus.cern.ch:~/"
     echo "ssh lxplus.cern.ch"
-    echo "setenv PATH $HOME/.local/bin:/afs/cern.ch/cms/lumi/brilconda-1.0.3/bin:$PATH"
+    echo "setenv PATH "\$"HOME/.local/bin:/afs/cern.ch/cms/lumi/brilconda-1.0.3/bin:"\$"PATH"
     echo "pip install --install-option="--prefix=$HOME/.local" brilws"
     echo "source get_luminosity_$TASKNAME.csh"
 
@@ -286,7 +342,7 @@ else if ( `echo $cmd | grep "checkup" | wc -l` ) then
         set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
 	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
 	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
-	das_client.py --limit=10000 --query="file dataset=$out_dataset instance=prod/phys03" | grep "\.root" | grep -v $timestamp >! duplicates.txt
+	das_client --limit=10000 --query="file dataset=$out_dataset instance=prod/phys03" | grep "\.root" | grep -v $timestamp >! duplicates.txt
 	if ( `cat duplicates.txt | wc -l` ) then
 	    printf "%-70s Duplicates found: %d\n" $short `cat duplicates.txt | wc -l`
 	    if ( ! -e $TASKDIR/Duplicates_$DATE.txt ) touch $TASKDIR/Duplicates_$DATE.txt
@@ -436,34 +492,36 @@ else if ( `echo $cmd | grep "make_ttrees" | wc -l` ) then
 else if ( `echo $cmd | grep "make_init_twiki" | wc -l` ) then
     echo "Please enter your name:"
     set NAME=$<
+    echo "Please enter your e-mail address:"
+    set EMAIL=$<
     echo "Please enter B2GAnaFW Version tag:"
     set TAG=$<
     set first_data="0"
     set first_mc="0"
-    echo "Paste this to the B2G ntuple twiki: https://twiki.cern.ch/twiki/bin/view/CMS/B2GAnaFilesRunIISpring15DR74Asympt25ns"
+    echo "Paste this to the B2G ntuple twiki: https://twiki.cern.ch/twiki/bin/view/CMS/B2GAnaEDMNTuples76X"
     foreach in_dataset (`awk '{ print $2 }' $TASKDIR/input_datasets.txt`)
 	set isData=`echo $in_dataset | grep '/MINIAOD$' | wc -l`
 	if ( $first_data == 0 && $isData ) then
 	    set first_data=1
 	    echo
-	    echo "| *Parent Sample* | *Submitted* | *Status* | *Lumi mask* | *Int. lumi [pb-1]* | *Published dataset* | *B2GFWAna tag* |"
+	    echo "| *Dataset* | *Submitter* | *Status* | *Lumi mask* | *Int. lumi [pb-1]* | *Published dataset* | *B2GAnaFW tag* |"
 	else if ( $first_mc == 0 && $isData == 0 ) then
 	    set first_mc=1
 	    echo
-	    echo "| *Parent Sample* | *Submitted* | *Status* | *N_events (orig. dataset)* | *N_events processed* | *Published dataset* | *B2GFWAna tag* |"
+	    echo "| *Dataset* | *Submitter* | *Status* | *Nevents* | *Nevents (processed)* | *Published dataset* | *B2GAnaFW tag* |"
 	endif
 	
 	echo -n "| [[https://cmsweb.cern.ch/das/request?input=$in_dataset&instance=prod%2Fglobal][$in_dataset]] "
-	echo -n "| $NAME "
+	echo -n "| [[mailto:$EMAIL][$NAME]] "
 	if ( $isData ) then
 	    set crab_script=`grep $in_dataset $TASKDIR/input_datasets.txt | awk '{ print "'$TASKDIR'/crab_"$1".py" }'`
 	    set CERT=`grep lumiMask $crab_script | sed "s;'; ;g;s;/; ;g" | awk '{ print $NF }'`
-	    echo -n "| Submitted "
-	    echo -n "| [[https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/$CERT][$CERT]] "
+	    echo -n "| SUBMITTED "
+	    echo -n "| [[https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/Reprocessing/$CERT][$CERT]] "
 	    echo -n "|  "
 	else
-	    set nevents=`das_client.py --query="dataset=$in_dataset | grep dataset.nevents" | tail -1`
-	    echo -n "| Submitted "
+	    set nevents=`das_client --query="dataset=$in_dataset | grep dataset.nevents" | tail -1`
+	    echo -n "| SUBMITTED "
 	    echo -n "|  $nevents "
 	    echo -n "|  "
 	endif
@@ -478,42 +536,44 @@ else if ( `echo $cmd | grep "make_twiki" | wc -l` ) then
     endif
     echo "Please enter your name:"
     set NAME=$<
+    echo "Please enter your e-mail address:"
+    set EMAIL=$<
     echo "Please enter B2GAnaFW Version tag:"
     set TAG=$<
     #echo "Please enter Total Int. lumi [pb-1]:"
     #set INTLUMI=$<
     
-    echo "Paste this to the B2G ntuple twiki: https://twiki.cern.ch/twiki/bin/view/CMS/B2GAnaFilesRunIISpring15DR74Asympt25ns"
+    echo "Paste this to the B2G ntuple twiki: https://twiki.cern.ch/twiki/bin/view/CMS/B2GAnaEDMNTuples76X"
     set first_data="0"
     set first_mc="0"
     foreach out_dataset ( `cat $TASKDIR/output_datasets.txt` )
-	set in_dataset=`das_client.py --query="parent dataset=$out_dataset instance=prod/phys03" | tail -1`
+	set in_dataset=`das_client --query="parent dataset=$out_dataset instance=prod/phys03" | tail -1`
 	### set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
 	set isData=`echo $in_dataset | grep '/MINIAOD$' | wc -l`
 	if ( $first_data == 0 && $isData ) then
 	    set first_data=1
 	    echo
-	    echo "| *Parent Sample* | *Submitted* | *Status* | *Lumi mask* | *Int. lumi [pb-1]* | *Published dataset* | *B2GFWAna tag* |"
+	    echo "| *Dataset* | *Submitter* | *Status* | *Lumi mask* | *Int. lumi [pb-1]* | *Published dataset* | *B2GAnaFW tag* |"
 	else if ( $first_mc == 0 && $isData == 0 ) then
 	    set first_mc=1
 	    echo
-	    echo "| *Parent Sample* | *Submitted* | *Status* | *N_events (orig. dataset)* | *N_events processed* | *Published dataset* | *B2GFWAna tag* |"
+	    echo "| *Dataset* | *Submitter* | *Status* | *N_events (orig. dataset)* | *N_events processed* | *Published dataset* | *B2GAnaFW tag* |"
 	endif
 	echo -n "| [[https://cmsweb.cern.ch/das/request?input=$in_dataset&instance=prod%2Fglobal][$in_dataset]] "
-	echo -n "| $NAME "
+	echo -n "| [[mailto:$EMAIL][$NAME]]"
 	if ( $isData ) then
 	    set crab_script=`grep $in_dataset $TASKDIR/input_datasets.txt | awk '{ print "'$TASKDIR'/crab_"$1".py" }'`
 	    set CERT=`grep lumiMask $crab_script | sed "s;'; ;g;s;/; ;g" | awk '{ print $NF }'`
-	    echo -n "| Completed "
-	    echo -n "| [[https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/$CERT][$CERT]] "
+	    echo -n "| COMPLETED "
+	    echo -n "| [[https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/Reprocessing/$CERT][$CERT]] "
 	    echo -n "|  "#$INTLUMI  "
 	else
-	    set nevents=`das_client.py --query="dataset=$in_dataset | grep dataset.nevents" | tail -1`
-	    set nevents_proc=`das_client.py --query="dataset=$out_dataset instance=prod/phys03 | grep dataset.nevents" | tail -1`
+	    set nevents=`das_client --query="dataset=$in_dataset | grep dataset.nevents" | tail -1`
+	    set nevents_proc=`das_client --query="dataset=$out_dataset instance=prod/phys03 | grep dataset.nevents" | tail -1`
 	    if ( $nevents == $nevents_proc ) then
-		echo -n "| Completed "
+		echo -n "| COMPLETED "
 	    else
-		echo -n "| Submitted "
+		echo -n "| SUBMITTED "
 	    endif
 	    echo -n "|  $nevents "
 	    echo -n "|  $nevents_proc "
