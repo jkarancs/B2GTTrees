@@ -42,7 +42,7 @@ cmsRun Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py runOnGrid=False i
 cmsRun Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py runOnGrid=False isData=True sample="file:B2GEDMNtuple_Data_25ns_76X_JetHT.root" outputLabel=B2GTTreeNtupleExtra_Data_25ns_76X_JetHT.root
 ```
 
-CRAB3 Tools (Recipe might need to be updated for 76X)
+CRAB3 Tools
 ==========
 INFO: You can mass produce B2GEdmNtuples similar to multicrab
 
@@ -62,24 +62,21 @@ cd $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3
 cmsenv
 source /cvmfs/cms.cern.ch/crab3/crab.csh
 voms-proxy-init --voms cms -valid 168:00
-source crab3_B2GEdmNtuples.csh create Nov18 B2GAnaFW_v74x_V8p4 MINIAODv2_Nov18_input.txt T2_HU_Budapest /store/user/jkarancs/SusyAnalysis/B2GEdmNtuple
-source crab3_B2GEdmNtuples.csh submit Nov18
-source crab3_B2GEdmNtuples.csh make_init_twiki Nov18
+source crab3_B2GEdmNtuples.csh create Apr01 B2GAnaFW_76X_V1p1 MINIAODv2_Apr01_input.txt T2_HU_Budapest /store/user/jkarancs/SusyAnalysis/B2GEdmNtuple
+edm make_init_twiki Apr01
 Janos
-v7.4.x_v8.4
-source crab3_B2GEdmNtuples.csh status Nov18
-source crab3_B2GEdmNtuples.csh find_missing Nov18
-source crab3_B2GEdmNtuples.csh get_datasets Nov18 --run
-source crab3_B2GEdmNtuples.csh make_twiki Nov18 --run
+janos.karancsi@cern.ch
+v7.6.x_v1.2
+source crab3_B2GEdmNtuples.csh submit Apr01
+source crab3_B2GEdmNtuples.csh status Apr01
+source crab3_B2GEdmNtuples.csh find_missing Apr01
+source crab3_B2GEdmNtuples.csh checkup Apr01
+source crab3_B2GEdmNtuples.csh get_datasets Apr01 --run
+source crab3_B2GEdmNtuples.csh make_twiki Apr01 --run
 Janos
-v7.4.x_v8.4
-```
-
-   * Optional steps (download edm ntuple and make TTrees locally - parallel background jobs)
-
-```Shell
-source crab3_B2GEdmNtuples.csh download Sep29 /data/gridout/jkarancs/SusyAnalysis/B2G/EdmNtuple
-source crab3_B2GEdmNtuples.csh make_ttrees Sep29 /data/gridout/jkarancs/SusyAnalysis/B2G/TTreeNtuple/Oct02 5
+janos.karancsi@cern.ch
+v7.6.x_v1.2
+source crab3_B2GEdmNtuples.csh get_lumi Apr01
 ```
 
    * 2/crab3) Make TTree ntuples from previous Edm ntuples on grid
@@ -88,23 +85,10 @@ cd $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3
 cmsenv
 source /cvmfs/cms.cern.ch/crab3/crab.csh
 voms-proxy-init --voms cms -valid 168:00
-source crab3_B2GTTreeNtuples.csh create Nov30_edm_Nov18 EdmNtuple_Nov18_input.txt cross_sections.txt T2_HU_Budapest /store/user/jkarancs/SusyAnalysis/B2GTTreeNtuple
-source crab3_B2GTTreeNtuples.csh submit Nov30_edm_Nov18
-source crab3_B2GTTreeNtuples.csh status Nov30_edm_Nov18
-source crab3_B2GTTreeNtuples.csh download Nov30_edm_Nov18 /data/gridout/jkarancs/SusyAnalysis/B2G/TTreeNtuple --run
-source crab3_B2GTTreeNtuples.csh find_missing Nov30_edm_Nov18
-```
-
-   * 1-2/local)  Local Mass produces step (useful for signal samples not on grid)
-    download MiniAOD signal samples from susy group directory  
-    MiniAOD -> Common B2G edm ntuple -> TTree ntuple
-    (Might need to update script)
-
-
-```Shell
-cd $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3
-mkdir susy_signal_dir
-source se_util.csh dl cern:/store/cmst3/group/susy/gpetrucc/13TeV/RunIISpring15DR74/T5ttttDeg_mGo1000_mStop300_mCh285_mChi280_23bodydec susy_signal_dir --par 4 --run
-source ../make_EdmNtuples.csh Sep29 T5ttttDeg_mGo1000_4bodydec susy_signal_dir /data/gridout/jkarancs/SusyAnalysis/B2G/EdmNtuple 5
-source crab3_B2GTTreeNtuples.csh make_ttrees Oct02_edm_Sep29 cross_sections_signal.txt /data/gridout/jkarancs/SusyAnalysis/B2G/EdmNtuple/Sep29 /data/gridout/jkarancs/SusyAnalysis/B2G/TTreeNtuple/Oct02_edm_Sep29 5 --run
+source crab3_B2GTTreeNtuples.csh create Apr12_edm_Apr01 Apr12_B2GAnaFW_76X_V1p2 EdmNtuple_Apr01_input.txt cross_sections.txt T2_HU_Budapest /store/user/jkarancs/SusyAnalysis/B2GTTreeNtuple
+source crab3_B2GTTreeNtuples.csh submit Apr12_edm_Apr01 
+source crab3_B2GTTreeNtuples.csh status Apr12_edm_Apr01
+source crab3_B2GTTreeNtuples.csh download Apr12_edm_Apr01 /data/gridout/jkarancs/SusyAnalysis/B2G/TTreeNtuple --run
+source crab3_B2GTTreeNtuples.csh find_missing Apr12_edm_Apr01
+source crab3_B2GTTreeNtuples.csh report Apr12_edm_Apr01 --run
 ```
