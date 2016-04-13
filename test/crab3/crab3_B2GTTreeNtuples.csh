@@ -120,6 +120,7 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	    set WEIGHT=1
 	else
 	    if ( ! `echo $primary | grep SMS | wc -l` ) then
+		if ( $SHORT == "TTJets_HT-0to600" ) set primary="TTJets_HT-0to600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8"
 	        set xsec=`grep "^$primary" $TASKDIR/xsec_datasets.txt | awk '{ print $2 }'`
 	        if ( $xsec == "" ) then
 	            echo "Error: Cross-section is missing for $primary, exiting..."
@@ -138,6 +139,10 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	        set nevent=`echo | awk '{ printf "%10.0f", '$nevent'/'$neg_corr' }'`
 	        # Calculate lumi weight for 1 fb^-1
 	        set lumiWeight=`echo | awk '{ printf "%lf", 1000*'$xsec'/'$nevent' }'`
+		if ( $SHORT == "TTJets_HT-0to600" ) then 
+		    set nevent="0"
+		    set lumiWeight="0"
+		endif
 	    else
 		# Signal: Xsec depends on mGlu (fill in ntuple)
 		# also LHE label may be different
@@ -167,6 +172,7 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	sed "s;TASKNAME;$SHORT;;s;DATASET;$DATASET;;s;PUBNAME;$TAG"_"$PROCESSED_DS_NAME;;s;JEC_ERA;$JEC_ERA;;s;LHELABEL;$LHELABEL;;s;ISDATA;$ISDATA;;" $TASKDIR/crab_template_ttreentuple_py.txt > $TASKDIR/crab_$SHORT.py
 	if ( ! $isData ) then
 	    sed -i "s;xsec=0;xsec=$xsec;;s;nevent=0;nevent=$nevent;;s;lumiWeight=1.0;lumiWeight=$lumiWeight;" $TASKDIR/crab_$SHORT.py
+	    if ( $SHORT == "TTJets_HT-0to600" ) sed -i "s;'lumiWeight=0';'lumiWeight=0', 'genHtFilter=True';" $TASKDIR/crab_$SHORT.py
 	else if ( $APPLY_JSON ) then
 	    sed -i "31s;^"\$";config.Data.lumiMask = '$CERT_DIR/$JSON';" $TASKDIR/crab_$SHORT.py
 	endif
@@ -178,7 +184,7 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 else if ( `echo $cmd | grep "submit" | wc -l` ) then
     if ( $dry == "1" ) echo "Add --run after command to excecute following lines:\n"
     foreach cfg_file ( `ls -ltr $TASKDIR/*.py | awk '{ print $NF }'`)
-        eval_or_echo "crab submit -c $cfg_file"
+        eval_or_echo "crab submit -c $cfg_file; sleep 1m"
     end
 
 else if ( `echo $cmd | grep "status" | wc -l` ) then

@@ -145,8 +145,6 @@ void B2GEdmExtraVarProducer::init_tokens_() {
     edm::EDGetTokenT<GenEventInfoProduct>(consumes<GenEventInfoProduct>(edm::InputTag("generator")));
     edm::EDGetTokenT<LHEEventProduct>(consumes<LHEEventProduct>(edm::InputTag(lhe_label_, "")));
   }
-
-  edm::EDGetTokenT<LHERunInfoProduct>(mayConsume<LHERunInfoProduct, edm::InRun>(edm::InputTag(lhe_label_, "")));
 }
 
 void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::EventSetup const& iSetup) {
@@ -250,6 +248,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   single_float_["evt_NEvent_Corr"] = isData_ ? -9999 : num_events_;                    /* evt_NEvent_Corr */
   single_float_["evt_Lumi_Weight"] = isData_ ? 1 : lumi_weight_;                       /* evt_Lumi_Weight */
   single_float_["evt_Gen_Weight"] = -9999;                                             /* evt_Gen_Weight */
+  single_float_["evt_Gen_Ht"] = -9999;                                                 /* evt_Gen_Ht */
   
   // NLO negative weights, see:
   // https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideDataFormatGeneratorInterface
@@ -261,7 +260,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   //    but s = Sum(weight) / Sum( abs(weight) ) fb^-1 instead
   //    In order to get the correct weight for 1 fb^-1, one has to calculate
   //    s on the whole dataset and multiply the currently set weight with 1/s
-
+  
   // Gen/LHE info
   // For Run II recommendations see:
   // https://indico.cern.ch/event/459797/contribution/2/attachments/1181555/1710844/mcaod-Nov4-2015.pdf
@@ -278,6 +277,18 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     single_int_["evt_LHA_PDF_ID"] = lha_pdf_id_;
     
     if (lheEvtInfo.isValid() && genEvtInfo.isValid()) {
+      // HT
+      const lhef::HEPEUP& lheEvent = lheEvtInfo->hepeup();
+      std::vector<lhef::HEPEUP::FiveVector> lheParticles = lheEvent.PUP;
+      single_float_["evt_Gen_Ht"] = 0;
+      for ( size_t idxParticle = 0, numParticles = lheParticles.size(); idxParticle < numParticles; ++idxParticle ) {
+        int absPdgId = TMath::Abs(lheEvent.IDUP[idxParticle]);
+        int status = lheEvent.ISTUP[idxParticle];
+        if ( status == 1 && ((absPdgId >= 1 && absPdgId <= 6) || absPdgId == 21) )   // quarks and gluons
+          single_float_["evt_Gen_Ht"] += TMath::Sqrt(TMath::Power(lheParticles[idxParticle][0], 2.) + 
+						     TMath::Power(lheParticles[idxParticle][1], 2.)); // first entry is px, second py
+      }
+      
       // We only look for the sign of the gen weight but not it's value
       // The xsec weight is already calculated, but certain NLO samples
       // have negative weights and such events need to be subtracted

@@ -86,6 +86,12 @@ options.register('lheLabel',
                  opts.VarParsing.varType.string,
                  'LHE module label, MC sample specific. Can be: externalLHEProducer')
 
+options.register('genHtFilter',
+                 False,
+                 opts.VarParsing.multiplicity.singleton,
+                 opts.VarParsing.varType.bool,
+                 'Specify whether you want to add a gen-level HT Filter (for unbinned TTJets sample)')
+
 options.parseArguments()
 
 process = cms.Process("b2gAnalysisTTrees")
@@ -384,6 +390,7 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "evt_NEvent_Corr",
         "evt_Lumi_Weight",
         "evt_Gen_Weight",
+        "evt_Gen_Ht",
         "SUSY_Gluino_Mass",
         "SUSY_LSP_Mass",
     ),
@@ -520,6 +527,10 @@ process.EdmNtupleCountFilter = cms.EDFilter("EdmNtupleCountFilter", # This one w
     min = cms.double(350),
     minNumber = cms.uint32(2)
 )
+process.GenHtFilter = cms.EDFilter("SingleFloatFilter",
+    src = cms.InputTag("extraVar","evtGenHt"),
+    max = cms.untracked.double(600),
+)
 
 ### B2GTTreeMaker
 process.load("Analysis.B2GTTrees.B2GTTreeMaker_cff")
@@ -568,11 +579,23 @@ process.edmNtuplesOut = cms.OutputModule("PoolOutputModule",
     dropMetaData = cms.untracked.string('ALL'),
 )
 
-process.analysisPath = cms.Path(
-    process.extraVar *
-    process.EventCounter *
-    #process.EdmNtupleCountFilter *
-    process.B2GTTreeMaker
-)
+# Paths
+if options.genHtFilter:
+    process.analysisPath = cms.Path(
+        process.extraVar *
+        process.GenHtFilter *
+        process.EventCounter *
+        #process.EdmNtupleCountFilter *
+        process.B2GTTreeMaker
+    )
+else:
+    process.analysisPath = cms.Path(
+        process.extraVar *
+        process.EventCounter *
+        #process.EdmNtupleCountFilter *
+        process.B2GTTreeMaker
+    )
+
+
 
 #process.endPath = cms.EndPath( process.edmNtuplesOut )

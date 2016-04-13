@@ -17,10 +17,14 @@ TT_TuneEE5C_13TeV-amcatnlo-herwigpp                                             
 # k factor applied = 1.6562 (= 831.76 / 502.2)
 # Figured out from above madgraph sample NNLO/LO
 
+TTJets_HT-0to600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                             499.80557 1.65623   1 **
 TTJets_HT-600to800_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                           1.61      1.65623   1
 TTJets_HT-800to1200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                          0.663     1.65623   1
 TTJets_HT-1200to2500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                         0.12      1.65623   1
 TTJets_HT-2500toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                          0.00143   1.65623   1
+
+# ** This dataset doesn't exist, so we filter the unbinned dataset
+#    LO XSec: 502.2 - 1.61 - 0.663 - 0.12 - 0.00143 = 499.80557
 
 # T - NLO/NNLO
 # https://twiki.cern.ch/twiki/bin/viewauth/CMS/SingleTopSigma
