@@ -14,9 +14,9 @@ git cms-init
 git remote add btv-cmssw https://github.com/cms-btv-pog/cmssw.git
 git fetch --tags btv-cmssw
 git cms-merge-topic cms-btv-pog:fixTMVAEvaluatorMemoryProblem-from-CMSSW_7_6_3 
-git clone https://github.com/dmajumder/JetToolbox JMEAnalysis/JetToolbox -b jetToolbox_763
+git clone https://github.com/cms-jet/JetToolbox JMEAnalysis/JetToolbox -b jetToolbox_763
 git clone https://github.com/cmsb2g/B2GAnaFW Analysis/B2GAnaFW -b v7.6.x_v1.2
-git clone https://github.com/jkarancs/B2GTTrees Analysis/B2GTTrees
+git clone https://github.com/jkarancs/B2GTTrees Analysis/B2GTTrees -b v7.6.x_v1.2_Apr13
 scram b -j 20
 ```
 
@@ -85,10 +85,10 @@ cd $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3
 cmsenv
 source /cvmfs/cms.cern.ch/crab3/crab.csh
 voms-proxy-init --voms cms -valid 168:00
-source crab3_B2GTTreeNtuples.csh create Apr12_edm_Apr01 Apr12_B2GAnaFW_76X_V1p2 EdmNtuple_Apr01_input.txt cross_sections.txt T2_HU_Budapest /store/user/jkarancs/SusyAnalysis/B2GTTreeNtuple
-source crab3_B2GTTreeNtuples.csh submit Apr12_edm_Apr01 
-source crab3_B2GTTreeNtuples.csh status Apr12_edm_Apr01
-source crab3_B2GTTreeNtuples.csh download Apr12_edm_Apr01 /data/gridout/jkarancs/SusyAnalysis/B2G/TTreeNtuple --run
-source crab3_B2GTTreeNtuples.csh find_missing Apr12_edm_Apr01
-source crab3_B2GTTreeNtuples.csh report Apr12_edm_Apr01 --run
+source crab3_B2GTTreeNtuples.csh create Apr13_edm_Apr01 Apr13_B2GAnaFW_76X_V1p2 EdmNtuple_Apr01_input.txt cross_sections.txt T2_HU_Budapest /store/user/jkarancs/SusyAnalysis/B2GTTreeNtuple
+source crab3_B2GTTreeNtuples.csh submit Apr13_edm_Apr01 
+source crab3_B2GTTreeNtuples.csh status Apr13_edm_Apr01
+source crab3_B2GTTreeNtuples.csh download Apr13_edm_Apr01 /data/gridout/jkarancs/SusyAnalysis/B2G/TTreeNtuple --run
+source crab3_B2GTTreeNtuples.csh find_missing Apr13_edm_Apr01
+source crab3_B2GTTreeNtuples.csh report Apr13_edm_Apr01 --run
 ```
