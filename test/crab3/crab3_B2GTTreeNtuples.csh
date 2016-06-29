@@ -87,12 +87,12 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
     set XSEC_FILE=$5
     set SE_SITE=$6
     set SE_USERDIR=$7
-    set APPLY_JSON="0"
+    set APPLY_JSON="1"
     set CERT_DIR="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions15/13TeV/Reprocessing"
     set LATEST_50NS_GOLDEN_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Reprocessing/ | grep Collisions15_50ns_JSON | grep -v MuonPhys | grep -v Silver | tail -1`
     set LATEST_25NS_GOLDEN_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Reprocessing/ | grep Collisions15_25ns_JSON | grep -v MuonPhys | grep -v Silver | tail -1`
     set LATEST_25NS_SILVER_JSON=`ls -rt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Reprocessing/ | grep Collisions15_25ns_JSON | grep -v MuonPhys | grep Silver | tail -1`
-    set JSON="$LATEST_25NS_GOLDEN_JSON"
+    set JSON="$LATEST_25NS_SILVER_JSON"
     if (-d $TASKDIR ) then
 	echo "Error: task directory: "$TASKDIR" already exists. exiting..."
 	exit
@@ -195,6 +195,7 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
         set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
 	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
         set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	set pubname=`grep outputDatasetTag $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
 	set dir=`echo $TASKDIR"/crab_"$short`
 	if ( ! -d $dir ) then
 	    set Status="MISSING"
@@ -221,7 +222,8 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	set nall=0
 	if ( $Status != "COMPLETED" ) then
 	    set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
-	    set ncomp=`se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp/0000 | grep "\.root" | wc -l`
+	    ( se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/0000 | grep "\.root" >! comp.txt ) >& /dev/null
+	    set ncomp=`cat comp.txt | wc -l`; rm comp.txt
 	    set nall=`cat $TASKDIR/status/$short/*.txt | grep "%.*\(.*\)" | sed "s;/; ;g;s;);;g" | awk '{ print $NF }' | sort | uniq -c | sort | tail -1 | awk '{ print $NF }'`
 	    if ( $ncomp == $nall ) then
 		set Status="COMPLETED"
@@ -248,13 +250,20 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	    echo
 	else if ( `grep "The server answered with an error" $status_txt | wc -l` ) then
 	    echo "  -> Server error. Do nothing ...\n"
-	else if ( ( `echo $Status | grep KILLED | wc -l` || `echo $Status | grep FAILED | wc -l` ) && `find $dir -maxdepth 0 -type d -mmin +2880 | wc -l` && $ncomp != $nall ) then
-	    grep "%.*\(.*\)" $status_txt
-	    echo "  -> Task KILLED/FAILED after more than 2 days, and not all jobs completed. Remove SE files, delete and submit again ...\n"
-	    eval_or_echo "se rm $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp --run"
-	    eval_or_echo "rm -rf $dir"
+	#else if ( ( `echo $Status | grep KILLED | wc -l` || `echo $Status | grep FAILED | wc -l` ) && `find $dir -maxdepth 0 -type d -mmin +2880 | wc -l` && $ncomp != $nall ) then
+	#    grep "%.*\(.*\)" $status_txt
+	#    echo "  -> Task KILLED/FAILED after more than 2 days, and not all jobs completed. Remove SE files, delete and submit again ...\n"
+	#    eval_or_echo "se rm $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp --run"
+	#    eval_or_echo "rm -rf $dir"
+	#    eval_or_echo "crab submit -c $dir.py"
+	#    echo
+	else if ( `grep "failed.*\%.*\(" $status_txt | wc -l` != 0  && `grep "failed with exit code 8002" $status_txt | wc -l`) then
+	    echo "\n-------------"
+	    eval_or_echo "crab kill -d $dir"
+	    eval_or_echo "se rm $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp --run"
+	    eval_or_echo "rm -rf $dir $TASKDIR/status/$short /data/gridout/jkarancs/SusyAnalysis/B2G/TTreeNtuple/Apr13_edm_Apr01/$short"
 	    eval_or_echo "crab submit -c $dir.py"
-	    echo
+	    echo "-------------\n"
 	
 	#else if ( `echo $Status | grep NEW | wc -l` && `find $dir -maxdepth 0 -type d -mmin +120 | wc -l` ) then
 	#    echo "  -> Task stuck in NEW state for more than 2 hours. Kill, delete and submit again ...\n"
@@ -269,8 +278,8 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	#    crab submit -c $dir.py
 	#    echo
         else if ( `echo $Status | grep COMPLETED | wc -l` == 0 ) then
-	    grep "%.*\(.*\)" $status_txt
             if ( `grep "failed.*\%.*\(" $status_txt | wc -l` == 1 && $ncomp != $nall ) then
+		grep "%.*\(.*\)" $status_txt
         	echo "  -> Resubmitting failed jobs ...\n"
         	eval_or_echo "crab resubmit -d $dir"
 		echo
@@ -302,6 +311,7 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
     set DLDIR=`echo $3"/"$TASKNAME | sed "s;//;/;"`
     set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
     set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
+    set NPar="4"
     if ( $dry == "1" ) then 
 	echo "source dl_$TASKNAME.csh $DLDIR\nOR add --run after command to excecute following lines\n"
         echo "kinit jkarancs@FNAL.GOV"
@@ -320,13 +330,14 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
         set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
 	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
         set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	set pubname=`grep outputDatasetTag $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
 	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
 	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
         eval_or_echo "mkdir -p $DLDIR/$short"
         echo "mkdir -p "'$1'"/$short" >> dl_$TASKNAME.csh
-	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp` )
-	    eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp/$thousand $DLDIR/$short --par 4 --run"
-	    echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp/$thousand "'$1'"/$short --par 4 --run" >> dl_$TASKNAME.csh
+	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp` )
+	    eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand $DLDIR/$short --par $NPar --run"
+	    echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand "'$1'"/$short --par $NPar --run" >> dl_$TASKNAME.csh
 	end
     end
 
@@ -345,8 +356,8 @@ else if ( `echo $cmd | grep "find_missing" | wc -l` ) then
 	set njobs=`grep ".*\%.*\(.*\)" $TASKDIR/status/$short/*.txt | sed "s;/; ;g;s;); ;g" | awk '{ print $NF }' | sort | uniq -c | sort | tail -1 | awk '{ print $2 }'`
 	# Get missing jobs
 	echo -n "" >! jobnums.txt
-	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp` )
-	    se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp/$thousand | grep "\.root" | sed 's;_; ;g;s;\.root;;' | awk '{ print $NF }' | sort -n | uniq >> jobnums.txt
+	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp` )
+	    se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand | grep "\.root" | sed 's;_; ;g;s;\.root;;' | awk '{ print $NF }' | sort -n | uniq >> jobnums.txt
 	end
 	set missing=""
 	foreach N ( `seq 1 $njobs` )
@@ -370,11 +381,12 @@ else if ( `echo $cmd | grep "transfer" | wc -l` ) then
         set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
 	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
         set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	set pubname=`grep outputDatasetTag $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
 	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
 	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
 	eval_or_echo "se mkdir caf:B2GTTreeNtuple/$DIR/$short"
-	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp` )
-	    eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/crab_$short/$timestamp/$thousand caf:B2GTTreeNtuple/$DIR/$short --par 4 --run"
+	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp` )
+	    eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand caf:B2GTTreeNtuple/$DIR/$short --par 4 --run"
 	end
     end
 

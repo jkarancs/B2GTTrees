@@ -1,4 +1,4 @@
-#!/bin/tcsh
+#!/bin/tcsh -f
 # Author: Janos Karancsi
 # Usage: 
 #   source_parallel.csh < scriptname.csh >

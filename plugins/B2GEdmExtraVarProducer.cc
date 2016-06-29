@@ -708,7 +708,6 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   // -      Jets         -
   // ---------------------
   
-  
   // Read jet correction parameters from DB
   edm::ESHandle<JetCorrectorParametersCollection> JetCorrParColl_AK4, JetCorrParColl_AK8, JetCorrParColl_AK8Puppi;
   iSetup.get<JetCorrectionsRecord>().get("AK4PFchs",   JetCorrParColl_AK4);
@@ -966,8 +965,8 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
 	  nSubjetKeys_SD += subjet_keys.size();
 	}
       }
-      // Add rest of the keys, but skip first N subjet keys
-      AK8Keys.insert(AK8Keys.end(), h_keys_["AK8"]->at(iJet).begin()+nSubjet_SD, h_keys_["AK8"]->at(iJet).end());
+      // Add rest of the keys
+      AK8Keys.insert(AK8Keys.end(), h_keys_["AK8"]->at(iJet).begin(), h_keys_["AK8"]->at(iJet).end());
       if (DR_fatjet<vector_float_["el_AK8JetV1DR"][iEle]) {
 	prev_jet[1] = closest_jet[1];
 	closest_jet[1] = fatjet;
@@ -1212,8 +1211,8 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
 	  nSubjetKeys_SD += subjet_keys.size();
 	}
       }
-      // Add rest of the keys, but skip first N subjet keys
-      AK8Keys.insert(AK8Keys.end(), h_keys_["AK8"]->at(iJet).begin()+nSubjet_SD, h_keys_["AK8"]->at(iJet).end());
+      // Add rest of the keys
+      AK8Keys.insert(AK8Keys.end(), h_keys_["AK8"]->at(iJet).begin(), h_keys_["AK8"]->at(iJet).end());
       if (DR_fatjet<vector_float_["mu_AK8JetV1DR"][iMu]) {
 	prev_jet[1] = closest_jet[1];
 	closest_jet[1] = fatjet;

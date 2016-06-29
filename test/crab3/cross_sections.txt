@@ -89,6 +89,9 @@ ZJetsToNuNu_HT-2500ToInf_13TeV-madgraph                                         
 # Not applied below
 ZJetsToQQ_HT600toInf_13TeV-madgraph                                                 5.67      1         1
 
+# unbinned
+DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                              4895      1.2309    1
+
 # HT Binned W - (NN)LO scale factor
 # https://twiki.cern.ch/twiki/bin/viewauth/CMS/StandardModelCrossSectionsat13TeV
 # https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=73
@@ -105,6 +108,11 @@ WJetsToLNu_HT-1200To2500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                 
 WJetsToLNu_HT-2500ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                      0.03216   1.21378   1
 
 WJetsToLNu_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8	                    18.77     1.21378   1
+# not applied for the hadronic decay channel
+WJetsToQQ_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8 	                    95.14     1         1
+
+# unbinned
+WJetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                                   50690     1.21378   1
 
 # QCD - LO
 # https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=126

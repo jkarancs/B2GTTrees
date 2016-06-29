@@ -1,7 +1,9 @@
-#!/bin/tcsh
+#!/bin/tcsh -f
 if ( `which par_source | grep "aliased to" | wc -l` == 0 ) then
     if ( -e source_parallel.csh ) then
 	alias par_source 'source source_parallel.csh \!*'
+    else if ( -e /data/jkarancs/scripts/source_parallel.csh ) then
+	alias par_source 'source /data/jkarancs/scripts/source_parallel.csh \!*'
     else
 	"Please set par_source command first"
 	" eg.: alias par_source 'source <some_directory>/source_parallel.csh \!*'"
@@ -41,19 +43,20 @@ end
 set USERNAME=`whoami`
 # Add your site srm paths here
 set SITE_INFO=( \
-    "T1_US_FNAL"     "srm://cmssrm.fnal.gov:8443/srm/managerv2"          "SFN=/" \
-    "T3_US_FNALLPC"  "srm://cmseos.fnal.gov:8443/srm/v2/server"          "SFN=/" \
-    "T2_IT_Rome"     "srm://cmsrm-se01.roma1.infn.it:8443/srm/managerv2" "SFN=/pnfs/roma1.infn.it/data/cms" \
-    "T2_DE_DESY"     "srm://dcache-se-cms.desy.de:8443/srm/managerv2"    "SFN=/pnfs/desy.de/cms/tier2/" \
-    "T2_CH_CERN"     "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/" \
-    "T2_HU_Budapest" "srm://grid143.kfki.hu:8446/srm/managerv2"          "SFN=/dpm/kfki.hu/home/cms/phedex/" \
-    "T3_HU_Debrecen" "srm://grid143.kfki.hu:8446"                        "/dpm/kfki.hu/home/cms/phedex/" \
-    "desy"           "srm://dcache-se-cms.desy.de:8443/srm/managerv2"    "SFN=/pnfs/desy.de/cms/tier2/" \
-    "cern"           "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/" \
-    "pixel"          "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/store/group/dpg_tracker_pixel/comm_pixel/" \
-    "caf"            "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/store/caf/user/$USERNAME/" \
-    "kfki"           "srm://grid143.kfki.hu:8446/srm/managerv2"          "SFN=/dpm/kfki.hu/home/cms/phedex/store/user/$USERNAME/" \
-    "deb"            "srm://grid143.kfki.hu:8446"                        "/dpm/kfki.hu/home/cms/phedex/" \
+    "T1_US_FNAL"      "srm://cmssrm.fnal.gov:8443/srm/managerv2"          "SFN=/" \
+    "T1_US_FNAL_Disk" "srm://cmsdcadisk01.fnal.gov:8443/srm/managerv2"    "SFN=/dcache/uscmsdisk/" \
+    "T3_US_FNALLPC"   "srm://cmseos.fnal.gov:8443/srm/v2/server"          "SFN=/" \
+    "T2_IT_Rome"      "srm://cmsrm-se01.roma1.infn.it:8443/srm/managerv2" "SFN=/pnfs/roma1.infn.it/data/cms/" \
+    "T2_DE_DESY"      "srm://dcache-se-cms.desy.de:8443/srm/managerv2"    "SFN=/pnfs/desy.de/cms/tier2/" \
+    "T2_CH_CERN"      "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/" \
+    "T2_HU_Budapest"  "srm://grid143.kfki.hu:8446/srm/managerv2"          "SFN=/dpm/kfki.hu/home/cms/phedex/" \
+    "T3_HU_Debrecen"  "srm://grid143.kfki.hu:8446"                        "/dpm/kfki.hu/home/cms/phedex/" \
+    "desy"            "srm://dcache-se-cms.desy.de:8443/srm/managerv2"    "SFN=/pnfs/desy.de/cms/tier2/" \
+    "cern"            "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/" \
+    "pixel"           "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/store/group/dpg_tracker_pixel/comm_pixel/" \
+    "caf"             "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/store/caf/user/$USERNAME/" \
+    "kfki"            "srm://grid143.kfki.hu:8446/srm/managerv2"          "SFN=/dpm/kfki.hu/home/cms/phedex/store/user/$USERNAME/" \
+    "deb"             "srm://grid143.kfki.hu:8446"                        "/dpm/kfki.hu/home/cms/phedex/" \
 )
 
 # Modify PATHs for commands that don't use the srm:// protocol
@@ -145,7 +148,8 @@ else
     endif
 endif
 set se_cp='lcg-cp -b -D srmv2 --vo cms'
-set se_cp_v='lcg-cp -b -D srmv2 --vo cms -v'
+#set se_cp='env -i gfal-copy -p -n 4 -t 86400 -T 86400'
+set se_cp_v='$se_cp -v'
 set se2_ls='lcg-ls -b -D srmv2 --vo cms'
 set se2_ls_l='lcg-ls -b -D srmv2 --vo cms -l'
 
@@ -180,7 +184,6 @@ unalias hasopt
 # Space and jobs
 #lcg-infosites -f BUDAPEST all # Space and jobs
 
-
 #------------------- Glite/Proxy ---------------------
 
 # Check for LCG env
@@ -199,6 +202,7 @@ else if ( `grep "timeleft" vomsout.txt | awk '{ print $3 }'` == "0:00:00" ) then
     voms-proxy-init --voms cms -valid 168:00
 endif
 rm vomsout.txt
+
 
 #----------------- Excecute Command ------------------
 if ( $cmd == "ls" ) then
