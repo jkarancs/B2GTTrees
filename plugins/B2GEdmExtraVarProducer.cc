@@ -50,13 +50,36 @@ void B2GEdmExtraVarProducer::beginRun(edm::Run const& iRun, edm::EventSetup cons
       
     }
   }
+
+  // ----------------------------
+  // - Trigger/Filter names     -
+  // ----------------------------
+  
+  iRun.getByLabel(edm::InputTag(trigger_label_, "triggerNameTree"),      h_strings_["trigger_names"]);
+  iRun.getByLabel(edm::InputTag(filter_label_,  "triggerNameTree"),      h_strings_["filter_names"]);
+  
+  nfilt_=h_strings_["filter_names"]->size();
+  filters_.clear();
+  for ( auto filter : filter_names_ ) for (size_t i=0; i<nfilt_; ++i) 
+    if (h_strings_["filter_names"]->at(i).find(filter)==0) filters_[filter] = i;
+  std::cout<<"Filters found: "<<std::endl;
+  for (size_t i=0; i<nfilt_; ++i) std::cout<<h_strings_["filter_names"]->at(i)<<std::endl;
+  //for ( auto filter : filters_ ) std::cout<<filter.first<<std::endl;
+
+  ntrig_=h_strings_["trigger_names"]->size();
+  triggers_.clear();
+  for ( auto trig : trigger_names_ ) for (size_t i=0; i<ntrig_; ++i) 
+    if (h_strings_["trigger_names"]->at(i).find(trig+"_v")==0) triggers_[trig] = i;
+  std::cout<<"Triggers found: "<<std::endl;
+  for (size_t i=0; i<ntrig_; ++i) std::cout<<h_strings_["trigger_names"]->at(i)<<std::endl;
+  //for ( auto trigger : triggers_ ) std::cout<<trigger.first<<std::endl;
 }
 
 void B2GEdmExtraVarProducer::init_tokens_() {
-  edm::EDGetTokenT<std::vector<std::string> >(consumes<std::vector<std::string> >(edm::InputTag(trigger_label_, "triggerNameTree")));
+  edm::EDGetTokenT<std::vector<std::string> >(mayConsume<std::vector<std::string>, edm::InRun>(edm::InputTag(trigger_label_, "triggerNameTree")));
+  edm::EDGetTokenT<std::vector<std::string> >(mayConsume<std::vector<std::string>, edm::InRun>(edm::InputTag(filter_label_,  "triggerNameTree")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(trigger_label_, "triggerBitTree")));
   edm::EDGetTokenT<std::vector<int> >(consumes<std::vector<int> >(edm::InputTag(trigger_label_, "triggerPrescaleTree")));
-  edm::EDGetTokenT<std::vector<std::string> >(consumes<std::vector<std::string> >(edm::InputTag(filter_label_,  "triggerNameTree")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(filter_label_,  "triggerBitTree")));
   
   edm::EDGetTokenT<double>(consumes<double>(edm::InputTag("fixedGridRhoFastjetAll", "")));
@@ -92,17 +115,35 @@ void B2GEdmExtraVarProducer::init_tokens_() {
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"vSubjetIndex0")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"vSubjetIndex1")));
   
-  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"Pt")));
-  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"Eta")));
-  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"Phi")));
-  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"E")));
-  
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"Pt")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"Eta")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"Phi")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"E")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"jecFactor0")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"jetArea")));
+  
+  // Jet ID variables
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"neutralHadronEnergyFrac")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"neutralEmEnergyFrac")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"chargedHadronEnergyFrac")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"chargedEmEnergyFrac")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"chargedMultiplicity")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"neutralMultiplicity")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"MuonEnergy")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"neutralHadronEnergyFrac")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"neutralEmEnergyFrac")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"chargedHadronEnergyFrac")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"chargedEmEnergyFrac")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"chargedMultiplicity")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"neutralMultiplicity")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"MuonEnergy")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"neutralHadronEnergyFrac")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"neutralEmEnergyFrac")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"chargedHadronEnergyFrac")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"chargedEmEnergyFrac")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"chargedMultiplicity")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"neutralMultiplicity")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"MuonEnergy")));
   
   edm::EDGetTokenT<std::vector<std::vector<int> > >(consumes<std::vector<std::vector<int> > >(edm::InputTag(AK4JetKeys_label_,"")));
   edm::EDGetTokenT<std::vector<std::vector<int> > >(consumes<std::vector<std::vector<int> > >(edm::InputTag(AK8JetKeys_label_,"")));
@@ -114,6 +155,19 @@ void B2GEdmExtraVarProducer::init_tokens_() {
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"E")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"Charge")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"Key")));
+  
+  // Electron ID variables
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"SCEta")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"full5x5siee")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"dEtaIn")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"dPhiIn")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"HoE")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"Iso03")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"ooEmooP")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"Dxy")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"Dz")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"missHits")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"hasMatchedConVeto")));
   
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(muons_label_, muons_prefix_+"Pt")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(muons_label_, muons_prefix_+"Eta")));
@@ -149,10 +203,8 @@ void B2GEdmExtraVarProducer::init_tokens_() {
 
 void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::EventSetup const& iSetup) {
   // Read variables from EdmNtuple
-  iEvent.getByLabel(edm::InputTag(trigger_label_, "triggerNameTree"),      h_strings_["trigger_names"]);
   iEvent.getByLabel(edm::InputTag(trigger_label_, "triggerBitTree"),       h_floats_["trigger_bits"]);
   iEvent.getByLabel(edm::InputTag(trigger_label_, "triggerPrescaleTree"),  h_ints_["trigger_prescales"]);
-  iEvent.getByLabel(edm::InputTag(filter_label_,  "triggerNameTree"),      h_strings_["filter_names"]);
   iEvent.getByLabel(edm::InputTag(filter_label_,  "triggerBitTree"),       h_floats_["filter_bits"]);
   
   iEvent.getByLabel(edm::InputTag("fixedGridRhoFastjetAll", ""),   h_double_["evt_rho"]);
@@ -188,11 +240,6 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"vSubjetIndex0"),   h_floats_["AK8_vSubjetIndex0"]);
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"vSubjetIndex1"),   h_floats_["AK8_vSubjetIndex1"]);
   
-  iEvent.getByLabel(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"Pt"),              h_floats_["AK8Puppi_Pt"]);
-  iEvent.getByLabel(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"Eta"),             h_floats_["AK8Puppi_Eta"]);
-  iEvent.getByLabel(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"Phi"),             h_floats_["AK8Puppi_Phi"]);
-  iEvent.getByLabel(edm::InputTag(AK8PuppiJets_label_, AK8PuppiJets_prefix_+"E"),               h_floats_["AK8Puppi_E"]);
-  
   iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"Pt"),         h_floats_["AK8Sub_Pt"]);
   iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"Eta"),        h_floats_["AK8Sub_Eta"]);
   iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"Phi"),        h_floats_["AK8Sub_Phi"]);
@@ -204,12 +251,49 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   iEvent.getByLabel(edm::InputTag(AK8JetKeys_label_),      h_keys_["AK8"]);
   iEvent.getByLabel(edm::InputTag(AK8SubjetKeys_label_),   h_keys_["AK8Sub"]);
   
+  // JET ID
+  iEvent.getByLabel(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"neutralHadronEnergyFrac"), h_floats_["AK4_neutralHadronEnergyFrac"]);
+  iEvent.getByLabel(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"neutralEmEnergyFrac"),     h_floats_["AK4_neutralEmEnergyFrac"]);
+  iEvent.getByLabel(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"chargedHadronEnergyFrac"), h_floats_["AK4_chargedHadronEnergyFrac"]);
+  iEvent.getByLabel(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"chargedEmEnergyFrac"),     h_floats_["AK4_chargedEmEnergyFrac"]);
+  iEvent.getByLabel(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"chargedMultiplicity"),     h_floats_["AK4_chargedMultiplicity"]);
+  iEvent.getByLabel(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"neutralMultiplicity"),     h_floats_["AK4_neutralMultiplicity"]);
+  iEvent.getByLabel(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"MuonEnergy"),              h_floats_["AK4_MuonEnergy"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"neutralHadronEnergyFrac"), h_floats_["AK8_neutralHadronEnergyFrac"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"neutralEmEnergyFrac"),     h_floats_["AK8_neutralEmEnergyFrac"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"chargedHadronEnergyFrac"), h_floats_["AK8_chargedHadronEnergyFrac"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"chargedEmEnergyFrac"),     h_floats_["AK8_chargedEmEnergyFrac"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"chargedMultiplicity"),     h_floats_["AK8_chargedMultiplicity"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"neutralMultiplicity"),     h_floats_["AK8_neutralMultiplicity"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"MuonEnergy"),              h_floats_["AK8_MuonEnergy"]);
+  iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"neutralHadronEnergyFrac"), h_floats_["AK8Sub_neutralHadronEnergyFrac"]);
+  iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"neutralEmEnergyFrac"),     h_floats_["AK8Sub_neutralEmEnergyFrac"]);
+  iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"chargedHadronEnergyFrac"), h_floats_["AK8Sub_chargedHadronEnergyFrac"]);
+  iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"chargedEmEnergyFrac"),     h_floats_["AK8Sub_chargedEmEnergyFrac"]);
+  iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"chargedMultiplicity"),     h_floats_["AK8Sub_chargedMultiplicity"]);
+  iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"neutralMultiplicity"),     h_floats_["AK8Sub_neutralMultiplicity"]);
+  iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"MuonEnergy"),              h_floats_["AK8Sub_MuonEnergy"]);
+  
+  // Leptons
   iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"Pt"),     h_floats_["ele_Pt"]);
   iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"Eta"),    h_floats_["ele_Eta"]);
   iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"Phi"),    h_floats_["ele_Phi"]);
   iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"E"),      h_floats_["ele_E"]);
   iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"Charge"), h_floats_["ele_Charge"]);
   iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"Key"),    h_floats_["ele_Key"]);
+
+  // Electron ID variables
+  iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"SCEta"),             h_floats_["ele_SCEta"]);
+  iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"full5x5siee"),       h_floats_["ele_full5x5siee"]);
+  iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"dEtaIn"),            h_floats_["ele_dEtaIn"]);
+  iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"dPhiIn"),            h_floats_["ele_dPhiIn"]);
+  iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"HoE"),               h_floats_["ele_HoE"]);
+  iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"Iso03"),             h_floats_["ele_Iso03"]);
+  iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"ooEmooP"),           h_floats_["ele_ooEmooP"]);
+  iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"Dxy"),               h_floats_["ele_Dxy"]);
+  iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"Dz"),                h_floats_["ele_Dz"]);
+  iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"missHits"),          h_floats_["ele_missHits"]);
+  iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"hasMatchedConVeto"), h_floats_["ele_hasMatchedConVeto"]);
   
   iEvent.getByLabel(edm::InputTag(muons_label_, muons_prefix_+"Pt"),          h_floats_["mu_Pt"]);
   iEvent.getByLabel(edm::InputTag(muons_label_, muons_prefix_+"Eta"),         h_floats_["mu_Eta"]);
@@ -245,8 +329,6 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   // Usage: Multiply this number by the total int luminosity in units of fb^-1
   single_int_["evt_LHA_PDF_ID"] = -9999;                                               /* evt_LHA_PDF_ID */
   single_float_["evt_XSec"] = isData_ ? -9999 : cross_section_;                        /* evt_Xsec */
-  single_float_["evt_NEvent_Corr"] = isData_ ? -9999 : num_events_;                    /* evt_NEvent_Corr */
-  single_float_["evt_Lumi_Weight"] = isData_ ? 1 : lumi_weight_;                       /* evt_Lumi_Weight */
   single_float_["evt_Gen_Weight"] = -9999;                                             /* evt_Gen_Weight */
   single_float_["evt_Gen_Ht"] = -9999;                                                 /* evt_Gen_Ht */
   
@@ -348,27 +430,8 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   }
   
   // ----------------------------
-  // - Trigger/Filter variables -
+  // - Trigger/Filter decisions -
   // ----------------------------
-  
-  if (nfilt_!=h_strings_["filter_names"]->size()) {
-    nfilt_=h_strings_["filter_names"]->size();
-    filters_.clear();
-    for ( auto filter : filter_names_ ) for (size_t i=0; i<nfilt_; ++i) 
-      if (h_strings_["filter_names"]->at(i).find(filter)==0) filters_[filter] = i;
-    std::cout<<"Filters found: "<<std::endl;
-    for ( auto filter : filters_ ) std::cout<<filter.first<<std::endl;
-    //for (size_t i=0; i<nfilt_; ++i) std::cout<<h_strings_["filter_names"]->at(i)<<std::endl;
-  }
-  if (ntrig_!=h_strings_["trigger_names"]->size()) {
-    ntrig_=h_strings_["trigger_names"]->size();
-    triggers_.clear();
-    for ( auto trig : trigger_names_ ) for (size_t i=0; i<ntrig_; ++i) 
-      if (h_strings_["trigger_names"]->at(i).find(trig+"_v")==0) triggers_[trig] = i;
-    std::cout<<"Triggers found: "<<std::endl;
-    for ( auto trigger : triggers_ ) std::cout<<trigger.first<<std::endl;
-    //for (size_t i=0; i<ntrig_; ++i) std::cout<<h_strings_["trigger_names"]->at(i)<<std::endl;
-  }
   for ( auto filter : filters_ ) single_int_[filter.first]                              /* Flag_* */
       = h_floats_["filter_bits"]->at(filter.second);
   for ( auto trigger : triggers_ ) {
@@ -376,7 +439,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     single_int_[trigger.first+"_prescale"]                                              /* HLT_*_prescale */
       = h_ints_["trigger_prescales"]->at(trigger.second);
   }
-  
+
   // ----------------------------
   // -        Vertices          -
   // ----------------------------
@@ -436,7 +499,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   size_t nmu =  h_floats_["mu_Pt"]->size();
   size_t njet_AK4 = h_floats_["AK4_Pt"]->size();
   size_t njet_AK8 = h_floats_["AK8_Pt"]->size();
-  size_t njet_AK8Puppi = h_floats_["AK8Puppi_Pt"]->size();
+  size_t njet_AK8Sub = h_floats_["AK8Sub_Pt"]->size();
   
   if (!isData_) {
     size_t ngen =  h_floats_["gen_Pt"]->size();
@@ -709,16 +772,15 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   // ---------------------
   
   // Read jet correction parameters from DB
-  edm::ESHandle<JetCorrectorParametersCollection> JetCorrParColl_AK4, JetCorrParColl_AK8, JetCorrParColl_AK8Puppi;
-  iSetup.get<JetCorrectionsRecord>().get("AK4PFchs",   JetCorrParColl_AK4);
-  iSetup.get<JetCorrectionsRecord>().get("AK8PFchs",   JetCorrParColl_AK8);
-  iSetup.get<JetCorrectionsRecord>().get("AK4PFPuppi", JetCorrParColl_AK8Puppi);
+  edm::ESHandle<JetCorrectorParametersCollection> JetCorrParColl_AK4, JetCorrParColl_AK8;
+  iSetup.get<JetCorrectionsRecord>().get(TString(AK4Jets_label_).Contains("Puppi") ? "AK4PFPuppi" : "AK4PFchs", JetCorrParColl_AK4);
+  iSetup.get<JetCorrectionsRecord>().get(TString(AK8Jets_label_).Contains("Puppi") ? "AK8PFPuppi" : "AK8PFchs", JetCorrParColl_AK8);
+
   // JEC Uncertainty
   // NB: JEC/JER variables are already there in the new versions of B2G ntuples
   /*
   JetCorrectionUncertainty jecUnc_AK4((*JetCorrParColl_AK4)["Uncertainty"]);
   JetCorrectionUncertainty jecUnc_AK8((*JetCorrParColl_AK8)["Uncertainty"]);
-  JetCorrectionUncertainty jecUnc_AK8Puppi((*JetCorrParColl_AK8Puppi)["Uncertainty"]);
   
   // JER
   // Twiki: https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyResolution#Scale_factors
@@ -726,55 +788,38 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   JME::JetParameters jetParam;
   JME::JetResolution resolution_AK4 = JME::JetResolution(JER_location_+"_PtResolution_AK4PFchs.txt");
   JME::JetResolution resolution_AK8 = JME::JetResolution(JER_location_+"_PtResolution_AK8PFchs.txt");
-  JME::JetResolution resolution_AK8Puppi = JME::JetResolution(JER_location_+"_PtResolution_AK8PFPuppi.txt");
   JME::JetResolutionScaleFactor res_sf_AK4 = JME::JetResolutionScaleFactor(JER_location_+"_SF_AK4PFchs.txt");
   JME::JetResolutionScaleFactor res_sf_AK8 = JME::JetResolutionScaleFactor(JER_location_+"_SF_AK8PFchs.txt");
-  JME::JetResolutionScaleFactor res_sf_AK8Puppi = JME::JetResolutionScaleFactor(JER_location_+"_SF_AK8PFPuppi.txt");
   
-  vector_float_["jetAK4_jecUncertainty"].assign(njet_AK4,-9999);
-  vector_float_["jetAK4_PtResolution"].assign(njet_AK4,-9999);
-  vector_float_["jetAK4_JERSF"].assign(njet_AK4,-9999);
-  vector_float_["jetAK4_JERSFDown"].assign(njet_AK4,-9999);
-  vector_float_["jetAK4_JERSFUp"].assign(njet_AK4,-9999);
+  vector_float_["jetAK4Puppi_jecUncertainty"].assign(njet_AK4,-9999);
+  vector_float_["jetAK4Puppi_PtResolution"].assign(njet_AK4,-9999);
+  vector_float_["jetAK4Puppi_JERSF"].assign(njet_AK4,-9999);
+  vector_float_["jetAK4Puppi_JERSFDown"].assign(njet_AK4,-9999);
+  vector_float_["jetAK4Puppi_JERSFUp"].assign(njet_AK4,-9999);
   for (size_t iJet=0; iJet<njet_AK4; ++iJet) {
     jecUnc_AK4.setJetPt(h_floats_["AK4_Pt"]->at(iJet));
     jecUnc_AK4.setJetEta(h_floats_["AK4_Eta"]->at(iJet));
     jetParam.setJetPt(h_floats_["AK4_Pt"]->at(iJet)).setJetEta(h_floats_["AK4_Eta"]->at(iJet)).setRho(*h_double_["evt_rho"]);
-    vector_float_["jetAK4_jecUncertainty"][iJet] = jecUnc_AK4.getUncertainty(true);
-    vector_float_["jetAK4_PtResolution"][iJet] = resolution_AK4.getResolution(jetParam);
-    vector_float_["jetAK4_JERSF"][iJet]     = res_sf_AK4.getScaleFactor(jetParam);
-    vector_float_["jetAK4_JERSFDown"][iJet] = res_sf_AK4.getScaleFactor(jetParam, Variation::UP);
-    vector_float_["jetAK4_JERSFUp"][iJet]   = res_sf_AK4.getScaleFactor(jetParam, Variation::DOWN);
+    vector_float_["jetAK4Puppi_jecUncertainty"][iJet] = jecUnc_AK4.getUncertainty(true);
+    vector_float_["jetAK4Puppi_PtResolution"][iJet] = resolution_AK4.getResolution(jetParam);
+    vector_float_["jetAK4Puppi_JERSF"][iJet]     = res_sf_AK4.getScaleFactor(jetParam);
+    vector_float_["jetAK4Puppi_JERSFDown"][iJet] = res_sf_AK4.getScaleFactor(jetParam, Variation::UP);
+    vector_float_["jetAK4Puppi_JERSFUp"][iJet]   = res_sf_AK4.getScaleFactor(jetParam, Variation::DOWN);
   }
-  vector_float_["jetAK8_jecUncertainty"].assign(njet_AK8,-9999);
-  vector_float_["jetAK8_PtResolution"].assign(njet_AK8,-9999);
-  vector_float_["jetAK8_JERSF"].assign(njet_AK8,-9999);
-  vector_float_["jetAK8_JERSFDown"].assign(njet_AK8,-9999);
-  vector_float_["jetAK8_JERSFUp"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8Puppi_jecUncertainty"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8Puppi_PtResolution"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8Puppi_JERSF"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8Puppi_JERSFDown"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8Puppi_JERSFUp"].assign(njet_AK8,-9999);
   for (size_t iJet=0; iJet<njet_AK8; ++iJet) {
     jecUnc_AK8.setJetPt(h_floats_["AK8_Pt"]->at(iJet));
     jecUnc_AK8.setJetEta(h_floats_["AK8_Eta"]->at(iJet));
     jetParam.setJetPt(h_floats_["AK8_Pt"]->at(iJet)).setJetEta(h_floats_["AK8_Eta"]->at(iJet)).setRho(*h_double_["evt_rho"]);
-    vector_float_["jetAK8_jecUncertainty"][iJet] = jecUnc_AK8.getUncertainty(true);
-    vector_float_["jetAK8_PtResolution"][iJet] = resolution_AK8.getResolution(jetParam);
-    vector_float_["jetAK8_JERSF"][iJet]     = res_sf_AK8.getScaleFactor(jetParam);
-    vector_float_["jetAK8_JERSFDown"][iJet] = res_sf_AK8.getScaleFactor(jetParam, Variation::UP);
-    vector_float_["jetAK8_JERSFUp"][iJet]   = res_sf_AK8.getScaleFactor(jetParam, Variation::DOWN);
-  }
-  vector_float_["jetAK8Puppi_jecUncertainty"].assign(njet_AK8Puppi,-9999);
-  vector_float_["jetAK8Puppi_PtResolution"].assign(njet_AK8Puppi,-9999);
-  vector_float_["jetAK8Puppi_JERSF"].assign(njet_AK8Puppi,-9999);
-  vector_float_["jetAK8Puppi_JERSFDown"].assign(njet_AK8Puppi,-9999);
-  vector_float_["jetAK8Puppi_JERSFUp"].assign(njet_AK8Puppi,-9999);
-  for (size_t iJet=0; iJet<njet_AK8Puppi; ++iJet) {
-    jecUnc_AK8Puppi.setJetPt(h_floats_["AK8Puppi_Pt"]->at(iJet));
-    jecUnc_AK8Puppi.setJetEta(h_floats_["AK8Puppi_Eta"]->at(iJet));
-    jetParam.setJetPt(h_floats_["AK8Puppi_Pt"]->at(iJet)).setJetEta(h_floats_["AK8Puppi_Eta"]->at(iJet)).setRho(*h_double_["evt_rho"]);
-    vector_float_["jetAK8Puppi_jecUncertainty"][iJet] = jecUnc_AK8Puppi.getUncertainty(true);
-    vector_float_["jetAK8Puppi_PtResolution"][iJet] = resolution_AK8Puppi.getResolution(jetParam);
-    vector_float_["jetAK8Puppi_JERSF"][iJet]     = res_sf_AK8Puppi.getScaleFactor(jetParam);
-    vector_float_["jetAK8Puppi_JERSFDown"][iJet] = res_sf_AK8Puppi.getScaleFactor(jetParam, Variation::UP);
-    vector_float_["jetAK8Puppi_JERSFUp"][iJet]   = res_sf_AK8Puppi.getScaleFactor(jetParam, Variation::DOWN);
+    vector_float_["jetAK8Puppi_jecUncertainty"][iJet] = jecUnc_AK8.getUncertainty(true);
+    vector_float_["jetAK8Puppi_PtResolution"][iJet] = resolution_AK8.getResolution(jetParam);
+    vector_float_["jetAK8Puppi_JERSF"][iJet]     = res_sf_AK8.getScaleFactor(jetParam);
+    vector_float_["jetAK8Puppi_JERSFDown"][iJet] = res_sf_AK8.getScaleFactor(jetParam, Variation::UP);
+    vector_float_["jetAK8Puppi_JERSFUp"][iJet]   = res_sf_AK8.getScaleFactor(jetParam, Variation::DOWN);
   }
   */
   
@@ -791,62 +836,150 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   AK8_vPar.push_back((*JetCorrParColl_AK8)["L3Absolute"]);
   if (isData_) AK8_vPar.push_back((*JetCorrParColl_AK8)["L2L3Residual"]);
   FactorizedJetCorrector AK8_JetCorrector(AK8_vPar);
-  std::vector<JetCorrectorParameters> AK8Puppi_vPar;
-  //AK8Puppi_vPar.push_back((*JetCorrParColl_AK8Puppi)["L1FastJet"]);
-  //AK8Puppi_vPar.push_back((*JetCorrParColl_AK8Puppi)["L2Relative"]);
-  //AK8Puppi_vPar.push_back((*JetCorrParColl_AK8Puppi)["L3Absolute"]);
-  //if (isData_) AK8Puppi_vPar.push_back((*JetCorrParColl_AK8Puppi)["L2L3Residual"]);
-  //FactorizedJetCorrector AK8Puppi_JetCorrector(AK8Puppi_vPar);
   
   // GEN infos
-  vector_int_["jetAK8_HasNearGenTop"].assign(njet_AK8,-9999);
-  vector_int_["jetAK8_NearGenTopIsHadronic"].assign(njet_AK8,-9999);
-  vector_int_["jetAK8_NearGenWIsHadronic"].assign(njet_AK8,-9999);
-  vector_int_["jetAK8_NearGenWToENu"].assign(njet_AK8,-9999);
-  vector_int_["jetAK8_NearGenWToMuNu"].assign(njet_AK8,-9999);
-  vector_int_["jetAK8_NearGenWToTauNu"].assign(njet_AK8,-9999);
-  vector_float_["jetAK8_DRNearGenTop"].assign(njet_AK8,9999);
-  vector_float_["jetAK8_DRNearGenWFromTop"].assign(njet_AK8,9999);
-  vector_float_["jetAK8_DRNearGenBFromTop"].assign(njet_AK8,9999);
-  vector_float_["jetAK8_DRNearGenLepFromSLTop"].assign(njet_AK8,9999);
-  vector_float_["jetAK8_DRNearGenNuFromSLTop"].assign(njet_AK8,9999);
-  vector_float_["jetAK8_PtNearGenTop"].assign(njet_AK8,-9999);
-  vector_float_["jetAK8_PtNearGenBFromTop"].assign(njet_AK8,-9999);
-  vector_float_["jetAK8_PtNearGenWFromTop"].assign(njet_AK8,-9999);
-  vector_float_["jetAK8_PtNearGenLepFromSLTop"].assign(njet_AK8,-9999);
-  vector_float_["jetAK8_PtNearGenNuFromSLTop"].assign(njet_AK8,-9999);
+  vector_int_["jetAK8Puppi_HasNearGenTop"].assign(njet_AK8,-9999);
+  vector_int_["jetAK8Puppi_NearGenTopIsHadronic"].assign(njet_AK8,-9999);
+  vector_int_["jetAK8Puppi_NearGenWIsHadronic"].assign(njet_AK8,-9999);
+  vector_int_["jetAK8Puppi_NearGenWToENu"].assign(njet_AK8,-9999);
+  vector_int_["jetAK8Puppi_NearGenWToMuNu"].assign(njet_AK8,-9999);
+  vector_int_["jetAK8Puppi_NearGenWToTauNu"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8Puppi_DRNearGenTop"].assign(njet_AK8,9999);
+  vector_float_["jetAK8Puppi_DRNearGenWFromTop"].assign(njet_AK8,9999);
+  vector_float_["jetAK8Puppi_DRNearGenBFromTop"].assign(njet_AK8,9999);
+  vector_float_["jetAK8Puppi_DRNearGenLepFromSLTop"].assign(njet_AK8,9999);
+  vector_float_["jetAK8Puppi_DRNearGenNuFromSLTop"].assign(njet_AK8,9999);
+  vector_float_["jetAK8Puppi_PtNearGenTop"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8Puppi_PtNearGenBFromTop"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8Puppi_PtNearGenWFromTop"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8Puppi_PtNearGenLepFromSLTop"].assign(njet_AK8,-9999);
+  vector_float_["jetAK8Puppi_PtNearGenNuFromSLTop"].assign(njet_AK8,-9999);
   
   if (!isData_) for (size_t i=0; i<njet_AK8; ++i) {
     TLorentzVector jet; jet.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(i), h_floats_["AK8_Eta"]->at(i),
 					 h_floats_["AK8_Phi"]->at(i), h_floats_["AK8_E"]->at(i));
-    vector_int_["jetAK8_HasNearGenTop"][i]=0;
+    vector_int_["jetAK8Puppi_HasNearGenTop"][i]=0;
     // Unsing Gen Particle Info
     if (jet_gentop_index.count(i)) {
       size_t top_index = jet_gentop_index[i];
-      vector_int_["jetAK8_HasNearGenTop"][i]=1;                                                  /* jetAK8_HasNearGenTop */
-      vector_float_["jetAK8_PtNearGenTop"][i] = gen_top[top_index].Pt();			 /* jetAK8_PtNearGenTop */
-      vector_float_["jetAK8_DRNearGenTop"][i] = gen_top[top_index].DeltaR(jet);			 /* jetAK8_DRNearGenTop */
+      vector_int_["jetAK8Puppi_HasNearGenTop"][i]=1;                                                  /* jetAK8Puppi_HasNearGenTop */
+      vector_float_["jetAK8Puppi_PtNearGenTop"][i] = gen_top[top_index].Pt();			      /* jetAK8Puppi_PtNearGenTop */
+      vector_float_["jetAK8Puppi_DRNearGenTop"][i] = gen_top[top_index].DeltaR(jet);		      /* jetAK8Puppi_DRNearGenTop */
       // If W matching was successful, more information is available
       if (good_W_matches) {
-        vector_float_["jetAK8_DRNearGenWFromTop"][i] = gen_top_matched_W[top_index].DeltaR(jet); /* jetAK8_DRNearGenWFromTop */
-        vector_float_["jetAK8_DRNearGenBFromTop"][i] = gen_top_matched_b[top_index].DeltaR(jet); /* jetAK8_DRNearGenBFromTop */
-        vector_float_["jetAK8_DRNearGenLepFromSLTop"][i] = 					 /* jetAK8_DRNearGenLepFromSLTop */
+        vector_float_["jetAK8Puppi_DRNearGenWFromTop"][i] = gen_top_matched_W[top_index].DeltaR(jet); /* jetAK8Puppi_DRNearGenWFromTop */
+        vector_float_["jetAK8Puppi_DRNearGenBFromTop"][i] = gen_top_matched_b[top_index].DeltaR(jet); /* jetAK8Puppi_DRNearGenBFromTop */
+        vector_float_["jetAK8Puppi_DRNearGenLepFromSLTop"][i] = 				      /* jetAK8Puppi_DRNearGenLepFromSLTop */
 	  W_type[top_index] ? gen_top_matched_W_matched_lep[top_index].DeltaR(jet) : -9999;
-        vector_float_["jetAK8_DRNearGenNuFromSLTop"][i]  = 					 /* jetAK8_DRNearGenNuFromSLTop */
+        vector_float_["jetAK8Puppi_DRNearGenNuFromSLTop"][i]  = 				      /* jetAK8Puppi_DRNearGenNuFromSLTop */
 	  W_type[top_index] ? gen_top_matched_W_matched_neu[top_index].DeltaR(jet) : -9999;
-        vector_float_["jetAK8_PtNearGenWFromTop"][i] = gen_top_matched_W[top_index].Pt();	 /* jetAK8_PtNearGenWFromTop */
-        vector_float_["jetAK8_PtNearGenBFromTop"][i] = gen_top_matched_b[top_index].Pt();	 /* jetAK8_PtNearGenBFromTop */
-        vector_float_["jetAK8_PtNearGenLepFromSLTop"][i] = 					 /* jetAK8_PtNearGenLepFromSLTop */
+        vector_float_["jetAK8Puppi_PtNearGenWFromTop"][i] = gen_top_matched_W[top_index].Pt();	      /* jetAK8Puppi_PtNearGenWFromTop */
+        vector_float_["jetAK8Puppi_PtNearGenBFromTop"][i] = gen_top_matched_b[top_index].Pt();	      /* jetAK8Puppi_PtNearGenBFromTop */
+        vector_float_["jetAK8Puppi_PtNearGenLepFromSLTop"][i] = 				      /* jetAK8Puppi_PtNearGenLepFromSLTop */
 	  W_type[top_index] ? gen_top_matched_W_matched_lep[top_index].Pt() : -9999;
-        vector_float_["jetAK8_PtNearGenNuFromSLTop"][i]  = 					 /* jetAK8_PtNearGenNuFromSLTop */
+        vector_float_["jetAK8Puppi_PtNearGenNuFromSLTop"][i]  = 				      /* jetAK8Puppi_PtNearGenNuFromSLTop */
 	  W_type[top_index] ? gen_top_matched_W_matched_neu[top_index].Pt() : -9999;
-	vector_int_["jetAK8_NearGenTopIsHadronic"][i] = !W_type[top_index];			 /* jetAK8_NearGenTopIsHadronic */
-	vector_int_["jetAK8_NearGenWIsHadronic"][i] = !W_type[top_index];			 /* jetAK8_NearGenWIsHadronic */
-	vector_int_["jetAK8_NearGenWToENu"][i] = W_type[top_index]==1;				 /* jetAK8_NearGenWToENu */
-	vector_int_["jetAK8_NearGenWToMuNu"][i] = W_type[top_index]==2;				 /* jetAK8_NearGenWToMuNu */
-	vector_int_["jetAK8_NearGenWToTauNu"][i] = W_type[top_index]==3;			 /* jetAK8_NearGenWToTauNu */
+	vector_int_["jetAK8Puppi_NearGenTopIsHadronic"][i] = !W_type[top_index];		      /* jetAK8Puppi_NearGenTopIsHadronic */
+	vector_int_["jetAK8Puppi_NearGenWIsHadronic"][i] = !W_type[top_index];			      /* jetAK8Puppi_NearGenWIsHadronic */
+	vector_int_["jetAK8Puppi_NearGenWToENu"][i] = W_type[top_index]==1;			      /* jetAK8Puppi_NearGenWToENu */
+	vector_int_["jetAK8Puppi_NearGenWToMuNu"][i] = W_type[top_index]==2;			      /* jetAK8Puppi_NearGenWToMuNu */
+	vector_int_["jetAK8Puppi_NearGenWToTauNu"][i] = W_type[top_index]==3;			      /* jetAK8_NearGenWToTauNu */
       }
     }
+  }
+  
+  // JET ID
+  //https://twiki.cern.ch/twiki/bin/view/CMS/JetID?rev=94#Recommendations_for_13_TeV_data
+  /*
+    For |eta|<=3.0 Apply
+    looseJetID = (NHF<0.99 && NEMF<0.99 && NumConst>1) && ((abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || abs(eta)>2.4) && abs(eta)<=3.0
+    tightJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1) && ((abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || abs(eta)>2.4) && abs(eta)<=3.0
+    tightLepVetoJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1 && MUF<0.8) && ((abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.90) || abs(eta)>2.4) && abs(eta)<=3.0
+    
+    For |eta|> 3.0 Apply
+    looseJetID = (NEMF<0.90 && NumNeutralParticle>10 && abs(eta)>3.0 )
+    tightJetID = (NEMF<0.90 && NumNeutralParticle>10 && abs(eta)>3.0 ) 
+  */
+  
+  vector_int_["jetAK4Puppi_looseJetID"].clear();
+  vector_int_["jetAK4Puppi_tightJetID"].clear();
+  vector_int_["jetAK4Puppi_tightLepVetoJetID"].clear();
+  for (size_t i=0; i<njet_AK4; ++i) {
+    float eta  = h_floats_["AK4_Eta"]->at(i);
+    float NHF  = h_floats_["AK4_neutralHadronEnergyFrac"]->at(i);
+    float NEMF = h_floats_["AK4_neutralEmEnergyFrac"]->at(i);
+    float MUF = h_floats_["AK4_MuonEnergy"]->at(i) / h_floats_["AK4_E"]->at(i);
+    float CHF  = h_floats_["AK4_chargedHadronEnergyFrac"]->at(i);
+    float CEMF = h_floats_["AK4_chargedEmEnergyFrac"]->at(i);
+    int CHM  = h_floats_["AK4_chargedMultiplicity"]->at(i);
+    int NumNeutralParticle   = h_floats_["AK4_neutralMultiplicity"]->at(i);
+    int NumConst = CHM + NumNeutralParticle;
+    bool looseJetID = 0, tightJetID = 0, tightLepVetoJetID = 0;
+    if (std::abs(eta)<=3.0) {
+      looseJetID = (NHF<0.99 && NEMF<0.99 && NumConst>1) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || std::abs(eta)>2.4);
+      tightJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || std::abs(eta)>2.4);
+      tightLepVetoJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1 && MUF<0.8) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.90) || std::abs(eta)>2.4);
+    } else {
+      looseJetID = (NEMF<0.90 && NumNeutralParticle>10);
+      tightJetID = (NEMF<0.90 && NumNeutralParticle>10);
+    }
+    vector_int_["jetAK4Puppi_looseJetID"].push_back(looseJetID);                       /* jetAK4Puppi_looseJetID  */
+    vector_int_["jetAK4Puppi_tightJetID"].push_back(tightJetID);                       /* jetAK4Puppi_tightJetID  */
+    vector_int_["jetAK4Puppi_tightLepVetoJetID"].push_back(tightLepVetoJetID);         /* jetAK4Puppi_tightLepVetoJetID  */
+  }
+  
+  vector_int_["jetAK8Puppi_looseJetID"].clear();
+  vector_int_["jetAK8Puppi_tightJetID"].clear();
+  vector_int_["jetAK8Puppi_tightLepVetoJetID"].clear();
+  for (size_t i=0; i<njet_AK8; ++i) {
+    float eta  = h_floats_["AK8_Eta"]->at(i);
+    float NHF  = h_floats_["AK8_neutralHadronEnergyFrac"]->at(i);
+    float NEMF = h_floats_["AK8_neutralEmEnergyFrac"]->at(i);
+    float MUF = h_floats_["AK8_MuonEnergy"]->at(i) / h_floats_["AK8_E"]->at(i);
+    float CHF  = h_floats_["AK8_chargedHadronEnergyFrac"]->at(i);
+    float CEMF = h_floats_["AK8_chargedEmEnergyFrac"]->at(i);
+    int CHM  = h_floats_["AK8_chargedMultiplicity"]->at(i);
+    int NumNeutralParticle   = h_floats_["AK8_neutralMultiplicity"]->at(i);
+    int NumConst = CHM + NumNeutralParticle;
+    bool looseJetID = 0, tightJetID = 0, tightLepVetoJetID = 0;
+    if (std::abs(eta)<=3.0) {
+      looseJetID = (NHF<0.99 && NEMF<0.99 && NumConst>1) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || std::abs(eta)>2.4);
+      tightJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || std::abs(eta)>2.4);
+      tightLepVetoJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1 && MUF<0.8) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.90) || std::abs(eta)>2.4);
+    } else {
+      looseJetID = (NEMF<0.90 && NumNeutralParticle>10);
+      tightJetID = (NEMF<0.90 && NumNeutralParticle>10);
+    }
+    vector_int_["jetAK8Puppi_looseJetID"].push_back(looseJetID);                       /* jetAK8Puppi_looseJetID  */
+    vector_int_["jetAK8Puppi_tightJetID"].push_back(tightJetID);                       /* jetAK8Puppi_tightJetID  */
+    vector_int_["jetAK8Puppi_tightLepVetoJetID"].push_back(tightLepVetoJetID);         /* jetAK8Puppi_tightLepVetoJetID  */
+  }
+  
+  vector_int_["subjetAK8Puppi_looseJetID"].clear();
+  vector_int_["subjetAK8Puppi_tightJetID"].clear();
+  vector_int_["subjetAK8Puppi_tightLepVetoJetID"].clear();
+  for (size_t i=0; i<njet_AK8Sub; ++i) {
+    float eta  = h_floats_["AK8Sub_Eta"]->at(i);
+    float NHF  = h_floats_["AK8Sub_neutralHadronEnergyFrac"]->at(i);
+    float NEMF = h_floats_["AK8Sub_neutralEmEnergyFrac"]->at(i);
+    float MUF = h_floats_["AK8Sub_MuonEnergy"]->at(i) / h_floats_["AK8Sub_E"]->at(i);
+    float CHF  = h_floats_["AK8Sub_chargedHadronEnergyFrac"]->at(i);
+    float CEMF = h_floats_["AK8Sub_chargedEmEnergyFrac"]->at(i);
+    int CHM  = h_floats_["AK8Sub_chargedMultiplicity"]->at(i);
+    int NumNeutralParticle   = h_floats_["AK8Sub_neutralMultiplicity"]->at(i);
+    int NumConst = CHM + NumNeutralParticle;
+    bool looseJetID = 0, tightJetID = 0, tightLepVetoJetID = 0;
+    if (std::abs(eta)<=3.0) {
+      looseJetID = (NHF<0.99 && NEMF<0.99 && NumConst>1) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || std::abs(eta)>2.4);
+      tightJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || std::abs(eta)>2.4);
+      tightLepVetoJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1 && MUF<0.8) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.90) || std::abs(eta)>2.4);
+    } else {
+      looseJetID = (NEMF<0.90 && NumNeutralParticle>10);
+      tightJetID = (NEMF<0.90 && NumNeutralParticle>10);
+    }
+    vector_int_["subjetAK8Puppi_looseJetID"].push_back(looseJetID);                       /* subjetAK8Puppi_looseJetID  */
+    vector_int_["subjetAK8Puppi_tightJetID"].push_back(tightJetID);                       /* subjetAK8Puppi_tightJetID  */
+    vector_int_["subjetAK8Puppi_tightLepVetoJetID"].push_back(tightLepVetoJetID);         /* subjetAK8Puppi_tightLepVetoJetID  */
   }
   
   // ---------------------
@@ -886,11 +1019,64 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   vector_float_["el_SubjetV2PtRel"].assign(nele,9999);
   vector_float_["el_SubjetV3PtRel"].assign(nele,9999);
   
-  // Find good leptons (for letponic tops)
-  single_int_["evt_NLep"] = 0;
-  single_float_["evt_HtLep"] = 0;
-  std::vector<TLorentzVector> goodleps;
+  vector_int_["el_IDVeto_NoIso"].clear();
+  vector_int_["el_IDLoose_NoIso"].clear();
+  vector_int_["el_IDMedium_NoIso"].clear();
+  vector_int_["el_IDTight_NoIso"].clear();
+  vector_int_["el_IsoVeto"].clear();
+  vector_int_["el_IsoLoose"].clear();
+  vector_int_["el_IsoMedium"].clear();
+  vector_int_["el_IsoTight"].clear();
+  vector_int_["el_IDVeto"].clear();
+  vector_int_["el_IDLoose"].clear();
+  vector_int_["el_IDMedium"].clear();
+  vector_int_["el_IDTight"].clear();
+  
+  // Loop on leptons
   for (size_t iEle=0; iEle<nele; ++iEle) {
+    // ------------------------------------------------------------------------
+    //                            Electron IDs
+    
+    float abs_eta                  = std::abs(h_floats_["ele_SCEta"]->at(iEle));
+    float full5x5_sigmaIetaIeta    = h_floats_["ele_full5x5siee"]->at(iEle);
+    float abs_dEtaIn               = std::abs(h_floats_["ele_dEtaIn"]->at(iEle));
+    float abs_dPhiIn               = std::abs(h_floats_["ele_dPhiIn"]->at(iEle));		
+    float hOverE                   = h_floats_["ele_HoE"]->at(iEle);                
+    float relIsoWithEA             = h_floats_["ele_Iso03"]->at(iEle);
+    float ooEmooP                  = h_floats_["ele_ooEmooP"]->at(iEle);
+    float abs_d0                   = std::abs(h_floats_["ele_Dxy"]->at(iEle));
+    float abs_dz                   = std::abs(h_floats_["ele_Dz"]->at(iEle));
+    float expectedMissingInnerHits = h_floats_["ele_missHits"]->at(iEle);
+    float pass_conversion_veto     = (h_floats_["ele_hasMatchedConVeto"]->at(iEle)==0.);
+    
+    bool el_IDVeto_NoIso   = pass_ele_ID_ (0, abs_eta, full5x5_sigmaIetaIeta, abs_dEtaIn, abs_dPhiIn, hOverE, ooEmooP, abs_d0, abs_dz, expectedMissingInnerHits, pass_conversion_veto, 0);
+    bool el_IDLoose_NoIso  = pass_ele_ID_ (1, abs_eta, full5x5_sigmaIetaIeta, abs_dEtaIn, abs_dPhiIn, hOverE, ooEmooP, abs_d0, abs_dz, expectedMissingInnerHits, pass_conversion_veto, 0);
+    bool el_IDMedium_NoIso = pass_ele_ID_ (2, abs_eta, full5x5_sigmaIetaIeta, abs_dEtaIn, abs_dPhiIn, hOverE, ooEmooP, abs_d0, abs_dz, expectedMissingInnerHits, pass_conversion_veto, 0);
+    bool el_IDTight_NoIso  = pass_ele_ID_ (3, abs_eta, full5x5_sigmaIetaIeta, abs_dEtaIn, abs_dPhiIn, hOverE, ooEmooP, abs_d0, abs_dz, expectedMissingInnerHits, pass_conversion_veto, 0);
+    bool el_IsoVeto   = pass_ele_ISO_(0, abs_eta, relIsoWithEA, 0);
+    bool el_IsoLoose  = pass_ele_ISO_(1, abs_eta, relIsoWithEA, 0);
+    bool el_IsoMedium = pass_ele_ISO_(2, abs_eta, relIsoWithEA, 0);
+    bool el_IsoTight  = pass_ele_ISO_(3, abs_eta, relIsoWithEA, 0);
+    bool el_IDVeto    = el_IDVeto_NoIso   && el_IsoVeto;
+    bool el_IDLoose   = el_IDLoose_NoIso  && el_IsoLoose;
+    bool el_IDMedium  = el_IDMedium_NoIso && el_IsoMedium;
+    bool el_IDTight   = el_IDTight_NoIso  && el_IsoTight;
+        
+    vector_int_["el_IDVeto_NoIso"]  .push_back(el_IDVeto_NoIso);                            /* el_IDVeto_NoIso   */
+    vector_int_["el_IDLoose_NoIso"] .push_back(el_IDLoose_NoIso);                           /* el_IDLoose_NoIso  */
+    vector_int_["el_IDMedium_NoIso"].push_back(el_IDMedium_NoIso);                          /* el_IDMedium_NoIso */
+    vector_int_["el_IDTight_NoIso"] .push_back(el_IDTight_NoIso);                           /* el_IDTight_NoIso  */
+    vector_int_["el_IsoVeto"]  .push_back(el_IsoVeto);                                      /* el_IsoVeto   */
+    vector_int_["el_IsoLoose"] .push_back(el_IsoLoose);                                     /* el_IsoLoose  */
+    vector_int_["el_IsoMedium"].push_back(el_IsoMedium);                                    /* el_IsoMedium */
+    vector_int_["el_IsoTight"] .push_back(el_IsoTight);                                     /* el_IsoTight  */
+    vector_int_["el_IDVeto"]   .push_back(el_IDVeto);                                       /* el_IDVeto    */
+    vector_int_["el_IDLoose"]  .push_back(el_IDLoose);                                      /* el_IDLoose   */
+    vector_int_["el_IDMedium"] .push_back(el_IDMedium);                                     /* el_IDMedium  */
+    vector_int_["el_IDTight"]  .push_back(el_IDTight);                                      /* el_IDTight   */
+
+    // ------------------------------------------------------------------------
+    //                              GEN INFO
     TLorentzVector ele; ele.SetPtEtaPhiE(h_floats_["ele_Pt"]->at(iEle), h_floats_["ele_Eta"]->at(iEle),
 					 h_floats_["ele_Phi"]->at(iEle), h_floats_["ele_E"]->at(iEle));
     if (!isData_) if (ele_genlep_index.count(iEle)) {
@@ -899,13 +1085,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
 	gen_top_matched_W_matched_lep[genlep_index].DeltaR(ele); 
       vector_float_["el_PtNearGenEleFromSLTop"][iEle] =                                     /* el_PtNearGenEleFromSLTop */
 	gen_top_matched_W_matched_lep[genlep_index].Pt();
-      vector_float_["el_PtNearGenTop"][iEle] = gen_top[genlep_index].Pt();                 /* el_PtNearGenTop */
-    }
-    if (h_floats_["ele_Pt"]->at(iEle) > 35 && 
-       fabs(h_floats_["ele_Eta"]->at(iEle)) < 2.5) {
-      ++single_int_["evt_NLep"];                                                        /* evt_NLep */
-      goodleps.push_back(ele);
-      single_float_["evt_HtLep"] += h_floats_["ele_Pt"]->at(iEle);                          /* evt_HtLep */
+      vector_float_["el_PtNearGenTop"][iEle] = gen_top[genlep_index].Pt();                  /* el_PtNearGenTop */
     }
     
     // ------------------------------------------------------------------------
@@ -1147,13 +1327,6 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
 	gen_top_matched_W_matched_lep[genlep_index].Pt();
       vector_float_["mu_PtNearGenTop"][iMu] = gen_top[genlep_index].Pt();                 /* mu_PtNearGenTop */
     }
-    if (h_floats_["mu_Pt"]->at(iMu) > 45 && 
-        fabs(h_floats_["mu_Eta"]->at(iMu)) < 2.1 &&
-        h_floats_["mu_IsTightMuon"]->at(iMu) == 1) {
-      ++single_int_["evt_NLep"];                                                        /* evt_NLep */
-      goodleps.push_back(mu);
-      single_float_["evt_HtLep"] += h_floats_["mu_Pt"]->at(iMu);                          /* evt_HtLep */
-    }
     // ------------------------------------------------------------------------
     //                       Lepton-Jet Disambiguation
     
@@ -1349,102 +1522,6 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   }
   
   // ---------------------
-  // --- Top Selection ---
-  // ---------------------
-  
-  single_int_["evt_NTopHad"] = 0;
-  single_int_["evt_NTopHadPreTag"] = 0;
-  single_int_["evt_NTopLep"] = 0;
-  single_int_["evt_NTop"] = 0;
-  single_float_["evt_HtTop"] = 0;
-  single_float_["evt_Ht"] = 0;
-  vector_int_["jetAK8_PassTopTag"].assign(njet_AK8,-9999);
-  TLorentzVector top1_had;
-  TLorentzVector top2_had;
-  TLorentzVector top1_lep;
-  TLorentzVector top2_lep;
-  for (size_t i=0; i<njet_AK8; ++i) {
-    bool is_top = false;
-    vector_int_["jetAK8_PassTopTag"][i] = 0;
-    // Hadronic tops (Loose selection)
-    if (i<2) { // only check two highest pt jets
-      if (h_floats_["AK8_Pt"]->at(i) > 400 &&
-	  h_floats_["AK8_softDropMass"]->at(i) >= 110 &&
-	  h_floats_["AK8_softDropMass"]->at(i) < 210) {
-	++single_int_["evt_NTopHadPreTag"];                                                 /* evt_NTopHadPreTag */
-	if (single_int_["evt_NTopHadPreTag"]==1) 
-	  top1_had.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(i), h_floats_["AK8_Eta"]->at(i),
-				h_floats_["AK8_Phi"]->at(i), h_floats_["AK8_E"]->at(i));
-	if (single_int_["evt_NTopHadPreTag"]==2) 
-	  top2_had.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(i), h_floats_["AK8_Eta"]->at(i),
-				h_floats_["AK8_Phi"]->at(i), h_floats_["AK8_E"]->at(i));
-	// Pass n-subjettiness cut
-	if (h_floats_["AK8_tau2"]->at(i)>0 ?  
-	    (h_floats_["AK8_tau3"]->at(i)/h_floats_["AK8_tau2"]->at(i)) < 0.75 : 0 ) {
-	  vector_int_["jetAK8_PassTopTag"][i] = 1;
-	  ++single_int_["evt_NTopHad"];                                                     /* evt_NTopHad */
-	  is_top = true;
-	}
-      }
-    }
-    // Leptonic tops
-    TLorentzVector lep;
-    TLorentzVector jet;
-    jet.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(i), h_floats_["AK8_Eta"]->at(i),
-                     h_floats_["AK8_Phi"]->at(i), h_floats_["AK8_E"]->at(i));
-    double DR_lep = 9999;
-    for (size_t i=0; i<goodleps.size(); ++i) {
-      double DR = goodleps[i].DeltaR(jet);
-      if (DR < DR_lep) {
-        DR_lep = DR;
-        lep = goodleps[i];
-      }
-    }
-    if (DR_lep<1.0) {
-      ++single_int_["evt_NTopLep"];                                                     /* evt_NTopLep */
-      is_top = true;
-      TLorentzVector leptop = lep + jet;
-      if (single_int_["evt_NTopLep"]==1) top1_lep = leptop;
-      if (single_int_["evt_NTopLep"]==2) top2_lep = leptop;
-    }
-    // HT
-    if (is_top) {
-      ++single_int_["evt_NTop"];                                                        /* evt_NTop */
-      single_float_["evt_HtTop"] += h_floats_["AK8_Pt"]->at(i);                         /* evt_HtTop */
-    }
-    single_float_["evt_Ht"] += h_floats_["AK8_Pt"]->at(i);                              /* evt_Ht */
-  }
-  single_float_["evt_HtAll"] = single_float_["evt_Ht"] +                                /* evt_HtAll */
-    h_floats_["met_Pt"]->at(0) + single_float_["evt_HtLep"];
-  single_float_["evt_HtEx"] = single_float_["evt_HtAll"] - single_float_["evt_HtTop"];  /* evt_HtEx */
-  single_float_["evt_HtExFr"] = single_float_["evt_HtEx"] / single_float_["evt_HtAll"]; /* evt_HtExFr */
-  single_float_["evt_HtTopFr"] = single_float_["evt_HtTop"]                             /* evt_HtTopFr */
-    / single_float_["evt_HtAll"];
-  
-  // ---------------------
-  // --- TT Selection ----
-  // ---------------------
-  
-  // Fully hadronic channel
-  single_float_["evt_TTHadDR"]   = -9999;
-  single_float_["evt_TTHadDPhi"] = -9999;
-  single_float_["evt_TTHadDEta"] = -9999;
-  single_float_["evt_TTHadMass"] = -9999;
-  single_float_["evt_TTHadPz"]   = -9999;
-  single_float_["evt_TTHadHz"]   = -9999;
-  single_float_["evt_TTHadDPz"]  = -9999;
-  if (single_int_["evt_NTopHadPreTag"]==2) {
-    single_float_["evt_TTHadDR"]   = top1_had.DeltaR(top2_had);                         /* evt_TTHadDR */
-    single_float_["evt_TTHadDPhi"] = top1_had.DeltaPhi(top2_had);                       /* evt_TTHadDPhi */
-    single_float_["evt_TTHadDEta"] = fabs(top1_had.Eta() - top2_had.Eta());             /* evt_TTHadDEta */
-    single_float_["evt_TTHadSumPt"] = top1_had.Pt()+top2_had.Pt();                      /* evt_TTHadSumPt */
-    single_float_["evt_TTHadMass"] = (top1_had + top2_had).M();                         /* evt_TTHadMass */
-    single_float_["evt_TTHadPz"]   = (top1_had + top2_had).Pz();                        /* evt_TTHadPz */
-    single_float_["evt_TTHadHz"]   = top1_had.Pz() + top2_had.Pz();                     /* evt_TTHadHz */
-    single_float_["evt_TTHadDPz"]  = fabs(top1_had.Pz() - top2_had.Pz());               /* evt_TTHadDPz */
-  }
-  
-  // ---------------------
   // -- Razor variables --
   // ---------------------
   
@@ -1459,17 +1536,6 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     }
   }
 
-  // Puppi jets
-  std::vector<TLorentzVector> jets_AK8Puppi;
-  for (size_t i=0; i<njet_AK8Puppi; ++i) {
-    if ((h_floats_["AK8Puppi_Pt"]->at(i) > 40) && (h_floats_["AK8Puppi_Eta"]->at(i) < 3)) {
-      TLorentzVector jl;
-      jl.SetPtEtaPhiE(h_floats_["AK8Puppi_Pt"]->at(i), h_floats_["AK8Puppi_Eta"]->at(i),
-                      h_floats_["AK8Puppi_Phi"]->at(i), h_floats_["AK8Puppi_E"]->at(i));
-      jets_AK8Puppi.push_back(jl);
-    }
-  }
-  
   // Same for AK4 jets
   std::vector<TLorentzVector> jets_AK4;
   for (size_t i=0; i<njet_AK4; ++i) {
@@ -1484,18 +1550,6 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   TVector3 metl;
   metl.SetPtEtaPhi(h_floats_["met_Pt"]->at(0), 0, h_floats_["met_Phi"]->at(0));
   
-  // Fully hadronic channel
-  single_float_["evt_TTHadMR"]  = -9999;
-  single_float_["evt_TTHadMTR"] = -9999;
-  single_float_["evt_TTHadR"]   = -9999;
-  single_float_["evt_TTHadR2"]  = -9999;
-  if (single_int_["evt_NTopHadPreTag"]==2) {
-    single_float_["evt_TTHadMR"]  = Razor::CalcMR(top1_had, top2_had);                 /* evt_TTHadMR */
-    single_float_["evt_TTHadMTR"] = Razor::CalcMTR(top1_had, top2_had, metl);          /* evt_TTHadMTR */
-    single_float_["evt_TTHadR"]   = single_float_["evt_TTHadMTR"]                      /* evt_TTHadR */
-      / single_float_["evt_TTHadMR"];
-    single_float_["evt_TTHadR2"]  = pow(single_float_["evt_TTHadR"], 2);               /* evt_TTHadR2 */
-  }
   // Default variables - AK8
   single_float_["evt_MR"]  = -9999;
   single_float_["evt_MTR"] = -9999;
@@ -1510,23 +1564,6 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       single_float_["evt_R2"]  = std::pow(single_float_["evt_R"], 2);                    /* evt_R2 */
     } else {
       std::cout<<"Too many AK8: "<<jets_AK8.size()<<" "<<njet_AK8<<std::endl;
-    }
-  }
-  
-  // AK8 Puppi
-  single_float_["evt_AK8Puppi_MR"]  = -9999;
-  single_float_["evt_AK8Puppi_MTR"] = -9999;
-  single_float_["evt_AK8Puppi_R"]   = -9999;
-  single_float_["evt_AK8Puppi_R2"]  = -9999;
-  if (jets_AK8Puppi.size() >= 2) {
-    if (njet_AK4<60) {
-      std::vector<TLorentzVector> hemis_AK8Puppi = Razor::CombineJets(jets_AK8Puppi);
-      single_float_["evt_AK8Puppi_MR"]  = Razor::CalcMR(hemis_AK8Puppi[0], hemis_AK8Puppi[1]);                  /* evt_AK8Puppi_MR */
-      single_float_["evt_AK8Puppi_MTR"] = Razor::CalcMTR(hemis_AK8Puppi[0], hemis_AK8Puppi[1], metl);           /* evt_AK8Puppi_MTR */
-      single_float_["evt_AK8Puppi_R"]   = single_float_["evt_AK8Puppi_MTR"] / single_float_["evt_AK8Puppi_MR"]; /* evt_AK8Puppi_R */
-      single_float_["evt_AK8Puppi_R2"]  = std::pow(single_float_["evt_AK8Puppi_R"], 2);                         /* evt_AK8Puppi_R2 */
-    } else {
-      std::cout<<"Too many AK8Puppi: "<<jets_AK8Puppi.size()<<" "<<njet_AK8Puppi<<std::endl;
     }
   }
   
@@ -1546,6 +1583,110 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       std::cout<<"Too many AK4: "<<jets_AK4.size()<<" "<<njet_AK4<<std::endl;
     }
   }
+}
+
+// Electron ID
+
+// https://twiki.cern.ch/twiki/bin/view/CMS/CutBasedElectronIdentificationRun2?rev=34#ICHEP16_recommendations
+// -->
+// https://twiki.cern.ch/twiki/bin/view/CMS/CutBasedElectronIdentificationRun2?rev=34#Spring15_selection_25ns
+
+/*
+  Spring15 selection, conditions: 25ns, barrel cuts ( |eta supercluster| <= 1.479)
+                                Veto 	Loose 	Medium 	Tight
+  full5x5_sigmaIetaIeta < 	0.0114 	0.0103 	0.0101 	0.0101
+  abs(dEtaIn) < 		0.0152 	0.0105 	0.0103 	0.00926
+  abs(dPhiIn) < 		0.216 	0.115 	0.0336 	0.0336
+  hOverE < 	                0.181 	0.104 	0.0876 	0.0597
+  relIsoWithEA < 		0.126 	0.0893 	0.0766 	0.0354
+  ooEmooP < 			0.207 	0.102 	0.0174 	0.012
+  abs(d0) < 			0.0564 	0.0261 	0.0118 	0.0111
+  abs(dz) < 			0.472 	0.41 	0.373 	0.0466
+  expectedMissingInnerHits <= 	2 	2 	2 	2
+  pass conversion veto 	        yes 	yes 	yes 	yes
+  
+  Spring15 selection, conditions: 25ns, endcap cuts (1.479 < |eta supercluster| < 2.5)
+                                Veto 	Loose 	Medium 	Tight
+  full5x5_sigmaIetaIeta < 	0.0352 	0.0301 	0.0283 	0.0279
+  abs(dEtaIn) < 		0.0113 	0.00814 0.00733 0.00724
+  abs(dPhiIn) < 		0.237 	0.182 	0.114 	0.0918
+  hOverE < 	                0.116 	0.0897 	0.0678 	0.0615
+  relIsoWithEA < 		0.144 	0.121 	0.0678 	0.0646
+  ooEmooP < 			0.174 	0.126 	0.0898 	0.00999
+  abs(d0) < 			0.222 	0.118 	0.0739 	0.0351
+  abs(dz) < 			0.921 	0.822 	0.602 	0.417
+  expectedMissingInnerHits <= 	3 	1 	1 	1
+  pass conversion veto 	        yes 	yes 	yes 	yes 
+*/
+
+bool B2GEdmExtraVarProducer::pass_ele_ID_(int id_index, const float& abs_eta, const float& full5x5_sigmaIetaIeta,
+						    const float& abs_dEtaIn, const float& abs_dPhiIn, const float& hOverE,
+						    const float& ooEmooP, const float& abs_d0, const float& abs_dz,
+					  const float& expectedMissingInnerHits, const float& pass_conversion_veto, bool verbose) {
+  if (abs_eta>=2.5) return 0;
+  float cuts[2][9][4] = 
+    {
+      { // Barrel
+        { 0.0114, 0.0103 , 0.0101 , 0.0101  },
+        { 0.0152, 0.0105 , 0.0103 , 0.00926 },
+        { 0.216 , 0.115  , 0.0336 , 0.0336  },
+        { 0.181 , 0.104  , 0.0876 , 0.0597  },
+        { 0.207 , 0.102  , 0.0174 , 0.012   },
+        { 0.0564, 0.0261 , 0.0118 , 0.0111  },
+        { 0.472 , 0.41   , 0.373  , 0.0466  },
+        { 2     , 2      , 2      , 2       },
+        { 1     , 1      , 1      , 1       }
+      },
+      { // Endcap
+        { 0.0352, 0.0301 , 0.0283 , 0.0279  },
+        { 0.0113, 0.00814, 0.00733, 0.00724 },
+        { 0.237 , 0.182  , 0.114  , 0.0918  },
+        { 0.116 , 0.0897 , 0.0678 , 0.0615  },
+        { 0.174 , 0.126  , 0.0898 , 0.00999 },
+        { 0.222 , 0.118  , 0.0739 , 0.0351  },
+        { 0.921 , 0.822  , 0.602  , 0.417   },
+        { 3     , 1      , 1      , 1       },
+        { 1     , 1      , 1      , 1       }
+      }
+    };
+
+  int endcap = abs_eta>1.479;
+  if (verbose) {
+    std::cout<<"full5x5_sigmaIetaIeta    "<<!(full5x5_sigmaIetaIeta    >= cuts[endcap][0][id_index])<<std::endl;
+    std::cout<<"abs_dEtaIn               "<<!(abs_dEtaIn               >= cuts[endcap][1][id_index])<<std::endl;
+    std::cout<<"abs_dPhiIn               "<<!(abs_dPhiIn               >= cuts[endcap][2][id_index])<<std::endl;
+    std::cout<<"hOverE                   "<<!(hOverE                   >= cuts[endcap][3][id_index])<<std::endl;
+    std::cout<<"ooEmooP                  "<<!(ooEmooP                  >= cuts[endcap][4][id_index])<<std::endl;
+    std::cout<<"abs_d0                   "<<!(abs_d0                   >= cuts[endcap][5][id_index])<<std::endl;
+    std::cout<<"abs_dz                   "<<!(abs_dz                   >= cuts[endcap][6][id_index])<<std::endl;
+    std::cout<<"expectedMissingInnerHits "<<!(expectedMissingInnerHits >  cuts[endcap][7][id_index])<<std::endl;
+    std::cout<<"pass_conversion_veto     "<<!(pass_conversion_veto     != cuts[endcap][8][id_index])<<std::endl;
+  }
+  if (full5x5_sigmaIetaIeta    >= cuts[endcap][0][id_index]) return 0;
+  if (abs_dEtaIn               >= cuts[endcap][1][id_index]) return 0;
+  if (abs_dPhiIn               >= cuts[endcap][2][id_index]) return 0;
+  if (hOverE                   >= cuts[endcap][3][id_index]) return 0;
+  if (ooEmooP                  >= cuts[endcap][4][id_index]) return 0;
+  if (abs_d0                   >= cuts[endcap][5][id_index]) return 0;
+  if (abs_dz                   >= cuts[endcap][6][id_index]) return 0;
+  if (expectedMissingInnerHits >  cuts[endcap][7][id_index]) return 0;
+  if (pass_conversion_veto     != cuts[endcap][8][id_index]) return 0;
+  return 1;
+}
+
+bool B2GEdmExtraVarProducer::pass_ele_ISO_(int id_index, const float& abs_eta, const float& relIsoWithEA, bool verbose) {
+  if (abs_eta>=2.5) return 0;
+
+  float cuts[2][4] = 
+    {
+      { 0.126 , 0.0893 , 0.0766 , 0.0354  },
+      { 0.144 , 0.121  , 0.0678 , 0.0646  },
+    };
+  int endcap = abs_eta>1.479;
+  if (verbose)
+    std::cout<<"relIsoWithEA             "<<!(relIsoWithEA             >= cuts[endcap][id_index])<<std::endl;
+  if (relIsoWithEA             >= cuts[endcap][id_index]) return 0;
+  return 1;
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"

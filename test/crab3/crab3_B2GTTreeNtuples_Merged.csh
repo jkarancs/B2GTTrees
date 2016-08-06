@@ -5,7 +5,7 @@
 #       When jobs finish, we can also get report and download all output files locally
 
 echo "Usage:"                                                    >! Usage.txt
-echo "  source crab3_B2GEdmNtuples.csh <cmd> <TASKNAME> ..."     >> Usage.txt
+echo "  source crab3_B2GEdmNtuples_Merged.csh <cmd> <TASKNAME> " >> Usage.txt
 echo "  there is a default safety mechanism for each command"    >> Usage.txt
 echo "  add --run at the end to excecute them"                   >> Usage.txt
 echo ""                                                          >> Usage.txt
@@ -97,11 +97,14 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
     endif
     set TAG=$3
     set TXT_FILE=$4
-    set SE_SITE=$5
-    set SE_USERDIR=$6
+    set XSEC_FILE=$5
+    set SE_SITE=$6
+    set SE_USERDIR=$7
     set CERT_DIR="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions16/13TeV"
     set LATEST_GOLDEN_JSON=`ls -lrt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV | awk '{ print $NF }' | grep -vE "MuonPhys|LowPU" | grep "\.txt" | tail -1`
-    set JSON="$LATEST_GOLDEN_JSON"
+    #set JSON="$LATEST_GOLDEN_JSON"
+    set ICHEP_GOLDEN_JSON="Cert_271036-276811_13TeV_PromptReco_Collisions16_JSON_NoL1T.txt"
+    set JSON="$ICHEP_GOLDEN_JSON"
     mkdir $TASKDIR
     echo "SE_SITE "$SE_SITE >! $TASKDIR/config.txt
     echo "SE_USERDIR "$SE_USERDIR >> $TASKDIR/config.txt
@@ -109,16 +112,20 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	echo "$TXT_FILE doesn't exist"; rm Usage.txt; exit
     endif
     grep -v '^#' $TXT_FILE | grep "/MINIAOD" >! $TASKDIR/input_datasets.txt
-    sed "s;TASKDIR;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_template_edmntuple_Data_py.txt
-    sed "s;TASKDIR;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_edmntuple_MC_py.txt > $TASKDIR/crab_template_edmntuple_MC_py.txt
+    cp $XSEC_FILE $TASKDIR/xsec_datasets.txt
+    mkdir -p $TASKDIR/cross_sections
+    sed "s;TASKDIR;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_ttreentuple_merged_Data.py > $TASKDIR/crab_template_ttreentuple_merged_Data.py
+    sed "s;TASKDIR;$TASKDIR;;s;SE_SITE;$SE_SITE;;s;SE_USERDIR;$SE_USERDIR;" crab_template_ttreentuple_merged_MC.py   > $TASKDIR/crab_template_ttreentuple_merged_MC.py
     set N=`cat $TASKDIR/input_datasets.txt | wc -l`
     foreach i ( `seq 1 $N` )
 	set line=`sed -n "$i"p $TASKDIR/input_datasets.txt`
 	set SHORT=`echo $line | awk '{ print $1 }'`
 	set DATASET=`echo $line | awk '{ print $2 }'`
+	set primary=`echo $DATASET | sed "s;/; ;g" | awk '{ print $1 }'`
 	set PROCESSED_DS_NAME=`echo $DATASET | sed "s;/; ;g" | awk '{ print $2 }'`
 	set isData=`echo $DATASET | grep 'MINIAOD$' | wc -l`
 	# 2016 Data
+	echo $primary
 	if ( `echo $PROCESSED_DS_NAME | grep "Run2016" | wc -l`) then
 	    set DATAPROC="Data_80X"
 	    set JEC_ERA="EMPTY"
@@ -141,13 +148,33 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	    rm -r $TASKDIR Usage.txt
 	    exit
 	endif
-	if ( $isData ) then
-	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$TAG"_"$PROCESSED_DS_NAME;;s;DATASET;$DATASET;;s;DATAPROC;$DATAPROC;;s;JEC_ERA;$JEC_ERA;;s;JSON;$CERT_DIR/$JSON;;s;RUNS;$RUNS;" $TASKDIR/crab_template_edmntuple_Data_py.txt > $TASKDIR/crab_$SHORT.py
+	# Create xsec txt file for each dataset
+	if ( `echo $primary | grep SMS | wc -l` || $isData ) then
+	    # Signal: Xsec depends on mGlu (fill in ntuple)
+	    # Data: Xsec variable not needed
+	    set xsec="0"
 	else
-	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$TAG"_"$PROCESSED_DS_NAME;;s;DATASET;$DATASET;;s;DATAPROC;$DATAPROC;;s;JEC_ERA;$JEC_ERA;" $TASKDIR/crab_template_edmntuple_MC_py.txt > $TASKDIR/crab_$SHORT.py
+	    set xsec=`grep "^$primary" $TASKDIR/xsec_datasets.txt | tail -1 | awk '{ print $2 }'`
+	    if ( "$xsec" == "" ) then
+	        echo "Error: Cross-section is missing for $primary, exiting..."
+	        rm -r $TASKDIR
+	        exit
+	    endif
+	    # Multiply cross-section with k-factor
+	    set k_factor=`grep "^$primary" $TASKDIR/xsec_datasets.txt | tail -1 | awk '{ print $3 }'`
+	    set xsec=`echo | awk '{ printf "%lf", '$xsec'*'$k_factor' }'`
+	endif
+	# cross_section.txt containing the actual cross-section for each primary dataset
+	mkdir -p $TASKDIR/cross_sections/$SHORT
+	echo "$xsec" >! $TASKDIR/cross_sections/$SHORT/cross_section.txt
+	set XSEC_FILE="$TASKDIR/cross_sections/$SHORT/cross_section.txt"
+	if ( $isData ) then
+	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$TAG"_"$PROCESSED_DS_NAME;;s;DATASET;$DATASET;;s;DATAPROC;$DATAPROC;;s;JEC_ERA;$JEC_ERA;;s;XSEC_FILE;$XSEC_FILE;;s;JSON;$CERT_DIR/$JSON;;s;RUNS;$RUNS;" $TASKDIR/crab_template_ttreentuple_merged_Data.py > $TASKDIR/crab_$SHORT.py
+	else
+	    sed "s;REQNAME;$SHORT;;s;PUBNAME;$TAG"_"$PROCESSED_DS_NAME;;s;DATASET;$DATASET;;s;DATAPROC;$DATAPROC;;s;JEC_ERA;$JEC_ERA;;s;XSEC_FILE;$XSEC_FILE;;" $TASKDIR/crab_template_ttreentuple_merged_MC.py > $TASKDIR/crab_$SHORT.py
 	endif
     end
-    rm $TASKDIR/crab_template_edmntuple_Data_py.txt $TASKDIR/crab_template_edmntuple_MC_py.txt
+    rm $TASKDIR/crab_template_ttreentuple_merged_Data.py $TASKDIR/crab_template_ttreentuple_merged_MC.py
     echo "Config files ready in directory: "$TASKDIR
     ls -ltr $TASKDIR
 
@@ -318,7 +345,7 @@ else if ( `echo $cmd | grep "get_lumi" | wc -l` ) then
     foreach i ( `seq 1 $N` )
         set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
         set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
-	set isData=`echo $in_dataset | grep 'Run2015' | wc -l`
+	set isData=`echo $in_dataset | grep 'Run201' | wc -l`
 	if ( $isData ) then
 	    if ( ! -e $TASKDIR/crab_$short/results/processedLumis.json ) then
 	        crab report -d $TASKDIR/crab_$short

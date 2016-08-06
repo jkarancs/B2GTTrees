@@ -1,30 +1,30 @@
 # ----------------------- Run II MC ------------------------------
-# Dataset name                                                                      XS (pb)   k-factor  Neg weight corr
+# Currently all value comes from 76X
+
+# Dataset name                                                                      XS (pb)   k-factor
 
 # TT - NNLO
 # https://twiki.cern.ch/twiki/bin/view/LHCPhysics/TtbarNNLO
-TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                                      831.76    1         3.015442
-TTJets_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                                       831.76    1         1
-TT_TuneZ2star_13TeV-powheg-pythia6-tauola                                           831.76    1         1
-TT_TuneCUETP8M1_13TeV-amcatnlo-pythia8                                              831.76    1         2.035141
-TT_TuneCUETP8M1_13TeV-powheg-pythia8                                                831.76    1         1
-TT_TuneCUETP8M1mpiOFF_13TeV-powheg-pythia8                                          831.76    1         1
-TT_TuneCUETP8M1noCR_13TeV-powheg-pythia8			                    831.76    1         1
-TT_TuneEE5C_13TeV-powheg-herwigpp				                    831.76    1         1
-TT_TuneEE5C_13TeV-amcatnlo-herwigpp                                                 831.76    1         1.780401
+TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                                      831.76    1
+TTJets_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                                       831.76    1
+TT_TuneZ2star_13TeV-powheg-pythia6-tauola                                           831.76    1
+TT_TuneCUETP8M1_13TeV-amcatnlo-pythia8                                              831.76    1
+TT_TuneCUETP8M1_13TeV-powheg-pythia8                                                831.76    1
+TT_TuneCUETP8M1mpiOFF_13TeV-powheg-pythia8                                          831.76    1
+TT_TuneCUETP8M1noCR_13TeV-powheg-pythia8			                    831.76    1
+TT_TuneEE5C_13TeV-powheg-herwigpp				                    831.76    1
+TT_TuneEE5C_13TeV-amcatnlo-herwigpp                                                 831.76    1
+TTJets_13TeV-madgraphMLM                                                            831.76    1
+TT_TuneCUETP8M1_13TeV-powheg-pythia8-evtgen                                         831.76    1
 
 # HT Binned TT (NN)LO scale factor
 # k factor applied = 1.6562 (= 831.76 / 502.2)
 # Figured out from above madgraph sample NNLO/LO
 
-TTJets_HT-0to600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                             499.80557 1.65623   1 **
-TTJets_HT-600to800_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                           1.61      1.65623   1
-TTJets_HT-800to1200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                          0.663     1.65623   1
-TTJets_HT-1200to2500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                         0.12      1.65623   1
-TTJets_HT-2500toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                          0.00143   1.65623   1
-
-# ** This dataset doesn't exist, so we filter the unbinned dataset
-#    LO XSec: 502.2 - 1.61 - 0.663 - 0.12 - 0.00143 = 499.80557
+TTJets_HT-600to800_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                           1.61      1.65623
+TTJets_HT-800to1200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                          0.663     1.65623
+TTJets_HT-1200to2500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                         0.12      1.65623
+TTJets_HT-2500toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                          0.00143   1.65623
 
 # T - NLO/NNLO
 # https://twiki.cern.ch/twiki/bin/viewauth/CMS/SingleTopSigma
@@ -32,35 +32,35 @@ TTJets_HT-2500toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                      
 # Not used: https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=73
 # For s and t leptonDecays, N/NNLO xsec was multiplied by BR(W->lv) = 0.324
 # For top/anti
-ST_s-channel_4f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1                    10.32    0.324     1.604867
-ST_t-channel_4f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1                    216.69   0.324     4.638947
-ST_t-channel_5f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1                    216.69   0.324     1        !MISSING!
-ST_t-channel_top_4f_leptonDecays_13TeV-powheg-pythia8_TuneCUETP8M1                  136.02   0.324     1
-ST_t-channel_antitop_4f_leptonDecays_13TeV-powheg-pythia8_TuneCUETP8M1              80.95    0.324     1
-ST_t-channel_top_4f_inclusiveDecays_13TeV-powhegV2-madspin-pythia8_TuneCUETP8M1     136.02   1         1
-ST_t-channel_antitop_4f_inclusiveDecays_13TeV-powhegV2-madspin-pythia8_TuneCUETP8M1 80.95    1         1
-ST_tW_top_5f_DS_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1                   71.7     0.5       1
-ST_tW_top_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1                      71.7     0.5       1
-ST_tW_antitop_5f_DS_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1               71.7     0.5       1
-ST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1                  71.7     0.5       1
+ST_s-channel_4f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1                    10.32    0.324
+ST_t-channel_4f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1                    216.69   0.324
+ST_t-channel_5f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1                    216.69   0.324
+ST_t-channel_top_4f_leptonDecays_13TeV-powheg-pythia8_TuneCUETP8M1                  136.02   0.324
+ST_t-channel_antitop_4f_leptonDecays_13TeV-powheg-pythia8_TuneCUETP8M1              80.95    0.324
+ST_t-channel_top_4f_inclusiveDecays_13TeV-powhegV2-madspin-pythia8_TuneCUETP8M1     136.02   1    
+ST_t-channel_antitop_4f_inclusiveDecays_13TeV-powhegV2-madspin-pythia8_TuneCUETP8M1 80.95    1    
+ST_tW_top_5f_DS_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1                   71.7     0.5  
+ST_tW_top_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1                      71.7     0.5  
+ST_tW_antitop_5f_DS_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1               71.7     0.5  
+ST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1                  71.7     0.5  
 	 
 # TTV - L/NLO
 # https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=73
 # ttH: https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageAt13TeV#ttH_Process
 
-TTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8                                         0.5297    1         2.133763
-TTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8                                0.2529    1         2.151468
-TTWJetsToQQ_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8                         0.4062    1         1.937964
-TTWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8                        0.2043    1         1.947693
-TTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8                             3.697     1         1        !MISSING!
-ttH_M125_13TeV_powheg_pythia8                                                       0.5071    1         1
-TTTT_TuneCUETP8M1_13TeV-amcatnlo-pythia8                                            0.009103  1         1        !MISSING!
+TTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8                                         0.5297    1
+TTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8                                0.2529    1
+TTWJetsToQQ_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8                         0.4062    1
+TTWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8                        0.2043    1
+TTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8                             3.697     1
+ttH_M125_13TeV_powheg_pythia8                                                       0.5071    1
+TTTT_TuneCUETP8M1_13TeV-amcatnlo-pythia8                                            0.009103  1
 
 # TV - NLO
 # https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns#TTbar
 
-tZq_ll_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1                                       0.0758    1         3.763389
-tZq_nunu_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1                                     0.1379    1         3.820400
+tZq_ll_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1                                       0.0758    1
+tZq_nunu_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1                                     0.1379    1
 
 # HT Binned Z/G - (NN)LO scale factor
 # https://twiki.cern.ch/twiki/bin/viewauth/CMS/StandardModelCrossSectionsat13TeV
@@ -70,27 +70,28 @@ tZq_nunu_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1                                 
 # Scale factor k = 3 * 2008.4 / 4895 = 1.231
 # Apply same factro for ZToNoNu
 
-DYJetsToLL_M-5to50_HT-100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8               224.2     1.2309    1
-DYJetsToLL_M-5to50_HT-200to400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8               37.19     1.2309    1
-DYJetsToLL_M-5to50_HT-400to600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8               3.581     1.2309    1
-DYJetsToLL_M-5to50_HT-600toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8               1.124     1.2309    1
-DYJetsToLL_M-50_HT-100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                  139.4     1.2309    1
-DYJetsToLL_M-50_HT-200to400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                  42.75     1.2309    1
-DYJetsToLL_M-50_HT-400to600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                  5.497     1.2309    1
-DYJetsToLL_M-50_HT-600toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                  2.21      1.2309    1
-ZJetsToNuNu_HT-100To200_13TeV-madgraph                                              280.47    1.2309    1
-ZJetsToNuNu_HT-200To400_13TeV-madgraph                                              78.36     1.2309    1
-ZJetsToNuNu_HT-400To600_13TeV-madgraph                                              10.944    1.2309    1
-ZJetsToNuNu_HT-600ToInf_13TeV-madgraph                                              4.203     1.2309    1
-ZJetsToNuNu_HT-600To800_13TeV-madgraph                                              N.A.
-ZJetsToNuNu_HT-800To1200_13TeV-madgraph                                             N.A.
-ZJetsToNuNu_HT-1200To2500_13TeV-madgraph                                            N.A.
-ZJetsToNuNu_HT-2500ToInf_13TeV-madgraph                                             N.A.
+DYJetsToLL_M-5to50_HT-100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8               224.2     1.2309
+DYJetsToLL_M-5to50_HT-200to400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8               37.19     1.2309
+DYJetsToLL_M-5to50_HT-400to600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8               3.581     1.2309
+DYJetsToLL_M-5to50_HT-600toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8               1.124     1.2309
+DYJetsToLL_M-50_HT-100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                  139.4     1.2309
+DYJetsToLL_M-50_HT-200to400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                  42.75     1.2309
+DYJetsToLL_M-50_HT-400to600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                  5.497     1.2309
+DYJetsToLL_M-50_HT-600toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                  2.21      1.2309
+ZJetsToNuNu_HT-100To200_13TeV-madgraph                                              280.47    1.2309
+ZJetsToNuNu_HT-200To400_13TeV-madgraph                                              78.36     1.2309
+ZJetsToNuNu_HT-400To600_13TeV-madgraph                                              10.944    1.2309
+ZJetsToNuNu_HT-600ToInf_13TeV-madgraph                                              4.203     1.2309
+ZJetsToNuNu_HT-600To800_13TeV-madgraph                                              0.853     1.2309
+ZJetsToNuNu_HT-800To1200_13TeV-madgraph                                             0.3942    1.2309
+ZJetsToNuNu_HT-1200To2500_13TeV-madgraph                                            0.0974    1.2309
+ZJetsToNuNu_HT-2500ToInf_13TeV-madgraph                                             0.002308  1.2309
 # Not applied below
-ZJetsToQQ_HT600toInf_13TeV-madgraph                                                 5.67      1         1
+DYJetsToQQ_HT180_13TeV-madgraphMLM-pythia8                                          1187      1
+ZJetsToQQ_HT600toInf_13TeV-madgraph                                                 5.67      1     
 
 # unbinned
-DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                              4895      1.2309    1
+DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                              4895      1.2309
 
 # HT Binned W - (NN)LO scale factor
 # https://twiki.cern.ch/twiki/bin/viewauth/CMS/StandardModelCrossSectionsat13TeV
@@ -99,116 +100,76 @@ DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                          
 # WJetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8 (LO) = 50690
 # Scale factor k = 3 * 20508.9 / 50690 = 1.214
 
-WJetsToLNu_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                       1345      1.21378   1
-WJetsToLNu_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8	                    359.7     1.21378   1
-WJetsToLNu_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8	                    48.91     1.21378   1
-WJetsToLNu_HT-600To800_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                       12.05     1.21378   1
-WJetsToLNu_HT-800To1200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                      5.501     1.21378   1
-WJetsToLNu_HT-1200To2500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                     1.329     1.21378   1
-WJetsToLNu_HT-2500ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                      0.03216   1.21378   1
+WJetsToLNu_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                       1345      1.21378
+WJetsToLNu_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8	                    359.7     1.21378
+WJetsToLNu_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8	                    48.91     1.21378
+WJetsToLNu_HT-600To800_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                       12.05     1.21378
+WJetsToLNu_HT-800To1200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                      5.501     1.21378
+WJetsToLNu_HT-1200To2500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                     1.329     1.21378
+WJetsToLNu_HT-2500ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                      0.03216   1.21378
 
-WJetsToLNu_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8	                    18.77     1.21378   1
+WJetsToLNu_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8	                    18.77     1.21378
 # not applied for the hadronic decay channel
-WJetsToQQ_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8 	                    95.14     1         1
+WJetsToQQ_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8 	                    95.14     1      
+WJetsToQQ_HT180_13TeV-madgraphMLM-pythia8                                           2788      1
 
 # unbinned
-WJetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                                   50690     1.21378   1
+WJetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                                   50690     1.21378
 
 # QCD - LO
 # https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=126
 # GenJets5 from McM
 
-QCD_HT100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                               27850000  1         1
-QCD_HT200to300_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                               1717000   1         1
-QCD_HT300to500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                               351300    1         1
-QCD_HT500to700_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                               31630     1         1
-QCD_HT700to1000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                              6802      1         1
-QCD_HT1000to1500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                             1206      1         1
-QCD_HT1500to2000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                             120.4     1         1
-QCD_HT2000toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                              25.25     1         1
+QCD_HT100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                               27850000  1
+QCD_HT200to300_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                               1717000   1
+QCD_HT300to500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                               351300    1
+QCD_HT500to700_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                               31630     1
+QCD_HT700to1000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                              6802      1
+QCD_HT1000to1500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                             1206      1
+QCD_HT1500to2000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                             120.4     1
+QCD_HT2000toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                              25.25     1
 
-QCD_HT300to500_GenJets5_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                      72410     1         1
-QCD_HT500to700_GenJets5_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                      11300     1         1
-QCD_HT700to1000_GenJets5_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                     2965      1         1
-QCD_HT1000to1500_GenJets5_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                    630       1         1
-QCD_HT1500to2000_GenJets5_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                    73.7      1         1
-QCD_HT2000toInf_GenJets5_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                     15.52     1         1
+QCD_HT300to500_GenJets5_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                      72410     1
+QCD_HT500to700_GenJets5_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                      11300     1
+QCD_HT700to1000_GenJets5_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                     2965      1
+QCD_HT1000to1500_GenJets5_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                    630       1
+QCD_HT1500to2000_GenJets5_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                    73.7      1
+QCD_HT2000toInf_GenJets5_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                     15.52     1
 
 # G - LO
 # https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=126
 
-GJets_HT-40To100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                             20730     1         1
-GJets_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                            9226      1         1
-GJets_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                            2300      1         1
-GJets_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                            277.4     1         1
-GJets_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                            93.38     1         1
+GJets_HT-40To100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                             20730     1
+GJets_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                            9226      1
+GJets_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                            2300      1
+GJets_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                            277.4     1
+GJets_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                            93.38     1
 
 # VV - NN/N/LO
 # https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=73
 # https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageAt13TeV#ZH_Process
-WW_TuneCUETP8M1_13TeV-pythia8                                                       63.21     1         1
-WZ_TuneCUETP8M1_13TeV-pythia8					                    47.13     1         1
-ZZ_TuneCUETP8M1_13TeV-pythia8					                    16.523    1         1
+WW_TuneCUETP8M1_13TeV-pythia8                                                       63.21     1
+WZ_TuneCUETP8M1_13TeV-pythia8					                    47.13     1
+ZZ_TuneCUETP8M1_13TeV-pythia8					                    16.523    1
 
-WWTo4Q_4f_13TeV_amcatnloFXFX_madspin_pythia8                                        51.723    1         1.589346
-WWTo4Q_13TeV-powheg                                                                 51.723    1         1
-WWTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8                                      49.997    1         1.606614
-WWToLNuQQ_13TeV-powheg			                                            49.997    1         1
-WWTo2L2Nu_13TeV-powheg			                                            12.178    1         1
+WWTo4Q_4f_13TeV_amcatnloFXFX_madspin_pythia8                                        51.723    1
+WWTo4Q_13TeV-powheg                                                                 51.723    1
+WWTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8                                      49.997    1
+WWToLNuQQ_13TeV-powheg			                                            49.997    1
+WWTo2L2Nu_13TeV-powheg			                                            12.178    1
 
-WZTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8                                      10.71     1         1.722645
-WZTo1L3Nu_13TeV_amcatnloFXFX_madspin_pythia8                                        3.05      1         1.807080
-WZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8                                         5.595     1         1.669946
-WZTo3LNu_TuneCUETP8M1_13TeV-powheg-pythia8                                          4.42965   1         1
+WZTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8                                      10.71     1
+WZTo1L3Nu_13TeV_amcatnloFXFX_madspin_pythia8                                        3.05      1
+WZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8                                         5.595     1
+WZTo3LNu_TuneCUETP8M1_13TeV-powheg-pythia8                                          4.42965   1
 
-ZZTo4Q_13TeV_amcatnloFXFX_madspin_pythia8                                           6.842     1         1.616180
-ZZTo2Q2Nu_13TeV_amcatnloFXFX_madspin_pythia8                                        4.04      1         1.628800
-ZZTo2L2Nu_13TeV_powheg_pythia8                                                      0.564     1         1
-ZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8                                         3.22      1         1.583894
-ZZTo4L_13TeV-amcatnloFXFX-pythia8                                                   1.212     1         1.449002
-ZZTo4L_13TeV_powheg_pythia8                                                         1.256     1         1
+ZZTo4Q_13TeV_amcatnloFXFX_madspin_pythia8                                           6.842     1
+ZZTo2Q2Nu_13TeV_amcatnloFXFX_madspin_pythia8                                        4.04      1
+ZZTo2L2Nu_13TeV_powheg_pythia8                                                      0.564     1
+ZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8                                         3.22      1
+ZZTo4L_13TeV-amcatnloFXFX-pythia8                                                   1.212     1
+ZZTo4L_13TeV_powheg_pythia8                                                         1.256     1
 
-ZHToTauTau_M125_13TeV_powheg_pythia8                                                0.8839    0.0335962 1
-ZH_HToBB_ZToLL_M125_13TeV_amcatnloFXFX_madspin_pythia8                              0.173     1		1  !MISSING!
-ZH_HToBB_ZToNuNu_M125_13TeV_amcatnloFXFX_madspin_pythia8                            0.159     1		1  !MISSING!
-
-# ------------------- PHYS14 -------------------------------------
-
-# TT
-https://twiki.cern.ch/twiki/bin/view/LHCPhysics/TtbarNNLO
-
-TT_Tune4C_13TeV-pythia8-tauola                             831.76
-TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola	   831.76
-RelValTTbar_13_AVE20					   831.76
-
-# T
-https://twiki.cern.ch/twiki/bin/viewauth/CMS/SingleTopSigma
-
-T_tW-channel-DR_Tune4C_13TeV-CSA14-powheg-tauola	   35.6
-Tbar_tW-channel-DR_Tune4C_13TeV-CSA14-powheg-tauola	   35.6
-TToLeptons_s-channel-CSA14_Tune4C_13TeV-aMCatNLO-tauola	   2
-TBarToLeptons_s-channel-CSA14_Tune4C_13TeV-aMCatNLO-tauola 1
-TToLeptons_t-channel-CSA14_Tune4C_13TeV-aMCatNLO-tauola	   103.4
-TBarToLeptons_t-channel_Tune4C_CSA14_13TeV-aMCatNLO-tauola 61.6
-
-# W
-https://twiki.cern.ch/twiki/bin/viewauth/CMS/B2GPHYS14#13_TeV_cross_sections
-
-WJetsToLNu_HT-100to200_Tune4C_13TeV-madgraph-tauola	   2234.9
-WJetsToLNu_HT-200to400_Tune4C_13TeV-madgraph-tauola	   580.1
-WJetsToLNu_HT-400to600_Tune4C_13TeV-madgraph-tauola	   68.4
-WJetsToLNu_HT-600toInf_Tune4C_13TeV-madgraph-tauola	   23.14
-
-# Rest is LO (from generator)
-ZJetsToNuNu_HT-100to200_Tune4C_13TeV-madgraph-tauola	   372.6
-ZJetsToNuNu_HT-200to400_Tune4C_13TeV-madgraph-tauola	   100.8
-ZJetsToNuNu_HT-400to600_Tune4C_13TeV-madgraph-tauola	   11.99
-ZJetsToNuNu_HT-600toInf_Tune4C_13TeV-madgraph-tauola	   4.113
-DYJetsToLL_M-50_HT-100to200_Tune4C_13TeV-madgraph-tauola   194.3
-DYJetsToLL_M-50_HT-200to400_Tune4C_13TeV-madgraph-tauola   52.24
-DYJetsToLL_M-50_HT-400to600_Tune4C_13TeV-madgraph-tauola   6.546
-DYJetsToLL_M-50_HT-600toInf_Tune4C_13TeV-madgraph-tauola   2.179
-QCD_HT-100To250_13TeV-madgraph				   28730000
-QCD_HT_250To500_13TeV-madgraph				   670500
-QCD_HT-500To1000_13TeV-madgraph				   26740
-QCD_HT_1000ToInf_13TeV-madgraph                            769.7  
+ZHToTauTau_M125_13TeV_powheg_pythia8                                                0.8839    0.0335962
+ZH_HToBB_ZToLL_M125_13TeV_amcatnloFXFX_madspin_pythia8                              0.173     1
+ZH_HToBB_ZToNuNu_M125_13TeV_amcatnloFXFX_madspin_pythia8                            0.159     1

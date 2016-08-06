@@ -28,11 +28,7 @@ private:
   
   // Input
   bool isData_;
-  std::string JER_location_;
-  
   double cross_section_;
-  double num_events_;
-  double lumi_weight_;
   
   std::string lhe_label_;
   std::string filter_label_;
@@ -55,14 +51,9 @@ private:
   std::string AK8Jets_prefix_;
   std::string AK8Subjets_label_;
   std::string AK8Subjets_prefix_;
-  std::string AK8PuppiJets_label_;
-  std::string AK8PuppiJets_prefix_;
-  std::string AK8PuppiSubjets_label_;
-  std::string AK8PuppiSubjets_prefix_;
   std::string AK4JetKeys_label_;
   std::string AK8JetKeys_label_;
   std::string AK8SubjetKeys_label_;
-  std::string AK8PuppiJetKeys_label_;
     
   // Handles
   std::map<std::string, edm::Handle<int> > h_int_;
@@ -85,22 +76,23 @@ private:
   size_t nfilt_, ntrig_;
   
   // JEC
-  //FactorizedJetCorrector *AK4_JetCorrector_, *AK8_JetCorrector_, *AK8Puppi_JetCorrector_;
-  //JetCorrectionUncertainty *AK4_JetUncertainty_, *AK8_JetUncertainty_, *AK8Puppi_JetUncertainty_;
+  //FactorizedJetCorrector *AK4_JetCorrector_, *AK8_JetCorrector_;
+  //JetCorrectionUncertainty *AK4_JetUncertainty_, *AK8_JetUncertainty_;
 
   // LHE/GEN stuff
   int lha_pdf_id_;
 
   void init_tokens_();
+
+  bool pass_ele_ID_(int, const float&, const float&, const float&, const float&, const float&, 
+		    const float&, const float&, const float&, const float&, const float&, bool);
+  bool pass_ele_ISO_(int, const float&, const float&, bool);
 };
 
 
 B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(edm::ParameterSet const& iConfig) :
   isData_(iConfig.getUntrackedParameter<bool>("isData", false)),
-  JER_location_(iConfig.getUntrackedParameter<std::string>("JER_location")),
   cross_section_(iConfig.getUntrackedParameter<double>("cross_section",0)),
-  num_events_(iConfig.getUntrackedParameter<double>("num_events",0)),
-  lumi_weight_(iConfig.getUntrackedParameter<double>("lumi_weight",1)),
   lhe_label_(iConfig.getUntrackedParameter<std::string>("lhe_label")),
   filter_label_(iConfig.getUntrackedParameter<std::string>("filter_label")),
   trigger_label_(iConfig.getUntrackedParameter<std::string>("trigger_label")),
@@ -122,14 +114,9 @@ B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(edm::ParameterSet const& iConfig)
   AK8Jets_prefix_(iConfig.getUntrackedParameter<std::string>("AK8Jets_prefix")),
   AK8Subjets_label_(iConfig.getUntrackedParameter<std::string>("AK8Subjets_label")),
   AK8Subjets_prefix_(iConfig.getUntrackedParameter<std::string>("AK8Subjets_prefix")),
-  AK8PuppiJets_label_(iConfig.getUntrackedParameter<std::string>("AK8PuppiJets_label")),
-  AK8PuppiJets_prefix_(iConfig.getUntrackedParameter<std::string>("AK8PuppiJets_prefix")),
-  AK8PuppiSubjets_label_(iConfig.getUntrackedParameter<std::string>("AK8PuppiSubjets_label")),
-  AK8PuppiSubjets_prefix_(iConfig.getUntrackedParameter<std::string>("AK8PuppiSubjets_prefix")),
   AK4JetKeys_label_(iConfig.getUntrackedParameter<std::string>("AK4JetKeys_label")),
   AK8JetKeys_label_(iConfig.getUntrackedParameter<std::string>("AK8JetKeys_label")),
   AK8SubjetKeys_label_(iConfig.getUntrackedParameter<std::string>("AK8SubjetKeys_label")),
-  AK8PuppiJetKeys_label_(iConfig.getUntrackedParameter<std::string>("AK8PuppiJetKeys_label")),
   singleI_(iConfig.getUntrackedParameter<std::vector<std::string> >("singleI")),
   singleF_(iConfig.getUntrackedParameter<std::vector<std::string> >("singleF")),
   vectorI_(iConfig.getUntrackedParameter<std::vector<std::string> >("vectorI")),
