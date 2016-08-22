@@ -1,4 +1,4 @@
-#!/bin/tcsh
+#!/bin/tcsh -f
 # Author: Janos Karancsi
 # E-mail: janos.karancsi@cern.ch
 # Tool: multicrab-like tool to create, submit, get status of crab3 tasks for B2GEdmNtuples
@@ -197,8 +197,7 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	    if ( `ls $TASKDIR/status/$short | grep ".txt" | wc -l` ) then
 		set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
 		set Status=`grep "Task status:" $status_txt | awk '{ print $3 }'`
-		set nfailpub=`grep "Publication status:" -A 5 $status_txt | grep "failed.*\%.*\(" | wc -l`
-		if ( $Status != "COMPLETED" || $nfailpub != 0 ) then
+		if ( $Status != "COMPLETED" ) then
 		    crab status -d $dir >! $TASKDIR/status/$short/$DATE.txt
 		endif
             else
@@ -213,27 +212,26 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	endif
         printf "%-70s %s\n" $dir $Status
 	set nfail=`grep "failed.*\%.*\(" $status_txt | wc -l`
-	set nfailpub=`grep "Publication status:" -A 5 $status_txt | grep "failed.*\%.*\(" | wc -l`
-	if ( $Status == "COMPLETED" && $nfailpub != 0 ) then
-	    echo "  -> Resubmitting failed publication jobs ...\n"
-	    crab resubmit -d $dir --publication
-	    echo
-	else if ( $Status == "MISSING" ) then
+	if ( $Status == "MISSING" ) then
 	    echo "  -> Task is not found (not yet submitted?). Submitting ...\n"
-	    crab submit -c $dir.py
+	    eval_or_echo "crab submit -c $dir.py"
 	    echo
 	else if ( `grep "Cannot find \.requestcache" $status_txt | wc -l` ) then
 	    echo "  -> Task submission failed - No requestcache. Delete and submit again ...\n"
-	    echo "rm -rf $dir"
-	    echo "crab submit -c $dir.py"
+	    eval_or_echo "rm -rf $dir"
+	    eval_or_echo "crab submit -c $dir.py"
 	    echo
 	else if ( `echo $Status | grep SUBMITFAILED | wc -l` && `find $dir -maxdepth 0 -type d -mmin +120 | wc -l` && `grep "\%.*\(" $status_txt | wc -l` == 0 ) then
 	    echo "  -> Task submission failed after more than 2 hours and no jobs are running. Delete and submit again ...\n"
-	    echo "rm -rf $dir"
-	    echo "crab submit -c $dir.py"
+	    eval_or_echo "rm -rf $dir"
+	    eval_or_echo "crab submit -c $dir.py"
 	    echo
 	else if ( `grep "The server answered with an error" $status_txt | wc -l` ) then
 	    echo "  -> Server error. Do nothing ...\n"
+	else if ( `grep "jobs failed with exit code 50660" $status_txt | wc -l` ) then
+	    echo "  -> Jobs found that exceeded 2000MB memory, resubmitting with 2500MB ...\n"
+	    eval_or_echo "crab resubmit --maxmemory=2500 -d $dir"
+	    echo
 	
 	#else if ( `echo $Status | grep NEW | wc -l` && `find $dir -maxdepth 0 -type d -mmin +120 | wc -l` ) then
 	#    echo "  -> Task stuck in NEW state for more than 2 hours. Kill, delete and submit again ...\n"
@@ -250,21 +248,16 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
         else if ( `echo $Status | grep COMPLETED | wc -l` == 0 ) then
 	    grep "%.*\(.*\)" $status_txt
             if ( $nfail != 0 ) then
-		if ( $nfail != $nfailpub ) then
-		    echo "  -> Resubmitting failed jobs ...\n"
-		    crab resubmit -d $dir
-		else
-		    echo "  -> Resubmitting failed publication jobs ...\n"
-		    #crab resubmit -d $dir --publication
-		endif
+		echo "  -> Resubmitting failed jobs ...\n"
+		eval_or_echo "crab resubmit -d $dir"
 		echo
 	    else
 		# Get more info about tasks not failing but near completion
-		echo "More info about task:"
 	        set percent=`grep "finished" $status_txt | head -1 | sed "s;\.; ;g" | awk '{ print $2 }'`
 	        if ( $percent == "status:" ) set percent=`grep "finished" $status_txt | head -1 | sed "s;\.; ;g" | awk '{ print $4 }'`
 	        if ( $percent == "" ) set percent=0
 	        if ( $percent > 90 ) then
+		    echo "More info about task:"
                     set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
                     set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
 	            set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
@@ -285,15 +278,6 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	                echo -n "-  Found missing jobs: "; cat missing.txt
 	            else
 	                echo "-  No jobs are missing on the SE"
-	                set out_dataset=`grep 'Output dataset:' $TASKDIR/status/$short/*.txt | grep $primary_dataset | awk '{ print $NF }' | tail -1`
-	                set npub=`das_client --query "dataset=$out_dataset instance=prod/phys03 | grep dataset.nfiles" | tail -1`
-	                if ( "$npub" != "$njobs" ) then
-	                    echo "- "`expr $njobs - $npub`" files still need to be published in DAS"
-			    crab resubmit -d $dir --publication
-	                else
-	                    echo "- All files are published --> Changing task status to COMPLETED"
-	                    sed -i 's;^\(Task status:\).*[A-Z]*$;\1                    COMPLETED;' $status_txt
-	                endif
 	            endif
 	            rm missing.txt
 	        endif
@@ -402,6 +386,34 @@ else if ( `echo $cmd | grep "getoutput" | wc -l` ) then
         eval_or_echo "crab getoutput -d $dir --outputpath=$DLDIR/$short/"
     end
 
+#else if ( `echo $cmd | grep "download" | wc -l` ) then
+#    if ( $#argv < 3 ) then
+#	cat Usage.txt; rm Usage.txt; exit
+#    endif
+#    set DLDIR=`echo $3"/"$TASKNAME | sed "s;//;/;"`
+#    set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
+#    set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
+#    if ( $dry == "1" ) echo "source dl_$TASKNAME.csh $DLDIR\nOR add --run after command to excecute following lines:\n"
+#    echo 'if ( $#argv < 1 ) echo "Please specify directory where you want to download files"' >! dl_$TASKNAME.csh
+#    echo 'alias par_source "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/source_parallel.csh \\!*"' >> dl_$TASKNAME.csh
+#    echo 'alias se         "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/se_util.csh \\!*"\n' >> dl_$TASKNAME.csh
+#    set N=`cat $TASKDIR/input_datasets.txt | wc -l`
+#    foreach i ( `seq 1 $N` )
+#        set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
+#        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+#	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
+#	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
+#        set pubname=`grep outputDatasetTag $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
+#	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
+#        eval_or_echo "mkdir -p $DLDIR/$short"
+#        echo "mkdir -p "'$1'"/$short" >> dl_$TASKNAME.csh
+#	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp` )
+#	    eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand $DLDIR/$short --par 4 --run"
+#	    echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand "'$1'"/$short --par 4 --run" >> dl_$TASKNAME.csh
+#	end
+#    end
+#    if ( ( `grep "EDM_NTUPLE" $TASKDIR/config.txt | wc -l` == 1 ) && ( $dry == "0" ) ) echo "EDM_NTUPLE $DLDIR" >> $TASKDIR/config.txt
+
 else if ( `echo $cmd | grep "download" | wc -l` ) then
     if ( $#argv < 3 ) then
 	cat Usage.txt; rm Usage.txt; exit
@@ -409,26 +421,27 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
     set DLDIR=`echo $3"/"$TASKNAME | sed "s;//;/;"`
     set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
     set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
-    if ( $dry == "1" ) echo "source dl_$TASKNAME.csh $DLDIR\nOR add --run after command to excecute following lines:\n"
+    set NPar="1"
     echo 'if ( $#argv < 1 ) echo "Please specify directory where you want to download files"' >! dl_$TASKNAME.csh
     echo 'alias par_source "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/source_parallel.csh \\!*"' >> dl_$TASKNAME.csh
     echo 'alias se         "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/se_util.csh \\!*"\n' >> dl_$TASKNAME.csh
     set N=`cat $TASKDIR/input_datasets.txt | wc -l`
     foreach i ( `seq 1 $N` )
         set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
-        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
-	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
-	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
-        set pubname=`grep outputDatasetTag $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
-	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
-        eval_or_echo "mkdir -p $DLDIR/$short"
-        echo "mkdir -p "'$1'"/$short" >> dl_$TASKNAME.csh
-	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp` )
-	    eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand $DLDIR/$short --par 4 --run"
-	    echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand "'$1'"/$short --par 4 --run" >> dl_$TASKNAME.csh
-	end
+	if ( `echo $in_dataset | grep Tprime | wc -l` == 0 ) then
+	    set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
+            set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	    set pubname=`grep outputDatasetTag $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
+	    set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
+	    set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
+            eval_or_echo "mkdir -p $DLDIR/$short"
+            echo "mkdir -p "'$1'"/$short" >> dl_$TASKNAME.csh
+	    foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp` )
+	        eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand $DLDIR/$short --par $NPar --run"
+	        echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand "'$1'"/$short --par $NPar --run" >> dl_$TASKNAME.csh
+	    end
+        endif
     end
-    if ( ( `grep "EDM_NTUPLE" $TASKDIR/config.txt | wc -l` == 1 ) && ( $dry == "0" ) ) echo "EDM_NTUPLE $DLDIR" >> $TASKDIR/config.txt
 
 else if ( `echo $cmd | grep "find_missing" | wc -l` ) then
     set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`

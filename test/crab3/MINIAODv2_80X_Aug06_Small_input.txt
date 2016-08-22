@@ -1,21 +1,17 @@
 # ------------- Data ---------------
-JetHT_Run2016Bv1                                  /JetHT/Run2016B-PromptReco-v1/MINIAOD
-JetHT_Run2016Bv2                                  /JetHT/Run2016B-PromptReco-v2/MINIAOD
+JetHT_Run2016B                                    /JetHT/Run2016B-PromptReco-v2/MINIAOD
 JetHT_Run2016C                                    /JetHT/Run2016C-PromptReco-v2/MINIAOD
 JetHT_Run2016D                                    /JetHT/Run2016D-PromptReco-v2/MINIAOD
 
-MET_Run2016Bv1                                    /MET/Run2016B-PromptReco-v1/MINIAOD
-MET_Run2016Bv2                                    /MET/Run2016B-PromptReco-v2/MINIAOD
+MET_Run2016B                                      /MET/Run2016B-PromptReco-v2/MINIAOD
 MET_Run2016C                                      /MET/Run2016C-PromptReco-v2/MINIAOD
 MET_Run2016D                                      /MET/Run2016D-PromptReco-v2/MINIAOD
 
-SingleElectron_Run2016Bv1                         /SingleElectron/Run2016B-PromptReco-v1/MINIAOD
-SingleElectron_Run2016Bv2                         /SingleElectron/Run2016B-PromptReco-v2/MINIAOD
+SingleElectron_Run2016B                           /SingleElectron/Run2016B-PromptReco-v2/MINIAOD
 SingleElectron_Run2016C                           /SingleElectron/Run2016C-PromptReco-v2/MINIAOD
 SingleElectron_Run2016D                           /SingleElectron/Run2016D-PromptReco-v2/MINIAOD
 
-SingleMuon_Run2016Bv1                             /SingleMuon/Run2016B-PromptReco-v1/MINIAOD
-SingleMuon_Run2016Bv2                             /SingleMuon/Run2016B-PromptReco-v2/MINIAOD
+SingleMuon_Run2016B                               /SingleMuon/Run2016B-PromptReco-v2/MINIAOD
 SingleMuon_Run2016C                               /SingleMuon/Run2016C-PromptReco-v2/MINIAOD
 SingleMuon_Run2016D                               /SingleMuon/Run2016D-PromptReco-v2/MINIAOD
 
@@ -34,6 +30,19 @@ FastSim_SMS-T2tt_mStop-400to1200                  /SMS-T2tt_mStop-400to1200_Tune
 FullSim_SMS-T2tt_mStop-425_mLSP-325               /SMS-T2tt_mStop-425_mLSP-325_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/MINIAODSIM
 FullSim_SMS-T2tt_mStop-500_mLSP-325               /SMS-T2tt_mStop-500_mLSP-325_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v2/MINIAODSIM
 FullSim_SMS-T2tt_mStop-850_mLSP-100               /SMS-T2tt_mStop-850_mLSP-100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/MINIAODSIM
+
+# Marc's Signal
+ZprimeToTprimeT_TprimeToWB_MZp-1500Nar_MTp-700Nar_LH   /ZprimeToTprimeT_TprimeToWB_MZp-1500Nar_MTp-700Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM
+ZprimeToTprimeT_TprimeToWB_MZp-1500Nar_MTp-900Nar_LH   /ZprimeToTprimeT_TprimeToWB_MZp-1500Nar_MTp-900Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM
+ZprimeToTprimeT_TprimeToWB_MZp-1500Nar_MTp-1200Nar_LH  /ZprimeToTprimeT_TprimeToWB_MZp-1500Nar_MTp-1200Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM
+ZprimeToTprimeT_TprimeToWB_MZp-2000Nar_MTp-900Nar_LH   /ZprimeToTprimeT_TprimeToWB_MZp-2000Nar_MTp-900Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM
+ZprimeToTprimeT_TprimeToWB_MZp-2000Nar_MTp-1200Nar_LH  /ZprimeToTprimeT_TprimeToWB_MZp-2000Nar_MTp-1200Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM
+ZprimeToTprimeT_TprimeToWB_MZp-2000Nar_MTp-1200Nar_RH  /ZprimeToTprimeT_TprimeToWB_MZp-2000Nar_MTp-1200Nar_RH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM
+ZprimeToTprimeT_TprimeToWB_MZp-2000Nar_MTp-1200Wid_LH  /ZprimeToTprimeT_TprimeToWB_MZp-2000Nar_MTp-1200Wid_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM
+ZprimeToTprimeT_TprimeToWB_MZp-2000Nar_MTp-1500Nar_LH  /ZprimeToTprimeT_TprimeToWB_MZp-2000Nar_MTp-1500Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM
+ZprimeToTprimeT_TprimeToWB_MZp-2000Wid_MTp-1200Nar_LH  /ZprimeToTprimeT_TprimeToWB_MZp-2000Wid_MTp-1200Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM
+ZprimeToTprimeT_TprimeToWB_MZp-2500Nar_MTp-1200Nar_LH  /ZprimeToTprimeT_TprimeToWB_MZp-2500Nar_MTp-1200Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM
+ZprimeToTprimeT_TprimeToWB_MZp-2500Nar_MTp-1500Nar_LH  /ZprimeToTprimeT_TprimeToWB_MZp-2500Nar_MTp-1500Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM
 
 # ----------- Background -----------
 # TTbar

@@ -162,6 +162,7 @@ WZTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8                                  
 WZTo1L3Nu_13TeV_amcatnloFXFX_madspin_pythia8                                        3.05      1
 WZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8                                         5.595     1
 WZTo3LNu_TuneCUETP8M1_13TeV-powheg-pythia8                                          4.42965   1
+WZTo3LNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                                    4.712     1
 
 ZZTo4Q_13TeV_amcatnloFXFX_madspin_pythia8                                           6.842     1
 ZZTo2Q2Nu_13TeV_amcatnloFXFX_madspin_pythia8                                        4.04      1
@@ -173,3 +174,16 @@ ZZTo4L_13TeV_powheg_pythia8                                                     
 ZHToTauTau_M125_13TeV_powheg_pythia8                                                0.8839    0.0335962
 ZH_HToBB_ZToLL_M125_13TeV_amcatnloFXFX_madspin_pythia8                              0.173     1
 ZH_HToBB_ZToNuNu_M125_13TeV_amcatnloFXFX_madspin_pythia8                            0.159     1
+
+# Marc's signal
+ZprimeToTprimeT_TprimeToWB_MZp-1500Nar_MTp-700Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8  0 0 
+ZprimeToTprimeT_TprimeToWB_MZp-1500Nar_MTp-900Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8  0 0
+ZprimeToTprimeT_TprimeToWB_MZp-1500Nar_MTp-1200Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8 0 0
+ZprimeToTprimeT_TprimeToWB_MZp-2000Nar_MTp-900Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8  0 0
+ZprimeToTprimeT_TprimeToWB_MZp-2000Nar_MTp-1200Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8 0 0
+ZprimeToTprimeT_TprimeToWB_MZp-2000Nar_MTp-1200Nar_RH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8 0 0
+ZprimeToTprimeT_TprimeToWB_MZp-2000Nar_MTp-1200Wid_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8 0 0
+ZprimeToTprimeT_TprimeToWB_MZp-2000Nar_MTp-1500Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8 0 0
+ZprimeToTprimeT_TprimeToWB_MZp-2000Wid_MTp-1200Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8 0 0
+ZprimeToTprimeT_TprimeToWB_MZp-2500Nar_MTp-1200Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8 0 0
+ZprimeToTprimeT_TprimeToWB_MZp-2500Nar_MTp-1500Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8 0 0

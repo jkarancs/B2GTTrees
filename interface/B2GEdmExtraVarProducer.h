@@ -1,5 +1,6 @@
 #include "FWCore/Framework/interface/EDProducer.h"
 #include "FWCore/Framework/interface/Event.h"
+#include "FWCore/Framework/interface/LuminosityBlock.h"
 #include "FWCore/Framework/interface/Run.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/InputTag.h"
@@ -21,6 +22,7 @@ public:
   B2GEdmExtraVarProducer(edm::ParameterSet const&);
   
   void beginRun(edm::Run const&, edm::EventSetup const&);
+  void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
   void produce(edm::Event&, edm::EventSetup const&);
   
 private:

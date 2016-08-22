@@ -2,78 +2,9 @@
 #include "Analysis/B2GTTrees/interface/Razor.h"
 #include "Analysis/B2GTTrees/data/GluinoXSec.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenLumiInfoHeader.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
-
-void B2GEdmExtraVarProducer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {
-  
-  if (!isData_) {
-    // Weights from scale variations, PDFs etc. are stored in the relative product. 
-    // Notice that to be used they need to be renormalized to the central event weight
-    // at LHE level which may be different from genEvtInfo->weight()
-    
-    //int whichWeight = XXX;
-    //theWeight *= EvtHandle->weights()[whichWeight].wgt/EvtHandle->originalXWGTUP(); 
-    
-    //To know which integer XXX corresponds to which weight you can use:
-    edm::Handle<LHERunInfoProduct> lheRunInfo;
-    iRun.getByLabel(lhe_label_, lheRunInfo);
-    
-    if (lheRunInfo.isValid()) {
-      
-      // Check which PDF set was used
-      // HEPRUP reference: http://arxiv.org/pdf/hep-ph/0609017.pdf
-      // ID reference: https://lhapdf.hepforge.org/pdfsets.html
-      lha_pdf_id_ = lheRunInfo->heprup().PDFSUP.first;
-      std::cout<<"LHE: LHA PDF ID = "<<lha_pdf_id_<<std::endl;
-      std::cout<<"LHE:   --> For more info about the sets, check: https://lhapdf.hepforge.org/pdfsets.html"<<std::endl;
-      
-      // Check headers
-      std::cout<<"LHE: Weight info in header:"<<std::endl;
-      LHERunInfoProduct lheRunInfoProduct = *(lheRunInfo.product());
-      typedef std::vector<LHERunInfoProduct::Header>::const_iterator headers_const_iterator;
-      size_t iHead = 0;
-      for (headers_const_iterator header=lheRunInfoProduct.headers_begin(); header!=lheRunInfoProduct.headers_end(); header++){
-        if (header->tag()=="initrwgt") {
-          std::cout<<"LHE: "<<iHead<<" "<<header->tag()<<std::endl;
-          for (auto line : header->lines()) {
-	    std::cout<<"LHE: "<<line;
-	    // Fix buggy powheg samples
-	    if (lha_pdf_id_==-1 && line.find("weight id=\"2001\"")!=std::string::npos) {
-	      if (line.find("PDF set = 260001")!=std::string::npos) lha_pdf_id_ = 260000;
-	      else if (line.find("PDF set = 260401")!=std::string::npos) lha_pdf_id_ = 260400;
-	    }
-	  }
-        }
-        iHead++;
-      }
-      
-    }
-  }
-
-  // ----------------------------
-  // - Trigger/Filter names     -
-  // ----------------------------
-  
-  iRun.getByLabel(edm::InputTag(trigger_label_, "triggerNameTree"),      h_strings_["trigger_names"]);
-  iRun.getByLabel(edm::InputTag(filter_label_,  "triggerNameTree"),      h_strings_["filter_names"]);
-  
-  nfilt_=h_strings_["filter_names"]->size();
-  filters_.clear();
-  for ( auto filter : filter_names_ ) for (size_t i=0; i<nfilt_; ++i) 
-    if (h_strings_["filter_names"]->at(i).find(filter)==0) filters_[filter] = i;
-  std::cout<<"Filters found: "<<std::endl;
-  for (size_t i=0; i<nfilt_; ++i) std::cout<<h_strings_["filter_names"]->at(i)<<std::endl;
-  //for ( auto filter : filters_ ) std::cout<<filter.first<<std::endl;
-
-  ntrig_=h_strings_["trigger_names"]->size();
-  triggers_.clear();
-  for ( auto trig : trigger_names_ ) for (size_t i=0; i<ntrig_; ++i) 
-    if (h_strings_["trigger_names"]->at(i).find(trig+"_v")==0) triggers_[trig] = i;
-  std::cout<<"Triggers found: "<<std::endl;
-  for (size_t i=0; i<ntrig_; ++i) std::cout<<h_strings_["trigger_names"]->at(i)<<std::endl;
-  //for ( auto trigger : triggers_ ) std::cout<<trigger.first<<std::endl;
-}
 
 void B2GEdmExtraVarProducer::init_tokens_() {
   edm::EDGetTokenT<std::vector<std::string> >(mayConsume<std::vector<std::string>, edm::InRun>(edm::InputTag(trigger_label_, "triggerNameTree")));
@@ -195,9 +126,102 @@ void B2GEdmExtraVarProducer::init_tokens_() {
     edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"Dau1Status")));
     
     edm::EDGetTokenT<LHERunInfoProduct>(mayConsume<LHERunInfoProduct, edm::InRun>(edm::InputTag(lhe_label_, "")));
-
-    edm::EDGetTokenT<GenEventInfoProduct>(consumes<GenEventInfoProduct>(edm::InputTag("generator")));
     edm::EDGetTokenT<LHEEventProduct>(consumes<LHEEventProduct>(edm::InputTag(lhe_label_, "")));
+    
+    edm::EDGetTokenT<GenLumiInfoHeader>(mayConsume<GenLumiInfoHeader, edm::InLumi>(edm::InputTag("generator")));
+    edm::EDGetTokenT<GenEventInfoProduct>(consumes<GenEventInfoProduct>(edm::InputTag("generator")));
+  }
+}
+
+void B2GEdmExtraVarProducer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {
+  
+  if (!isData_) {
+    // Weights from scale variations, PDFs etc. are stored in the relative product. 
+    // Notice that to be used they need to be renormalized to the central event weight
+    // at LHE level which may be different from genEvtInfo->weight()
+    
+    //int whichWeight = XXX;
+    //theWeight *= EvtHandle->weights()[whichWeight].wgt/EvtHandle->originalXWGTUP(); 
+    
+    //To know which integer XXX corresponds to which weight you can use:
+    edm::Handle<LHERunInfoProduct> lheRunInfo;
+    iRun.getByLabel(lhe_label_, lheRunInfo);
+    
+    if (lheRunInfo.isValid()) {
+      
+      // Check which PDF set was used
+      // HEPRUP reference: http://arxiv.org/pdf/hep-ph/0609017.pdf
+      // ID reference: https://lhapdf.hepforge.org/pdfsets.html
+      lha_pdf_id_ = lheRunInfo->heprup().PDFSUP.first;
+      std::cout<<"LHE: LHA PDF ID = "<<lha_pdf_id_<<std::endl;
+      std::cout<<"LHE:   --> For more info about the sets, check: https://lhapdf.hepforge.org/pdfsets.html"<<std::endl;
+      
+      // Check headers
+      std::cout<<"LHE: Weight info in header:"<<std::endl;
+      LHERunInfoProduct lheRunInfoProduct = *(lheRunInfo.product());
+      typedef std::vector<LHERunInfoProduct::Header>::const_iterator headers_const_iterator;
+      size_t iHead = 0;
+      for (headers_const_iterator header=lheRunInfoProduct.headers_begin(); header!=lheRunInfoProduct.headers_end(); header++){
+        if (header->tag()=="initrwgt") {
+          std::cout<<"LHE: "<<iHead<<" "<<header->tag()<<std::endl;
+          for (auto line : header->lines()) {
+	    std::cout<<"LHE: "<<line;
+	    // Fix buggy powheg samples
+	    if (lha_pdf_id_==-1 && line.find("weight id=\"2001\"")!=std::string::npos) {
+	      if (line.find("PDF set = 260001")!=std::string::npos) lha_pdf_id_ = 260000;
+	      else if (line.find("PDF set = 260401")!=std::string::npos) lha_pdf_id_ = 260400;
+	    }
+	  }
+        }
+        iHead++;
+      }
+      
+    }
+  }
+
+  // ----------------------------
+  // - Trigger/Filter names     -
+  // ----------------------------
+  
+  iRun.getByLabel(edm::InputTag(trigger_label_, "triggerNameTree"),      h_strings_["trigger_names"]);
+  iRun.getByLabel(edm::InputTag(filter_label_,  "triggerNameTree"),      h_strings_["filter_names"]);
+  
+  nfilt_=h_strings_["filter_names"]->size();
+  filters_.clear();
+  for ( auto filter : filter_names_ ) for (size_t i=0; i<nfilt_; ++i) 
+    if (h_strings_["filter_names"]->at(i).find(filter)==0) filters_[filter] = i;
+  std::cout<<"Filters found: "<<std::endl;
+  for (size_t i=0; i<nfilt_; ++i) std::cout<<h_strings_["filter_names"]->at(i)<<std::endl;
+  //for ( auto filter : filters_ ) std::cout<<filter.first<<std::endl;
+
+  ntrig_=h_strings_["trigger_names"]->size();
+  triggers_.clear();
+  for ( auto trig : trigger_names_ ) for (size_t i=0; i<ntrig_; ++i) 
+    if (h_strings_["trigger_names"]->at(i).find(trig+"_v")==0) triggers_[trig] = i;
+  std::cout<<"Triggers found: "<<std::endl;
+  for (size_t i=0; i<ntrig_; ++i) std::cout<<h_strings_["trigger_names"]->at(i)<<std::endl;
+  //for ( auto trigger : triggers_ ) std::cout<<trigger.first<<std::endl;
+}
+
+void B2GEdmExtraVarProducer::beginLuminosityBlock(edm::LuminosityBlock const& iLumi, edm::EventSetup const& iSetup) {
+  if (!isData_) {
+    // SUSY signal specific info in 80X
+    edm::Handle<GenLumiInfoHeader> genLumiInfo;
+    iLumi.getByLabel(edm::InputTag("generator"), genLumiInfo);
+    
+    if (genLumiInfo.isValid()) {
+      
+      // Check which PDF set was used
+      lha_pdf_id_ = 263000;
+      std::cout<<"GEN: LHA PDF ID = "<<lha_pdf_id_<<std::endl;
+      std::cout<<"GEN:   --> For more info about the sets, check: https://lhapdf.hepforge.org/pdfsets.html"<<std::endl;
+      
+      // Print headers
+      //std::cout<<"GEN: Weight info in Lumi:"<<std::endl;
+      //for (auto wname : genLumiInfo->weightNames()) std::cout<<"GEN:   "<<wname<<std::endl;
+      //std::cout<<"GEN: Header info in Lumi:"<<std::endl;
+      //for (auto header : genLumiInfo->lheHeaders()) std::cout<<header.first<<"\n"<<header.second<<std::endl;
+    }
   }
 }
 
@@ -376,7 +400,6 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       // have negative weights and such events need to be subtracted
       // (and consequently the weight also needs to be corrected with a factor)
       single_float_["evt_Gen_Weight"] = genEvtInfo->weight();
-      if (single_float_["evt_Gen_Weight"]<0) single_float_["evt_Xsec_Weight"] *= -1;
       
       // This weight is used to normalize pdf/scale etc weights
       double lheOrigWeight = lheEvtInfo->originalXWGTUP();
@@ -426,6 +449,44 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
         vector_float_["alphas_Weights"].push_back(lheEvtInfo->weights()[109].wgt/lheOrigWeight);
         vector_float_["alphas_Weights"].push_back(lheEvtInfo->weights()[110].wgt/lheOrigWeight);
       }
+    } else if (genEvtInfo.isValid()) {
+      // SUSY MC only has genEvtInfo
+      // nominal weight is 1
+      // --> weight should be weights()[1] = weights()[10] = typically 0.0003*
+      single_float_["evt_Gen_Weight"] = genEvtInfo->weight();
+      
+      // This weight is used to normalize pdf/scale etc weights
+      double genNomWeight = genEvtInfo->weights()[1];
+      
+      // Print factors in an event
+      //std::cout<<"GEN: weight() = "<<genEvtInfo->weight()<<std::endl;
+      //for (size_t i=0; i<genEvtInfo->weights().size(); ++i)
+      //  std::cout<<"GEN: weights() - index: "<<i<<" wgt = "<<genEvtInfo->weights()[i]<<" wgtNorm = "<<(genEvtInfo->weights()[i]/genNomWeight)<<std::endl;
+      
+      // Renormalization/Factorization scale weights
+      // These are the first 9 weights for all generators
+      // mu_R and mu_F are varied independently (by a factor of 1, 2, 0.5) - check GEN header
+      // [1] is the default weight (no variation)
+      // --> I skip saving it (one can just use 1)
+      // --> Also do not save unphysical combinations as recommended
+      //    (mu_R = 0.5, mu_F = 2 and mu_R = 2, mu_F = 0.5)
+      // Save only ids: 2,3,4,5,7,9
+      if (genEvtInfo->weights().size()>=10) for (size_t i=1; i<10; ++i) if (i!=1&&i!=6&&i!=8)
+        vector_float_["scale_Weights"].push_back(genEvtInfo->weights()[i]/genNomWeight);
+      
+      // PDF weights
+      // Usually a set of 100 weights (excluding default)
+      // Only default PDF variation is saved, but if needed
+      // likely others are available depending on the generator
+      // index of first weight varies, beware!
+      // Sometimes first weight is default=1 weight (has to skip!)
+      // Additional info: MC2Hessian conversion will soon be provided
+      // NNPDF30_lo_as_0130 (SUSY signals has +1 weight weights()[0])
+      size_t first = 11;
+      if (genEvtInfo->weights().size()>=first+100) for (size_t i=first; i<first+100; ++i)
+        vector_float_["pdf_Weights"].push_back(genEvtInfo->weights()[i]/genNomWeight);
+      
+      // Alpha_s weights (only given for NLO!)
     }
   }
   

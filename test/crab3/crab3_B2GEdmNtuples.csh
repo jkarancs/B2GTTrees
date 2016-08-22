@@ -233,11 +233,11 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 		echo
 	    else
 		# Get more info about tasks not failing but near completion
-		echo "More info about task:"
 	        set percent=`grep "finished" $status_txt | head -1 | sed "s;\.; ;g" | awk '{ print $2 }'`
 	        if ( $percent == "status:" ) set percent=`grep "finished" $status_txt | head -1 | sed "s;\.; ;g" | awk '{ print $4 }'`
 	        if ( $percent == "" ) set percent=0
 	        if ( $percent > 90 ) then
+		    echo "More info about task:"
                     set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
                     set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
 	            set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
