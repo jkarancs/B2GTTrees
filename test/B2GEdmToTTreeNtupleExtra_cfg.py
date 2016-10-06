@@ -426,18 +426,18 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "mu_IsPartOfNearAK4Jet",
         "mu_IsPartOfNearAK8Jet",
         "mu_IsPartOfNearSubjet",
-        "el_IDVeto_NoIso",
-        "el_IDLoose_NoIso",
-        "el_IDMedium_NoIso",
-        "el_IDTight_NoIso",
+        #"el_IDVeto_NoIso",
+        #"el_IDLoose_NoIso",
+        #"el_IDMedium_NoIso",
+        #"el_IDTight_NoIso",
         "el_IsoVeto",
         "el_IsoLoose",
         "el_IsoMedium",
         "el_IsoTight",
-        "el_IDVeto",
-        "el_IDLoose",
-        "el_IDMedium",
-        "el_IDTight",
+        #"el_IDVeto",
+        #"el_IDLoose",
+        #"el_IDMedium",
+        #"el_IDTight",
     ),
     vectorF = cms.untracked.vstring(
         "scale_Weights",
@@ -542,20 +542,6 @@ if genHtFilter:
 
 ### B2GTTreeMaker
 process.load("Analysis.B2GTTrees.B2GTTreeMaker_cff")
-# Adding HBHE Noise (MET) filter results
-process.B2GTTreeMaker.physicsObjects.append(
-    cms.PSet(
-        label = cms.untracked.string("HBHENoiseFilterResultProducer"),
-        prefix_in = cms.untracked.string(""),
-        prefix_out = cms.untracked.string("Flag_"),
-        singleB = cms.untracked.vstring(
-            "HBHEIsoNoiseFilterResult",
-            "HBHENoiseFilterResult",
-            "HBHENoiseFilterResultRun1",
-            "HBHENoiseFilterResultRun2Loose",
-            "HBHENoiseFilterResultRun2Tight"),
-    )
-)
 # Adding extra Variables
 process.B2GTTreeMaker.physicsObjects.append(
     cms.PSet(

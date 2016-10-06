@@ -139,6 +139,7 @@ else:
         #'DB',
         #'DBerr',
         #'dEtaIn',
+        #'dEtaInSeed',
         #'dPhiIn',
         #'HoE',
         #'full5x5siee',
@@ -149,9 +150,13 @@ else:
         #'SCPhi',
         'vidVeto',
         'vidLoose',
-        'vidTight',
         'vidMedium',
+        'vidTight',
         'vidHEEP',
+        'vidVetonoiso',
+        'vidLoosenoiso',
+        'vidMediumnoiso',
+        'vidTightnoiso',
         'vidHEEPnoiso',
     )
     
@@ -430,6 +435,19 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
         #    vectorI = cms.untracked.vstring("ndof"),
         #    vectorF = cms.untracked.vstring("z","rho","chi"),
         #),
+        # MET Filters
+        cms.PSet(
+            label = cms.untracked.string("BadPFMuonFilter"),
+            prefix_in = cms.untracked.string(""),
+            prefix_out = cms.untracked.string("Flag_BadPFMuonFilter"),
+            singleB = cms.untracked.vstring("")
+        ),
+        cms.PSet(
+            label = cms.untracked.string("BadChargedCandidateFilter"),
+            prefix_in = cms.untracked.string(""),
+            prefix_out = cms.untracked.string("Flag_BadChargedCandidateFilter"),
+            singleB = cms.untracked.vstring("")
+        ),
         # MET
         #cms.PSet(
         #    label = cms.untracked.string("metNoHF"),

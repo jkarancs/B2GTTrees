@@ -86,8 +86,8 @@ private:
 
   void init_tokens_();
 
-  bool pass_ele_ID_(int, const float&, const float&, const float&, const float&, const float&, 
-		    const float&, const float&, const float&, const float&, const float&, bool);
+  bool pass_ele_ID_(int, const float&, const float&, const float&, const float&, 
+		    const float&, const float&, const float&, const float&, bool);
   bool pass_ele_ISO_(int, const float&, const float&, bool);
 };
 
