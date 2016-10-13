@@ -6,16 +6,17 @@
 #include "SimDataFormats/GeneratorProducts/interface/GenLumiInfoHeader.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
 void B2GEdmExtraVarProducer::init_tokens_() {
   edm::EDGetTokenT<std::vector<std::string> >(mayConsume<std::vector<std::string>, edm::InRun>(edm::InputTag(trigger_label_, "triggerNameTree")));
   edm::EDGetTokenT<std::vector<std::string> >(mayConsume<std::vector<std::string>, edm::InRun>(edm::InputTag(filter_label_,  "triggerNameTree")));
-  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(trigger_label_, "triggerBitTree")));
   edm::EDGetTokenT<std::vector<int> >(consumes<std::vector<int> >(edm::InputTag(trigger_label_, "triggerPrescaleTree")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(trigger_label_, "triggerBitTree")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(filter_label_,  "triggerBitTree")));
   
   edm::EDGetTokenT<double>(consumes<double>(edm::InputTag("fixedGridRhoFastjetAll", "")));
-  edm::EDGetTokenT<int>(consumes<int>(edm::InputTag(evt_label_, evt_prefix_+"npv")));
+  edm::EDGetTokenT<int>(consumes<int>(edm::InputTag(vtx_label_, vtx_prefix_+"npv")));
   edm::EDGetTokenT<std::vector<int> >(consumes<std::vector<int> >(edm::InputTag(vtx_label_, vtx_prefix_+"ndof")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(vtx_label_, vtx_prefix_+"z")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(vtx_label_, vtx_prefix_+"rho")));
@@ -132,6 +133,8 @@ void B2GEdmExtraVarProducer::init_tokens_() {
     
     edm::EDGetTokenT<GenLumiInfoHeader>(mayConsume<GenLumiInfoHeader, edm::InLumi>(edm::InputTag("generator")));
     edm::EDGetTokenT<GenEventInfoProduct>(consumes<GenEventInfoProduct>(edm::InputTag("generator")));
+    
+    edm::EDGetTokenT<reco::GenParticleCollection>(consumes<reco::GenParticleCollection>(edm::InputTag("filteredPrunedGenParticles")));
   }
 }
 
@@ -187,22 +190,23 @@ void B2GEdmExtraVarProducer::beginRun(edm::Run const& iRun, edm::EventSetup cons
   
   iRun.getByLabel(edm::InputTag(trigger_label_, "triggerNameTree"),      h_strings_["trigger_names"]);
   iRun.getByLabel(edm::InputTag(filter_label_,  "triggerNameTree"),      h_strings_["filter_names"]);
+  bool print_all = false;
   
   nfilt_=h_strings_["filter_names"]->size();
   filters_.clear();
   for ( auto filter : filter_names_ ) for (size_t i=0; i<nfilt_; ++i) 
     if (h_strings_["filter_names"]->at(i).find(filter)==0) filters_[filter] = i;
   std::cout<<"Filters found: "<<std::endl;
-  for (size_t i=0; i<nfilt_; ++i) std::cout<<h_strings_["filter_names"]->at(i)<<std::endl;
-  //for ( auto filter : filters_ ) std::cout<<filter.first<<std::endl;
-
+  if (print_all) for ( auto filter : filters_ ) std::cout<<filter.first<<std::endl;
+  else for (size_t i=0; i<nfilt_; ++i) std::cout<<h_strings_["filter_names"]->at(i)<<std::endl;
+  
   ntrig_=h_strings_["trigger_names"]->size();
   triggers_.clear();
   for ( auto trig : trigger_names_ ) for (size_t i=0; i<ntrig_; ++i) 
     if (h_strings_["trigger_names"]->at(i).find(trig+"_v")==0) triggers_[trig] = i;
   std::cout<<"Triggers found: "<<std::endl;
-  for (size_t i=0; i<ntrig_; ++i) std::cout<<h_strings_["trigger_names"]->at(i)<<std::endl;
-  //for ( auto trigger : triggers_ ) std::cout<<trigger.first<<std::endl;
+  if (print_all) for ( auto trigger : triggers_ ) std::cout<<trigger.first<<std::endl;
+  else for (size_t i=0; i<ntrig_; ++i) std::cout<<h_strings_["trigger_names"]->at(i)<<std::endl;
 }
 
 void B2GEdmExtraVarProducer::beginLuminosityBlock(edm::LuminosityBlock const& iLumi, edm::EventSetup const& iSetup) {
@@ -234,7 +238,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   iEvent.getByLabel(edm::InputTag(filter_label_,  "triggerBitTree"),       h_floats_["filter_bits"]);
   
   iEvent.getByLabel(edm::InputTag("fixedGridRhoFastjetAll", ""),   h_double_["evt_rho"]);
-  iEvent.getByLabel(edm::InputTag(evt_label_, evt_prefix_+"npv"),  h_int_["evt_npv"]);
+  iEvent.getByLabel(edm::InputTag(vtx_label_, vtx_prefix_+"npv"),  h_int_["vtx_npv"]);
   iEvent.getByLabel(edm::InputTag(vtx_label_, vtx_prefix_+"ndof"), h_ints_["vtx_ndof"]);
   iEvent.getByLabel(edm::InputTag(vtx_label_, vtx_prefix_+"z"),    h_floats_["vtx_z"]);
   iEvent.getByLabel(edm::InputTag(vtx_label_, vtx_prefix_+"rho"),  h_floats_["vtx_rho"]);
@@ -503,19 +507,30 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     single_int_[trigger.first+"_prescale"]                                              /* HLT_*_prescale */
       = h_ints_["trigger_prescales"]->at(trigger.second);
   }
-
+  
   // ----------------------------
   // -        Vertices          -
   // ----------------------------
   
   single_int_["evt_NGoodVtx"] = 0;
-  for (int iVtx=0; iVtx<*h_int_["evt_npv"]; ++iVtx)
+  for (int iVtx=0; iVtx<*h_int_["vtx_npv"]; ++iVtx)
     if (h_ints_["vtx_ndof"]->at(iVtx)>=4&&fabs(h_floats_["vtx_z"]->at(iVtx))<24&&fabs(h_floats_["vtx_rho"]->at(iVtx)<2))
       ++single_int_["evt_NGoodVtx"];                                                    /* evt_NGoodVtx */
   
   // ---------------------
   // - Gen Particle Info -
   // ---------------------
+  
+  // Using GenParticles
+  edm::Handle<reco::GenParticleCollection> genParticles;
+  iEvent.getByLabel(edm::InputTag("filteredPrunedGenParticles"),  genParticles);
+  const bool print = false;
+  if (print) for(size_t i=0; i<genParticles->size(); ++i) {
+    const reco::GenParticle& p = (*genParticles)[i];
+    int momId = p.numberOfMothers() ? p.mother()->pdgId() : 0;
+    std::cout<<i<<" id="<<p.pdgId()<<" ("<<p.status()<<") mom="<<momId<<", daughters=";
+    for(size_t j = 0, n=p.numberOfDaughters(); j<n; ++j) std::cout<<p.daughter(j)->pdgId()<<(j+1<n?", ":"\n");
+  }
   
   // Make a list of Generator level objects and save them to vectors
   vector_int_["gen_ID"].clear();
@@ -538,7 +553,8 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   std::vector<TLorentzVector> gen_top;
   std::vector<size_t > gen_top_index;
   std::vector<TLorentzVector> gen_W_from_top;
-  std::vector<TLorentzVector> gen_b_from_top;
+  std::vector<TLorentzVector> gen_q_from_top;
+  std::vector<bool>           gen_b_from_top;
   std::vector<TLorentzVector> gen_lep_from_W;
   std::vector<TLorentzVector> gen_neu_from_W;
   std::vector<int> gen_top_ID;
@@ -547,7 +563,8 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   std::vector<int> gen_neu_from_W_ID;
   
   bool good_W_matches = true;
-  std::vector<TLorentzVector> gen_top_matched_b;
+  std::vector<TLorentzVector> gen_top_matched_q;
+  std::vector<bool>           gen_top_matched_b;
   std::vector<TLorentzVector> gen_top_matched_W;
   std::vector<int> gen_top_matched_W_ID;
   
@@ -564,7 +581,8 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   size_t njet_AK4 = h_floats_["AK4_Pt"]->size();
   size_t njet_AK8 = h_floats_["AK8_Pt"]->size();
   size_t njet_AK8Sub = h_floats_["AK8Sub_Pt"]->size();
-  
+  bool useGenParticles = false;
+
   if (!isData_) {
     size_t ngen =  h_floats_["gen_Pt"]->size();
     double stop_mass = -9999, gluino_mass = -9999, lsp_mass = -9999;
@@ -604,7 +622,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
 	  lsp_mass = std::round(genp.M()/5)*5;
 	}
       }
-      if (h_floats_["gen_Pt"]->at(i)>0) {
+      if (!useGenParticles&&h_floats_["gen_Pt"]->at(i)>0) {
         TLorentzVector genp; genp.SetPtEtaPhiE(h_floats_["gen_Pt"]->at(i), h_floats_["gen_Eta"]->at(i),
           				     h_floats_["gen_Phi"]->at(i), h_floats_["gen_E"]->at(i));
         if (h_floats_["gen_ID"]->at(i)!=h_floats_["gen_Mom0ID"]->at(i)) {
@@ -613,7 +631,18 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
             gen_top_index.push_back(i);
             gen_top_ID.push_back(h_floats_["gen_ID"]->at(i));
           }
-          if (abs(h_floats_["gen_ID"]->at(i))==5&&abs(h_floats_["gen_Mom0ID"]->at(i))==6) gen_b_from_top.push_back(genp);
+          if (abs(h_floats_["gen_ID"]->at(i))==5&&abs(h_floats_["gen_Mom0ID"]->at(i))==6) {
+	    if (abs(h_floats_["gen_ID"]->at(i))==1) {
+	      gen_q_from_top.push_back(genp);
+	      gen_b_from_top.push_back(0);
+	    } else if (abs(h_floats_["gen_ID"]->at(i))==3) {
+	      gen_q_from_top.push_back(genp);
+	      gen_b_from_top.push_back(0);
+	    } else if (abs(h_floats_["gen_ID"]->at(i))==5) {
+	      gen_q_from_top.push_back(genp);
+	      gen_b_from_top.push_back(1);
+	    }
+	  }
           if (abs(h_floats_["gen_ID"]->at(i))==24&&abs(h_floats_["gen_Mom0ID"]->at(i))==6) {
             gen_W_from_top.push_back(genp);
             gen_W_from_top_ID.push_back(h_floats_["gen_ID"]->at(i));
@@ -654,6 +683,52 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       }
     }
     
+    if (useGenParticles) for(size_t i=0; i<genParticles->size(); ++i) {
+      const reco::GenParticle& p = (*genParticles)[i];
+      int momId = p.numberOfMothers() ? p.mother()->pdgId() : 0;
+      int Id = p.pdgId();
+      TLorentzVector p4; p4.SetPtEtaPhiE(p.pt(), p.eta(), p.phi(), p.mass());
+      // Exclude radiations
+      bool sameDau = 0;
+      for (size_t j=0, ndau=p.numberOfDaughters(); j<ndau; ++j) if (p.daughter(j)->pdgId()==Id) sameDau = 1;
+      if (!sameDau) {
+	if (abs(Id)==6) {
+	  gen_top.push_back(p4);
+	  gen_top_ID.push_back(Id);
+	  //bool bWDecay = false;
+	  //if (p.numberOfDaughters()==2)
+	  //  if ((abs(p.daughter(0)->pdgId())==24&&abs(p.daughter(1)->pdgId())==5) ||
+	  //      (abs(p.daughter(0)->pdgId())==5&&abs(p.daughter(1)->pdgId())==24)) bWDecay = true;
+	  //if (!bWDecay) {
+	  //  std::cout<<"id="<<p.pdgId()<<" mom="<<momId<<", daughters=";
+	  //  for(size_t j = 0, n=p.numberOfDaughters(); j<n; ++j) std::cout<<p.daughter(j)->pdgId()<<(j+1<n?", ":"\n");
+	  //}
+	  // top daughters
+	} else if (abs(momId)==6) {
+	  if (abs(Id)==1) {
+	    gen_q_from_top.push_back(p4);
+	    gen_b_from_top.push_back(0);
+	  } else if (abs(Id)==3) {
+	    gen_q_from_top.push_back(p4);
+	    gen_b_from_top.push_back(0);
+	  } else if (abs(Id)==5) {
+	    gen_q_from_top.push_back(p4);
+	    gen_b_from_top.push_back(1);
+	  } else if (abs(Id)==24) {
+	    gen_W_from_top.push_back(p4);
+	    gen_W_from_top_ID.push_back(Id);
+	  }
+	  // leptons from W
+	} else if ((abs(Id)==11||abs(Id)==13||abs(Id)==15)&&abs(momId)==24) {
+	  gen_lep_from_W.push_back(p4);
+	  gen_lep_from_W_ID.push_back(Id);
+	} else if ((abs(Id)==12||abs(Id)==14||abs(Id)==16)&&abs(momId)==24) {
+	  gen_neu_from_W.push_back(p4);
+	  gen_neu_from_W_ID.push_back(Id);
+	}
+      }
+    }
+    
     // Save SUSY Signal related quantities
     if (lsp_mass != -9999) {
       single_float_["SUSY_Stop_Mass"] = stop_mass;                                                  /* SUSY_Stop_Mass */
@@ -672,28 +747,29 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     // Best pair with lowest combined mass and DR difference is selected
     for (size_t i=0; i<gen_top.size(); ++i) {
       // Match b and W to t
-      size_t j_b = -1, k_W = -1;
+      size_t j_q = -1, k_W = -1;
       double min_DM = 9999, min_DR = 9999;
-      if (gen_b_from_top.size()<gen_top.size()||gen_W_from_top.size()<gen_top.size()) {
+      if (gen_q_from_top.size()<gen_top.size()||gen_W_from_top.size()<gen_top.size()) {
         good_W_matches = false;
       } else {
-        for (size_t j=0; j<gen_b_from_top.size(); ++j) {
+        for (size_t j=0; j<gen_q_from_top.size(); ++j) {
           for (size_t k=0; k<gen_W_from_top.size(); ++k) {
-            TLorentzVector bW_comb = gen_b_from_top[j]+gen_W_from_top[k];
+            TLorentzVector bW_comb = gen_q_from_top[j]+gen_W_from_top[k];
             double DR = gen_top[i].DeltaR(bW_comb);
             double DM = fabs(gen_top[i].M()-bW_comb.M());
             if (DR<0.8) {
               if (DM<min_DM) {
                 min_DM = DM;
                 min_DR = DR;
-                j_b = j;
+                j_q = j;
                 k_W = k;
               }
             }
           }
         }
         if (min_DR<0.8&&min_DM<1) {
-          gen_top_matched_b.push_back(gen_b_from_top[j_b]);
+	  gen_top_matched_q.push_back(gen_q_from_top[j_q]);
+	  gen_top_matched_b.push_back(gen_b_from_top[j_q]);
           gen_top_matched_W.push_back(gen_W_from_top[k_W]);
           gen_top_matched_W_ID.push_back(gen_W_from_top_ID[k_W]);
         } else {
@@ -938,13 +1014,15 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       // If W matching was successful, more information is available
       if (good_W_matches) {
         vector_float_["jetAK8Puppi_DRNearGenWFromTop"][i] = gen_top_matched_W[top_index].DeltaR(jet); /* jetAK8Puppi_DRNearGenWFromTop */
-        vector_float_["jetAK8Puppi_DRNearGenBFromTop"][i] = gen_top_matched_b[top_index].DeltaR(jet); /* jetAK8Puppi_DRNearGenBFromTop */
+	if (gen_top_matched_b[top_index])
+	  vector_float_["jetAK8Puppi_DRNearGenBFromTop"][i] = gen_top_matched_q[top_index].DeltaR(jet); /* jetAK8Puppi_DRNearGenBFromTop */
         vector_float_["jetAK8Puppi_DRNearGenLepFromSLTop"][i] = 				      /* jetAK8Puppi_DRNearGenLepFromSLTop */
 	  W_type[top_index] ? gen_top_matched_W_matched_lep[top_index].DeltaR(jet) : -9999;
         vector_float_["jetAK8Puppi_DRNearGenNuFromSLTop"][i]  = 				      /* jetAK8Puppi_DRNearGenNuFromSLTop */
 	  W_type[top_index] ? gen_top_matched_W_matched_neu[top_index].DeltaR(jet) : -9999;
         vector_float_["jetAK8Puppi_PtNearGenWFromTop"][i] = gen_top_matched_W[top_index].Pt();	      /* jetAK8Puppi_PtNearGenWFromTop */
-        vector_float_["jetAK8Puppi_PtNearGenBFromTop"][i] = gen_top_matched_b[top_index].Pt();	      /* jetAK8Puppi_PtNearGenBFromTop */
+	if (gen_top_matched_b[top_index])
+	  vector_float_["jetAK8Puppi_PtNearGenBFromTop"][i] = gen_top_matched_q[top_index].Pt();      /* jetAK8Puppi_PtNearGenBFromTop */
         vector_float_["jetAK8Puppi_PtNearGenLepFromSLTop"][i] = 				      /* jetAK8Puppi_PtNearGenLepFromSLTop */
 	  W_type[top_index] ? gen_top_matched_W_matched_lep[top_index].Pt() : -9999;
         vector_float_["jetAK8Puppi_PtNearGenNuFromSLTop"][i]  = 				      /* jetAK8Puppi_PtNearGenNuFromSLTop */
@@ -1323,7 +1401,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
 	    AK8_JetCorrector.setJetE(cleaned1_jet.E());
 	    AK8_JetCorrector.setJetA(closest_jet_Area[iType]);
 	    AK8_JetCorrector.setRho(*h_double_["evt_rho"]);
-	    AK8_JetCorrector.setNPV(*h_int_["evt_npv"]);
+	    AK8_JetCorrector.setNPV(*h_int_["vtx_npv"]);
 	    cleaned1_jet *= AK8_JetCorrector.getCorrection();
   	    } else {
 	    AK4_JetCorrector.setJetEta(cleaned1_jet.Eta());
@@ -1331,7 +1409,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
 	    AK4_JetCorrector.setJetE(cleaned1_jet.E());
 	    AK4_JetCorrector.setJetA(closest_jet_Area[iType]);
 	    AK4_JetCorrector.setRho(*h_double_["evt_rho"]);
-	    AK4_JetCorrector.setNPV(*h_int_["evt_npv"]);
+	    AK4_JetCorrector.setNPV(*h_int_["vtx_npv"]);
 	    cleaned1_jet *= AK4_JetCorrector.getCorrection();
 	  }
           cleaned3_jet = cleaned2_jet = cleaned1_jet;
@@ -1562,7 +1640,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
 	    AK8_JetCorrector.setJetE(cleaned1_jet.E());
 	    AK8_JetCorrector.setJetA(closest_jet_Area[iType]);
 	    AK8_JetCorrector.setRho(*h_double_["evt_rho"]);
-	    AK8_JetCorrector.setNPV(*h_int_["evt_npv"]);
+	    AK8_JetCorrector.setNPV(*h_int_["vtx_npv"]);
 	    cleaned1_jet *= AK8_JetCorrector.getCorrection();
   	    } else {
 	    AK4_JetCorrector.setJetEta(cleaned1_jet.Eta());
@@ -1570,7 +1648,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
 	    AK4_JetCorrector.setJetE(cleaned1_jet.E());
 	    AK4_JetCorrector.setJetA(closest_jet_Area[iType]);
 	    AK4_JetCorrector.setRho(*h_double_["evt_rho"]);
-	    AK4_JetCorrector.setNPV(*h_int_["evt_npv"]);
+	    AK4_JetCorrector.setNPV(*h_int_["vtx_npv"]);
 	    cleaned1_jet *= AK4_JetCorrector.getCorrection();
 	  }
           cleaned3_jet = cleaned2_jet = cleaned1_jet;

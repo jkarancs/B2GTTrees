@@ -63,7 +63,7 @@ endif
 set cmd=$1
 set TASKNAME=$2
 # Working directory name (created in the current directory)
-set TASKDIR="B2G_edm_"$TASKNAME
+set TASKDIR="B2G_merged_"$TASKNAME
 
 # Aliases
 if ( ! (-e $PWD/source_parallel.csh) || ! (-e $PWD/se_util.csh) ) then

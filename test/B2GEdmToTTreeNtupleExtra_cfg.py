@@ -80,7 +80,7 @@ else:
                      'Directory, where the JEC text files are lcoated')
     
     options.register('usePrivateSQLite',
-                     True,
+                     False,
                      opts.VarParsing.multiplicity.singleton,
                      opts.VarParsing.varType.bool,
                      'Take Corrections from private SQL file')
@@ -129,7 +129,7 @@ genHtFilter = False
 process.TFileService = cms.Service("TFileService", fileName = cms.string(ttreeOutputLabel))
 
 ### B2GEdmExtraVarProducer
-from Analysis.B2GAnaFW.b2gedmntuples_cff import metFull, genPart, electrons, muons, photons, photonjets, jetsAK4CHS, jetsAK4Puppi, jetsAK8CHS, jetsAK8Puppi, subjetsAK8CHS, subjetsAK8Puppi, genJetsAK8, genJetsAK8SoftDrop, eventInfo # metNoHF off since 76X
+from Analysis.B2GAnaFW.b2gedmntuples_cff import puppimetFull, genPart, electrons, muons, photons, photonjets, jetsAK4CHS, jetsAK4Puppi, jetsAK8CHS, jetsAK8Puppi, subjetsAK8CHS, subjetsAK8Puppi, genJetsAK8, genJetsAK8SoftDrop, eventInfo # metNoHF off since 76X
 
 # import DB content from sqlite
 
@@ -183,8 +183,8 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
     evt_prefix = cms.untracked.string(""),
     vtx_label = cms.untracked.string("vertexInfo"),
     vtx_prefix = cms.untracked.string(""),
-    met_label = cms.untracked.string("metFull"), # New Since 07 March 2016 (ReReco is good)
-    met_prefix = metFull.prefix,
+    met_label = cms.untracked.string("puppimetFull"), # New 13 September 2016
+    met_prefix = puppimetFull.prefix,
     gen_label = cms.untracked.string("genPart"),
     gen_prefix = genPart.prefix,
     electrons_label = cms.untracked.string("electrons"),
