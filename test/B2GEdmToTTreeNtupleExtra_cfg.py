@@ -32,15 +32,6 @@ else:
     #    process.GlobalTag = customiseGlobalTag(process.GlobalTag, globaltag = 'auto:run2_mc')
     #    print "Automatically selected GlobalTag: "+str(process.GlobalTag.globaltag)
     
-    ### Output Report
-    process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(False) )
-    ### Number of maximum events to process
-    process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
-    ### Source file
-    process.source = cms.Source("PoolSource",
-        fileNames = cms.untracked.vstring(options.sample)
-    )
-    
     options = opts.VarParsing('analysis')
     
     options.register('sample',
@@ -104,6 +95,15 @@ else:
                      'Specify whether you want to add a gen-level HT Filter (for unbinned TTJets sample)')
     
     options.parseArguments()
+    
+    ### Output Report
+    process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(False) )
+    ### Number of maximum events to process
+    process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
+    ### Source file
+    process.source = cms.Source("PoolSource",
+        fileNames = cms.untracked.vstring(options.sample)
+    )
 
 # TTree code specific options
 ttreeOutputLabel = options.outputLabel
