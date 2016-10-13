@@ -225,7 +225,6 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "Flag_METFilters",
         # Add trigger names below (these are automatically picked up)
         # Hadronic
-        "HLT_AK8PFJet360_TrimMass30",
         #"HLT_PFJet40",
         #"HLT_PFJet60",
         #"HLT_PFJet80",
@@ -236,6 +235,7 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "HLT_PFJet400",
         "HLT_PFJet450",
         "HLT_PFJet500",
+        "HLT_AK8PFJet360_TrimMass30",
         "HLT_AK8PFJet40",  # New in 80X
         "HLT_AK8PFJet60",  # New in 80X
         "HLT_AK8PFJet80",  # New in 80X
@@ -248,8 +248,8 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "HLT_AK8PFJet500", # New in 80X
         "HLT_AK8DiPFJet250_200_TrimMass30", # New in 80X
         "HLT_AK8DiPFJet280_200_TrimMass30", # New in 80X
-        "HLT_AK8DiPFJet280_200_TrimMass30_BTagCSV_p20", # New in 80X
         "HLT_AK8DiPFJet250_200_TrimMass30_BTagCSV_p20", # New in 80X
+        "HLT_AK8DiPFJet280_200_TrimMass30_BTagCSV_p20", # New in 80X
         "HLT_AK8DiPFJet250_200_TrimMass30_BTagCSV0p45",
         "HLT_AK8DiPFJet280_200_TrimMass30_BTagCSV0p45",
         "HLT_AK8PFHT600_TrimR0p1PT0p03Mass50_BTagCSV_p20_v2", # New in 80X
@@ -280,7 +280,7 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "HLT_PFMET400",
         "HLT_PFMET500",
         "HLT_PFMET600",
-        "HLT_PFHT300_PFMET100",                                            
+        "HLT_PFHT300_PFMET100",
         "HLT_PFHT300_PFMET110",
         # Razor
         "HLT_Rsq0p25",

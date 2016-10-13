@@ -521,17 +521,6 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   // - Gen Particle Info -
   // ---------------------
   
-  // Using GenParticles
-  edm::Handle<reco::GenParticleCollection> genParticles;
-  iEvent.getByLabel(edm::InputTag("filteredPrunedGenParticles"),  genParticles);
-  const bool print = false;
-  if (print) for(size_t i=0; i<genParticles->size(); ++i) {
-    const reco::GenParticle& p = (*genParticles)[i];
-    int momId = p.numberOfMothers() ? p.mother()->pdgId() : 0;
-    std::cout<<i<<" id="<<p.pdgId()<<" ("<<p.status()<<") mom="<<momId<<", daughters=";
-    for(size_t j = 0, n=p.numberOfDaughters(); j<n; ++j) std::cout<<p.daughter(j)->pdgId()<<(j+1<n?", ":"\n");
-  }
-  
   // Make a list of Generator level objects and save them to vectors
   vector_int_["gen_ID"].clear();
   vector_int_["gen_Status"].clear();
@@ -584,6 +573,17 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   bool useGenParticles = false;
 
   if (!isData_) {
+    // Using GenParticles
+    edm::Handle<reco::GenParticleCollection> genParticles;
+    iEvent.getByLabel(edm::InputTag("filteredPrunedGenParticles"),  genParticles);
+    const bool print = false;
+    if (print) for(size_t i=0; i<genParticles->size(); ++i) {
+      const reco::GenParticle& p = (*genParticles)[i];
+      int momId = p.numberOfMothers() ? p.mother()->pdgId() : 0;
+      std::cout<<i<<" id="<<p.pdgId()<<" ("<<p.status()<<") mom="<<momId<<", daughters=";
+      for(size_t j = 0, n=p.numberOfDaughters(); j<n; ++j) std::cout<<p.daughter(j)->pdgId()<<(j+1<n?", ":"\n");
+    }
+    
     size_t ngen =  h_floats_["gen_Pt"]->size();
     double stop_mass = -9999, gluino_mass = -9999, lsp_mass = -9999;
     for (size_t i=0; i<ngen; ++i) {
@@ -1036,14 +1036,19 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     }
   }
   
-  // JET ID
-  //https://twiki.cern.ch/twiki/bin/view/CMS/JetID?rev=94#Recommendations_for_13_TeV_data
   /*
-    For |eta|<=3.0 Apply
-    looseJetID = (NHF<0.99 && NEMF<0.99 && NumConst>1) && ((abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || abs(eta)>2.4) && abs(eta)<=3.0
-    tightJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1) && ((abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || abs(eta)>2.4) && abs(eta)<=3.0
-    tightLepVetoJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1 && MUF<0.8) && ((abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.90) || abs(eta)>2.4) && abs(eta)<=3.0
-    
+    Jet ID
+    https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetID?rev=95#Recommendations_for_13_TeV_data
+        
+    For |eta|<=2.7 Apply
+    looseJetID = (NHF<0.99 && NEMF<0.99 && NumConst>1) && ((abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || abs(eta)>2.4) && abs(eta)<=2.7
+    tightJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1) && ((abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || abs(eta)>2.4) && abs(eta)<=2.7
+    tightLepVetoJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1 && MUF<0.8) && ((abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.90) || abs(eta)>2.4) && abs(eta)<=2.7
+
+    For 2.7<|eta|<= 3.0 Apply
+    looseJetID = (NEMF<0.90 && NumNeutralParticle>2 && abs(eta)>2.7 && abs(eta)<=3.0 )
+    tightJetID = (NEMF<0.90 && NumNeutralParticle>2 && abs(eta)>2.7 && abs(eta)<=3.0 )
+
     For |eta|> 3.0 Apply
     looseJetID = (NEMF<0.90 && NumNeutralParticle>10 && abs(eta)>3.0 )
     tightJetID = (NEMF<0.90 && NumNeutralParticle>10 && abs(eta)>3.0 ) 
@@ -1063,10 +1068,13 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     int NumNeutralParticle   = h_floats_["AK4_neutralMultiplicity"]->at(i);
     int NumConst = CHM + NumNeutralParticle;
     bool looseJetID = 0, tightJetID = 0, tightLepVetoJetID = 0;
-    if (std::abs(eta)<=3.0) {
+    if (std::abs(eta)<=2.7) {
       looseJetID = (NHF<0.99 && NEMF<0.99 && NumConst>1) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || std::abs(eta)>2.4);
       tightJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || std::abs(eta)>2.4);
       tightLepVetoJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1 && MUF<0.8) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.90) || std::abs(eta)>2.4);
+    } else if (std::abs(eta)>2.7&&std::abs(eta)<=3.0) {
+      looseJetID = (NEMF<0.90 && NumNeutralParticle>2);
+      tightJetID = (NEMF<0.90 && NumNeutralParticle>2);
     } else {
       looseJetID = (NEMF<0.90 && NumNeutralParticle>10);
       tightJetID = (NEMF<0.90 && NumNeutralParticle>10);
@@ -1090,10 +1098,13 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     int NumNeutralParticle   = h_floats_["AK8_neutralMultiplicity"]->at(i);
     int NumConst = CHM + NumNeutralParticle;
     bool looseJetID = 0, tightJetID = 0, tightLepVetoJetID = 0;
-    if (std::abs(eta)<=3.0) {
+    if (std::abs(eta)<=2.7) {
       looseJetID = (NHF<0.99 && NEMF<0.99 && NumConst>1) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || std::abs(eta)>2.4);
       tightJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || std::abs(eta)>2.4);
       tightLepVetoJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1 && MUF<0.8) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.90) || std::abs(eta)>2.4);
+    } else if (std::abs(eta)>2.7&&std::abs(eta)<=3.0) {
+      looseJetID = (NEMF<0.90 && NumNeutralParticle>2);
+      tightJetID = (NEMF<0.90 && NumNeutralParticle>2);
     } else {
       looseJetID = (NEMF<0.90 && NumNeutralParticle>10);
       tightJetID = (NEMF<0.90 && NumNeutralParticle>10);
@@ -1685,7 +1696,9 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   // Select the best pair of jets (AK8, pt>40, |eta| < 3.0)
   std::vector<TLorentzVector> jets_AK8;
   for (size_t i=0; i<njet_AK8; ++i) {
-    if ((h_floats_["AK8_Pt"]->at(i) > 40) && (h_floats_["AK8_Eta"]->at(i) < 3)) {
+    // Cut in B2G/MINIAOD: pt>170, |eta|<2.4
+    // 2016/10/14: Loose JetID cut added
+    if ((h_floats_["AK8_Pt"]->at(i) >= 30) && (h_floats_["AK8_Eta"]->at(i) < 2.4) && vector_int_["jetAK8Puppi_looseJetID"][i]) {
       TLorentzVector jl;
       jl.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(i), h_floats_["AK8_Eta"]->at(i),
                       h_floats_["AK8_Phi"]->at(i), h_floats_["AK8_E"]->at(i));
@@ -1696,7 +1709,9 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   // Same for AK4 jets
   std::vector<TLorentzVector> jets_AK4;
   for (size_t i=0; i<njet_AK4; ++i) {
-    if ((h_floats_["AK4_Pt"]->at(i) > 40) && (h_floats_["AK4_Eta"]->at(i) < 3)) {
+    // Cut in MINIAOD: pt>20
+    // 2016/10/14: JetID cut added, pt lowered from 40 to 30, |eta| lowered to 2.4
+    if ((h_floats_["AK4_Pt"]->at(i) >= 30) && (h_floats_["AK4_Eta"]->at(i) < 3) && vector_int_["jetAK4Puppi_looseJetID"][i]) {
       TLorentzVector jl;
       jl.SetPtEtaPhiE(h_floats_["AK4_Pt"]->at(i), h_floats_["AK4_Eta"]->at(i),
                       h_floats_["AK4_Phi"]->at(i), h_floats_["AK4_E"]->at(i));

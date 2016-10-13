@@ -95,7 +95,7 @@ if getVariablesFromConfig:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
         genJetsAK8SoftDrop_var.append(s)
 else:
-    # Currrent B2GAnaFW ver: 01 Apr (v7.6.x_v1.1 ntuple version)
+    # Currrent B2GAnaFW ver: 01 Apr (v8.0.x_v2.1 ntuple version)
     metNoHF_var = cms.untracked.vstring(
         "Pt",
         #"Px",
@@ -140,10 +140,10 @@ else:
         #'sumNeutralHadronEt',
         #'sumPhotonEt',
         #'sumPUPt',
-        #'Dxy',
-        #'Dz',
-        #'DB',
-        #'DBerr',
+        'Dxy',
+        'Dz',
+        'DB',
+        'DBerr',
         #'dEtaIn',
         #'dEtaInSeed',
         #'dPhiIn',
@@ -179,6 +179,8 @@ else:
         'IsMediumMuon',
         'IsTightMuon',
         'IsHighPtMuon',
+        #'InnerTrackPt',
+        #'TunePMuonBestTrackPt',
         #'IsPFMuon',
         #'IsGlobalMuon',
         #'IsTrackerMuon',
@@ -194,6 +196,7 @@ else:
         #'SumNeutralHadronPt',
         #'SumPhotonPt',
         #'SumPUPt',
+        #'TrackerSumPt',
         #'GenMuonEta',
         #'GenMuonPhi',
         #'GenMuonPt',
@@ -204,16 +207,21 @@ else:
     photonVars = cms.untracked.vstring(
         'SCEta',
         'SCPhi',
+        'SCRawE',
         'HasPixelSeed',
+        'ElectronVeto',
         'SigmaIEtaIEta',
+        'SigmaIEtaIPhi',
+        'SigmaIPhiIPhi',
+        'E1x5',
+        'E5x5',
         'HoverE',
         'R9',
         'ChargedHadronIso',
         'PhotonIso',
         'NeutralHadronIso',
-        'ChargedHadronIsoEAcorrected',
-        'PhotonIsoEAcorrected',
-        'NeutralHadronIsoEAcorrected',
+        'PhotonIsoEAcorrectedsp15',
+        'NeutralHadronIsoEAcorrectedsp15',
         'PassLooseID',
         'PassMediumID',
         'PassTightID',
@@ -239,12 +247,10 @@ else:
     )
     
     jetVars = cms.untracked.vstring(
-        'CSVv2',                                                                                                     
-        #'DoubleBAK8',                                                                                                
-        #'DoubleBCA15',
+        'CSVv2',
         'CMVAv2',
-        #'CvsL',
-        #'CvsB',
+        'CvsL',
+        'CvsB',
         #'CMVA',
         'GenPartonEta',
         'GenPartonPhi',
@@ -313,6 +319,8 @@ else:
     )
 
     jetToolboxAK8Vars = cms.untracked.vstring(
+        'DoubleBAK8',
+        'DoubleBCA15',
         'vSubjetIndex0',
         'vSubjetIndex1',
         'tau1',
@@ -325,6 +333,8 @@ else:
     )
     
     jetToolboxAK8PuppiVars = cms.untracked.vstring(
+        'DoubleBAK8',
+        'DoubleBCA15',
         'vSubjetIndex0',
         'vSubjetIndex1',
         'tau1',
@@ -401,8 +411,6 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
         #    label = cms.untracked.string("eventUserData"),
         #    prefix_in = cms.untracked.string(""),
         #    prefix_out = cms.untracked.string("evt_"),
-        #    singleI = cms.untracked.vstring("npv"),
-        #    singleD = cms.untracked.vstring("vx", "vy", "vz"),
         #),
         cms.PSet(
             label = cms.untracked.string("eventInfo"),
@@ -438,8 +446,9 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
         #    label = cms.untracked.string("vertexInfo"),
         #    prefix_in = cms.untracked.string(""),
         #    prefix_out = cms.untracked.string("vtx_"),
+        #    singleI = cms.untracked.vstring("npv"),
         #    vectorI = cms.untracked.vstring("ndof"),
-        #    vectorF = cms.untracked.vstring("z","rho","chi"),
+        #    vectorF = cms.untracked.vstring("z","rho","chi", "vx", "vy", "vz"),
         #),
         # MET Filters
         cms.PSet(
