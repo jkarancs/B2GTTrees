@@ -17,7 +17,7 @@ git cms-merge-topic cms-met:METRecipe_8020
 git cms-merge-topic -u cms-met:CMSSW_8_0_X-METFilterUpdate
 git clone git@github.com:cms-jet/JetToolbox.git JMEAnalysis/JetToolbox -b jetToolbox_80X_V2
 git clone git@github.com:cmsb2g/B2GAnaFW.git Analysis/B2GAnaFW -b v8.0.x_v2.1
-git clone git@github.com:jkarancs/B2GTTrees.git Analysis/B2GTTrees -b v8.0.x_v2.1_Oct14
+git clone git@github.com:jkarancs/B2GTTrees.git Analysis/B2GTTrees -b v8.0.x_v2.1_Oct24
 scram b -j 20
 ```
 
@@ -65,21 +65,21 @@ cd $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3
 cmsenv
 source /cvmfs/cms.cern.ch/crab3/crab.csh
 voms-proxy-init --voms cms -valid 168:00
-source crab3_B2GEdmNtuples.csh create Oct14 B2GAnaFW_80X_V2p1 MINIAODv2_80X_Sep04_T2tt.txt T2_HU_Budapest /store/user/jkarancs/SusyAnalysis/B2GEdmNtuple/Oct14
-edm make_init_twiki Oct14
+source crab3_B2GEdmNtuples.csh create Oct24 B2GAnaFW_80X_V2p1 MINIAODv2_80X_Oct24_input.txt T2_HU_Budapest /store/user/jkarancs/SusyAnalysis/B2GEdmNtuple/Oct24
+edm make_init_twiki Oct24
 Janos
 janos.karancsi@cern.ch
 v8.0.x_v2.1
-source crab3_B2GEdmNtuples.csh submit Oct14
-source crab3_B2GEdmNtuples.csh status Oct14
-source crab3_B2GEdmNtuples.csh find_missing Oct14
-source crab3_B2GEdmNtuples.csh checkup Oct14
-source crab3_B2GEdmNtuples.csh get_datasets Oct14 --run
-source crab3_B2GEdmNtuples.csh make_twiki Oct14 --run
+source crab3_B2GEdmNtuples.csh submit Oct24
+source crab3_B2GEdmNtuples.csh status Oct24
+source crab3_B2GEdmNtuples.csh find_missing Oct24
+source crab3_B2GEdmNtuples.csh checkup Oct24
+source crab3_B2GEdmNtuples.csh get_datasets Oct24 --run
+source crab3_B2GEdmNtuples.csh make_twiki Oct24 --run
 Janos
 janos.karancsi@cern.ch
 v8.0.x_v2.1
-source crab3_B2GEdmNtuples.csh get_lumi Oct14
+source crab3_B2GEdmNtuples.csh get_lumi Oct24
 ```
 
    * 2/crab3) Make TTree ntuples from previous MINIAOD(SIM) on grid
@@ -88,13 +88,13 @@ cd $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3
 cmsenv
 source /cvmfs/cms.cern.ch/crab3/crab.csh
 voms-proxy-init --voms cms -valid 168:00
-source crab3_B2GTTreeNtuples_Merged.csh create Oct14 B2GAnaFW_80X_V2p1_Oct14 MINIAODv2_80X_Sep04_T2tt.txt cross_sections.txt T2_HU_Budapest /store/user/jkarancs/SusyAnalysis/B2GTTreeNtuple/Oct14
-source crab3_B2GTTreeNtuples_Merged.csh submit Oct14 
-source crab3_B2GTTreeNtuples_Merged.csh status Oct14
-source crab3_B2GTTreeNtuples_Merged.csh download Oct14 /data/gridout/jkarancs/SusyAnalysis/B2G/TTreeNtuple --run
-source crab3_B2GTTreeNtuples_Merged.csh find_missing Oct14
-source crab3_B2GTTreeNtuples_Merged.csh checkup Oct14
-source crab3_B2GTTreeNtuples_Merged.csh report Oct14 --run
-source crab3_B2GTTreeNtuples_Merged.csh get_lumi Oct14
+source crab3_B2GTTreeNtuples_Merged.csh create Oct24 B2GAnaFW_80X_V2p1_Oct24 MINIAODv2_80X_Oct24_input.txt cross_sections.txt T2_HU_Budapest /store/user/jkarancs/SusyAnalysis/B2GTTreeNtuple/Oct24
+source crab3_B2GTTreeNtuples_Merged.csh submit Oct24 
+source crab3_B2GTTreeNtuples_Merged.csh status Oct24
+source crab3_B2GTTreeNtuples_Merged.csh download Oct24 /data/gridout/jkarancs/SusyAnalysis/B2G/TTreeNtuple --run
+source crab3_B2GTTreeNtuples_Merged.csh find_missing Oct24
+source crab3_B2GTTreeNtuples_Merged.csh checkup Oct24
+source crab3_B2GTTreeNtuples_Merged.csh report Oct24 --run
+source crab3_B2GTTreeNtuples_Merged.csh get_lumi Oct24
 ```
 

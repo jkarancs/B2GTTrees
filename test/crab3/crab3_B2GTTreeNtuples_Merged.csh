@@ -104,7 +104,7 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
     set LATEST_GOLDEN_JSON=`ls -lrt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV | awk '{ print $NF }' | grep -vE "MuonPhys|LowPU" | grep "\.txt" | tail -1`
     #set JSON="$LATEST_GOLDEN_JSON"
     set ICHEP_GOLDEN_JSON="Cert_271036-276811_13TeV_PromptReco_Collisions16_JSON_NoL1T.txt"
-    set JSON="$ICHEP_GOLDEN_JSON"
+    set JSON="$LATEST_GOLDEN_JSON"
     mkdir $TASKDIR
     echo "SE_SITE "$SE_SITE >! $TASKDIR/config.txt
     echo "SE_USERDIR "$SE_USERDIR >> $TASKDIR/config.txt
@@ -125,7 +125,7 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	set PROCESSED_DS_NAME=`echo $DATASET | sed "s;/; ;g" | awk '{ print $2 }'`
 	set isData=`echo $DATASET | grep 'MINIAOD$' | wc -l`
 	# 2016 Data
-	echo $primary
+	#echo $primary
 	if ( `echo $PROCESSED_DS_NAME | grep "Run2016" | wc -l`) then
 	    set DATAPROC="Data_80X"
 	    set JEC_ERA="EMPTY"

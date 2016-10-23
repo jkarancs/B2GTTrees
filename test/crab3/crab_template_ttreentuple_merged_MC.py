@@ -5,7 +5,7 @@ b2gana_test_dir = os.environ['CMSSW_BASE']+'/src/Analysis/B2GAnaFW/test/'
 
 # Input .db and .txt files for JEC/JER
 import glob
-input_files = glob.glob(b2gana_test_dir+'JEC_ERA*')
+input_files = glob.glob(b2gana_test_dir+'JECs/JEC_ERA*')
 input_files.append('XSEC_FILE')
 
 config.section_('General')

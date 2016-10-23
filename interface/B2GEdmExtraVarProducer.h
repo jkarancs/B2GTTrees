@@ -8,6 +8,7 @@
 #include "DataFormats/Common/interface/Handle.h"
 #include "DataFormats/Math/interface/LorentzVector.h"
 #include "FWCore/Framework/interface/DependentRecordImplementation.h"
+#include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
 
 // JEC/JER
 #include "JetMETCorrections/Modules/interface/JetResolution.h"
@@ -16,6 +17,8 @@
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
 #include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
+
+#include <fstream>
 
 class  B2GEdmExtraVarProducer : public edm::EDProducer {
 public:
@@ -89,12 +92,14 @@ private:
   bool pass_ele_ID_(int, const float&, const float&, const float&, const float&, 
 		    const float&, const float&, const float&, const float&, bool);
   bool pass_ele_ISO_(int, const float&, const float&, bool);
+
+  bool hasAncestor_(int, const lhef::HEPEUP&, int);
 };
 
 
 B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(edm::ParameterSet const& iConfig) :
   isData_(iConfig.getUntrackedParameter<bool>("isData", false)),
-  cross_section_(iConfig.getUntrackedParameter<double>("cross_section",0)),
+  cross_section_(-9999),
   lhe_label_(iConfig.getUntrackedParameter<std::string>("lhe_label")),
   filter_label_(iConfig.getUntrackedParameter<std::string>("filter_label")),
   trigger_label_(iConfig.getUntrackedParameter<std::string>("trigger_label")),
@@ -151,6 +156,12 @@ B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(edm::ParameterSet const& iConfig)
   
   // initialize tokens
   init_tokens_();
+
+  std::ifstream xsec_file("cross_section.txt");
+  if ( xsec_file.good() ) {
+    xsec_file>>cross_section_;
+    std::cout<<"Cross section successfully read from file: cross_section.txt: "<<cross_section_<<" pb"<<std::endl;
+  } else std::cout<<"Warning: Unable to open xsec file: cross_section.txt"<<std::endl;
 }
 
 void B2GEdmExtraVarProducer::produce(edm::Event& iEvent, edm::EventSetup const& iSetup) {

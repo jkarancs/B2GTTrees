@@ -118,10 +118,7 @@ if useMINIAOD:
 else:
     Era = options.Era + ("_DATA" if isData else "_MC")
 JECloc = Era if runOnGrid else os.environ['CMSSW_BASE']+'/src/Analysis/B2GAnaFW/test/'+Era
-xsec = -9999
-if os.path.isfile('cross_section.txt'):
-    with open('cross_section.txt') as f:
-        xsec = next(f)
+
 lheLabel = "externalLHEProducer"
 genHtFilter = False
 
@@ -175,7 +172,6 @@ if usePrivateSQLite and not useMINIAOD:
 
 process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
     isData = cms.untracked.bool(isData),
-    cross_section = cms.untracked.double(xsec),
     lhe_label = cms.untracked.string(lheLabel),
     filter_label = cms.untracked.string("METUserData"),
     trigger_label = cms.untracked.string("TriggerUserData"),
@@ -383,10 +379,10 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "evt_MTR",
         "evt_R",
         "evt_R2",
-        "evt_AK4_MR",
-        "evt_AK4_MTR",
-        "evt_AK4_R",
-        "evt_AK4_R2",
+        "evt_AK8_MR",
+        "evt_AK8_MTR",
+        "evt_AK8_R",
+        "evt_AK8_R2",
         "evt_XSec",
         "evt_Gen_Weight",
         "evt_Gen_Ht",
@@ -519,19 +515,31 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
 ### Filter - Select only events with at least 1 AK8 jet with pt>300
 # Filter for MiniAOD Jet collections
 process.PtMinAK8JetCountFilter = cms.EDFilter("PatJetCountFilter", # This one works on MiniAOD
-    src = cms.InputTag("slimmedJetsAK8"),
     filter = cms.bool(True),
+    src = cms.InputTag("slimmedJetsAK8"),
     cut = cms.string("pt>300"),
     minNumber = cms.uint32(1)
 )
 
 # Filter For Edm ntuple - Use this here
-process.EdmNtupleCountFilter = cms.EDFilter("EdmNtupleCountFilter", # This one works on EdmNtuple
-    src = cms.InputTag("jetsAK8Puppi","jetAK8PuppiPt"),
+#process.EdmNtupleCountFilter = cms.EDFilter("EdmNtupleCountFilter", # This one works on EdmNtuple
+#    filter = cms.bool(True), # False also filters for some reason (disable in Path instead)
+#    src = cms.InputTag("jetsAK8Puppi","jetAK8PuppiPt"),
+#    #min = cms.double(350),
+#    #minNumber = cms.uint32(2)
+#    min = cms.double(150),
+#    minNumber = cms.uint32(1)
+#)
+process.Min3AK4JetFilter = cms.EDFilter("EdmNtupleCountFilter", # This one works on EdmNtuple
     filter = cms.bool(True), # False also filters for some reason (disable in Path instead)
-    #min = cms.double(350),
-    #minNumber = cms.uint32(2)
-    min = cms.double(150),
+    src = cms.InputTag("jetsAK4Puppi","jetAK4PuppiPt"),
+    min = cms.double(0),
+    minNumber = cms.uint32(3)
+)
+process.Min1AK8JetFilter = cms.EDFilter("EdmNtupleCountFilter", # This one works on EdmNtuple
+    filter = cms.bool(True), # False also filters for some reason (disable in Path instead)
+    src = cms.InputTag("jetsAK8Puppi","jetAK8PuppiPt"),
+    min = cms.double(0),
     minNumber = cms.uint32(1)
 )
 if genHtFilter:
@@ -565,19 +573,9 @@ process.EventCounter = cms.EDAnalyzer("EventCounter",
 )
 
 # Paths
-if genHtFilter:
-    process.analysisPath = cms.Path(
-        process.extraVar *
-        process.GenHtFilter *
-        process.EventCounter *
-        process.EdmNtupleCountFilter *
-        process.B2GTTreeMaker
-    )
-else:
-    process.analysisPath = cms.Path(
-        process.extraVar *
-        process.EventCounter *
-        process.EdmNtupleCountFilter *
-        process.B2GTTreeMaker
-    )
-
+process.analysisPath = cms.Path(
+    process.extraVar *
+    process.EventCounter *
+    #process.Min3AK4JetFilter *
+    #process.Min1AK8JetFilter *
+    process.B2GTTreeMaker)

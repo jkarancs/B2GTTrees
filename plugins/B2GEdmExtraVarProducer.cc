@@ -5,7 +5,6 @@
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenLumiInfoHeader.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
-#include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
 void B2GEdmExtraVarProducer::init_tokens_() {
@@ -134,7 +133,7 @@ void B2GEdmExtraVarProducer::init_tokens_() {
     edm::EDGetTokenT<GenLumiInfoHeader>(mayConsume<GenLumiInfoHeader, edm::InLumi>(edm::InputTag("generator")));
     edm::EDGetTokenT<GenEventInfoProduct>(consumes<GenEventInfoProduct>(edm::InputTag("generator")));
     
-    edm::EDGetTokenT<reco::GenParticleCollection>(consumes<reco::GenParticleCollection>(edm::InputTag("filteredPrunedGenParticles")));
+    edm::EDGetTokenT<reco::GenParticleCollection>(consumes<reco::GenParticleCollection>(edm::InputTag("prunedGenParticles")));
   }
 }
 
@@ -376,7 +375,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   
   // Gen/LHE info
   // For Run II recommendations see:
-  // https://indico.cern.ch/event/459797/contribution/2/attachments/1181555/1710844/mcaod-Nov4-2015.pdf
+  // https://indico.cern.ch/event/459797/contributions/1961581/attachments/1181555/1800214/mcaod-Feb15-2016.pdf
   vector_float_["scale_Weights"].clear();
   vector_float_["pdf_Weights"].clear();
   vector_float_["alphas_Weights"].clear();
@@ -389,18 +388,32 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     
     single_int_["evt_LHA_PDF_ID"] = lha_pdf_id_;
     
-    if (lheEvtInfo.isValid() && genEvtInfo.isValid()) {
-      // HT
-      const lhef::HEPEUP& lheEvent = lheEvtInfo->hepeup();
-      std::vector<lhef::HEPEUP::FiveVector> lheParticles = lheEvent.PUP;
+    // Generator level HT
+    if (lheEvtInfo.isValid()) {
+      lhef::HEPEUP lheParticleInfo = lheEvtInfo->hepeup();
+      // Get the five vector (Px, Py, Pz, E and M in GeV)
+      std::vector<lhef::HEPEUP::FiveVector> allParticles = lheParticleInfo.PUP;
+      std::vector<int> statusCodes = lheParticleInfo.ISTUP;
       single_float_["evt_Gen_Ht"] = 0;
-      for ( size_t idxParticle = 0, numParticles = lheParticles.size(); idxParticle < numParticles; ++idxParticle ) {
-        int absPdgId = TMath::Abs(lheEvent.IDUP[idxParticle]);
-        int status = lheEvent.ISTUP[idxParticle];
-        if ( status == 1 && ((absPdgId >= 1 && absPdgId <= 6) || absPdgId == 21) )   // quarks and gluons
-          single_float_["evt_Gen_Ht"] += TMath::Sqrt(TMath::Power(lheParticles[idxParticle][0], 2.) + 
-						     TMath::Power(lheParticles[idxParticle][1], 2.)); // first entry is px, second py
+      for (unsigned int i = 0; i < allParticles.size(); i++) {
+	auto absId = abs(lheParticleInfo.IDUP[i]);
+	if (statusCodes[i] == 1 && ( absId < 11 || absId > 16 ) && absId != 22 && !hasAncestor_(i, lheParticleInfo, 6))
+	  single_float_["evt_Gen_Ht"] += std::sqrt(std::pow(allParticles[i][0], 2) + std::pow(allParticles[i][1], 2));
       }
+    }
+    
+    if (lheEvtInfo.isValid() && genEvtInfo.isValid()) {
+      // GenHT
+      //const lhef::HEPEUP& lheEvent = lheEvtInfo->hepeup();
+      //std::vector<lhef::HEPEUP::FiveVector> lheParticles = lheEvent.PUP;
+      //single_float_["evt_Gen_Ht"] = 0;
+      //for ( size_t idxParticle = 0, numParticles = lheParticles.size(); idxParticle < numParticles; ++idxParticle ) {
+      //  int absPdgId = TMath::Abs(lheEvent.IDUP[idxParticle]);
+      //  int status = lheEvent.ISTUP[idxParticle];
+      //  if ( status == 1 && ((absPdgId >= 1 && absPdgId <= 6) || absPdgId == 21) )   // quarks and gluons
+      //    single_float_["evt_Gen_Ht"] += TMath::Sqrt(TMath::Power(lheParticles[idxParticle][0], 2.) + 
+      //  					     TMath::Power(lheParticles[idxParticle][1], 2.)); // first entry is px, second py
+      //}
       
       // We only look for the sign of the gen weight but not it's value
       // The xsec weight is already calculated, but certain NLO samples
@@ -570,12 +583,12 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   size_t njet_AK4 = h_floats_["AK4_Pt"]->size();
   size_t njet_AK8 = h_floats_["AK8_Pt"]->size();
   size_t njet_AK8Sub = h_floats_["AK8Sub_Pt"]->size();
-  bool useGenParticles = false;
+  bool useGenParticles = true;
 
   if (!isData_) {
     // Using GenParticles
     edm::Handle<reco::GenParticleCollection> genParticles;
-    iEvent.getByLabel(edm::InputTag("filteredPrunedGenParticles"),  genParticles);
+    iEvent.getByLabel(edm::InputTag("prunedGenParticles"),  genParticles);
     const bool print = false;
     if (print) for(size_t i=0; i<genParticles->size(); ++i) {
       const reco::GenParticle& p = (*genParticles)[i];
@@ -1128,10 +1141,13 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     int NumNeutralParticle   = h_floats_["AK8Sub_neutralMultiplicity"]->at(i);
     int NumConst = CHM + NumNeutralParticle;
     bool looseJetID = 0, tightJetID = 0, tightLepVetoJetID = 0;
-    if (std::abs(eta)<=3.0) {
+    if (std::abs(eta)<=2.7) {
       looseJetID = (NHF<0.99 && NEMF<0.99 && NumConst>1) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || std::abs(eta)>2.4);
       tightJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || std::abs(eta)>2.4);
       tightLepVetoJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1 && MUF<0.8) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.90) || std::abs(eta)>2.4);
+    } else if (std::abs(eta)>2.7&&std::abs(eta)<=3.0) {
+      looseJetID = (NEMF<0.90 && NumNeutralParticle>2);
+      tightJetID = (NEMF<0.90 && NumNeutralParticle>2);
     } else {
       looseJetID = (NEMF<0.90 && NumNeutralParticle>10);
       tightJetID = (NEMF<0.90 && NumNeutralParticle>10);
@@ -1698,7 +1714,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   for (size_t i=0; i<njet_AK8; ++i) {
     // Cut in B2G/MINIAOD: pt>170, |eta|<2.4
     // 2016/10/14: Loose JetID cut added
-    if ((h_floats_["AK8_Pt"]->at(i) >= 30) && (h_floats_["AK8_Eta"]->at(i) < 2.4) && vector_int_["jetAK8Puppi_looseJetID"][i]) {
+    if ((h_floats_["AK8_Pt"]->at(i) >= 30) && std::abs(h_floats_["AK8_Eta"]->at(i)) < 2.4 && vector_int_["jetAK8Puppi_looseJetID"][i]) {
       TLorentzVector jl;
       jl.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(i), h_floats_["AK8_Eta"]->at(i),
                       h_floats_["AK8_Phi"]->at(i), h_floats_["AK8_E"]->at(i));
@@ -1711,7 +1727,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   for (size_t i=0; i<njet_AK4; ++i) {
     // Cut in MINIAOD: pt>20
     // 2016/10/14: JetID cut added, pt lowered from 40 to 30, |eta| lowered to 2.4
-    if ((h_floats_["AK4_Pt"]->at(i) >= 30) && (h_floats_["AK4_Eta"]->at(i) < 3) && vector_int_["jetAK4Puppi_looseJetID"][i]) {
+    if ((h_floats_["AK4_Pt"]->at(i) >= 30) && std::abs(h_floats_["AK4_Eta"]->at(i)) < 2.4 && vector_int_["jetAK4Puppi_looseJetID"][i]) {
       TLorentzVector jl;
       jl.SetPtEtaPhiE(h_floats_["AK4_Pt"]->at(i), h_floats_["AK4_Eta"]->at(i),
                       h_floats_["AK4_Phi"]->at(i), h_floats_["AK4_E"]->at(i));
@@ -1723,34 +1739,34 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   metl.SetPtEtaPhi(h_floats_["met_Pt"]->at(0), 0, h_floats_["met_Phi"]->at(0));
   
   // Default variables - AK8
-  single_float_["evt_MR"]  = -9999;
-  single_float_["evt_MTR"] = -9999;
-  single_float_["evt_R"]   = -9999;
-  single_float_["evt_R2"]  = -9999;
+  single_float_["evt_AK8_MR"]  = -9999;
+  single_float_["evt_AK8_MTR"] = -9999;
+  single_float_["evt_AK8_R"]   = -9999;
+  single_float_["evt_AK8_R2"]  = -9999;
   if (jets_AK8.size() >= 2) {
     if (njet_AK4<60) {
       std::vector<TLorentzVector> hemis_AK8 = Razor::CombineJets(jets_AK8);
-      single_float_["evt_MR"]  = Razor::CalcMR(hemis_AK8[0], hemis_AK8[1]);              /* evt_MR */
-      single_float_["evt_MTR"] = Razor::CalcMTR(hemis_AK8[0], hemis_AK8[1], metl);       /* evt_MTR */
-      single_float_["evt_R"]   = single_float_["evt_MTR"] / single_float_["evt_MR"];     /* evt_R */
-      single_float_["evt_R2"]  = std::pow(single_float_["evt_R"], 2);                    /* evt_R2 */
+      single_float_["evt_AK8_MR"]  = Razor::CalcMR(hemis_AK8[0], hemis_AK8[1]);              /* evt_AK8_MR */
+      single_float_["evt_AK8_MTR"] = Razor::CalcMTR(hemis_AK8[0], hemis_AK8[1], metl);       /* evt_AK8_MTR */
+      single_float_["evt_AK8_R"]   = single_float_["evt_AK8_MTR"] / single_float_["evt_AK8_MR"]; /* evt_AK8_R */
+      single_float_["evt_AK8_R2"]  = std::pow(single_float_["evt_AK8_R"], 2);                /* evt_AK8_R2 */
     } else {
       std::cout<<"Too many AK8: "<<jets_AK8.size()<<" "<<njet_AK8<<std::endl;
     }
   }
   
   // AK4
-  single_float_["evt_AK4_MR"]  = -9999;
-  single_float_["evt_AK4_MTR"] = -9999;
-  single_float_["evt_AK4_R"]   = -9999;
-  single_float_["evt_AK4_R2"]  = -9999;
+  single_float_["evt_MR"]  = -9999;
+  single_float_["evt_MTR"] = -9999;
+  single_float_["evt_R"]   = -9999;
+  single_float_["evt_R2"]  = -9999;
   if (jets_AK4.size() >= 2) {
     if (njet_AK4<60) {
       std::vector<TLorentzVector> hemis_AK4 = Razor::CombineJets(jets_AK4);
-      single_float_["evt_AK4_MR"]  = Razor::CalcMR(hemis_AK4[0], hemis_AK4[1]);          /* evt_AK4_MR */
-      single_float_["evt_AK4_MTR"] = Razor::CalcMTR(hemis_AK4[0], hemis_AK4[1], metl);   /* evt_AK4_MTR */
-      single_float_["evt_AK4_R"]   = single_float_["evt_AK4_MTR"] / single_float_["evt_AK4_MR"]; /* evt_AK4_R */
-      single_float_["evt_AK4_R2"]  = std::pow(single_float_["evt_AK4_R"], 2);            /* evt_AK4_R2 */
+      single_float_["evt_MR"]  = Razor::CalcMR(hemis_AK4[0], hemis_AK4[1]);          /* evt_MR */
+      single_float_["evt_MTR"] = Razor::CalcMTR(hemis_AK4[0], hemis_AK4[1], metl);   /* evt_MTR */
+      single_float_["evt_R"]   = single_float_["evt_MTR"] / single_float_["evt_MR"]; /* evt_R */
+      single_float_["evt_R2"]  = std::pow(single_float_["evt_R"], 2);                /* evt_R2 */
     } else {
       std::cout<<"Too many AK4: "<<jets_AK4.size()<<" "<<njet_AK4<<std::endl;
     }
@@ -1842,6 +1858,18 @@ bool B2GEdmExtraVarProducer::pass_ele_ISO_(int id_index, const float& abs_eta, c
     std::cout<<"relIsoWithEA             "<<relIsoWithEA             <<", decision: "<<!(relIsoWithEA             >= cuts[endcap][id_index])<<std::endl;
   if (relIsoWithEA             >= cuts[endcap][id_index]) return 0;
   return 1;
+}
+
+// checks if a particle has a special mother. Treats anti-particles as particles
+bool B2GEdmExtraVarProducer::hasAncestor_(int index, const lhef::HEPEUP& info, int searchId) {
+   if (index < 2 || index > info.NUP) return false;
+   else if (std::abs(info.IDUP[index]) == searchId) return true;
+   else {
+     auto mothers = info.MOTHUP[index];
+     return
+       (index != mothers.first-1 && hasAncestor_(mothers.first-1, info, searchId)) ||
+       (index != mothers.second-1 && hasAncestor_(mothers.second-1, info, searchId));
+   }
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"
