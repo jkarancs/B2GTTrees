@@ -55,7 +55,7 @@ cd Analysis/B2GTTrees/test/crab3
 cmsenv
 source /cvmfs/cms.cern.ch/crab3/crab.csh
 source crab3_B2GEdmNtuples.csh --help
-source crab3_B2GTTreeNtuples.csh --help
+source crab3_B2GTTreeNtuples_Merged.csh --help
 ```
 
 Examples:

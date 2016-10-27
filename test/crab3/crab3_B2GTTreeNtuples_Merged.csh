@@ -75,6 +75,7 @@ endif
 alias par_source 'source source_parallel.csh \!*'
 # Storage element utility (ls, cp, dl, mkdir etc commands)
 alias se         'source se_util.csh \!*'
+alias grep egrep
 
 set rest_args=""
 foreach n ( `seq 3 $#argv` )
@@ -205,7 +206,7 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	    endif
 	    set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
 	    set Status=`grep "Task status:" $status_txt | awk '{ print $3 }'`
-	    if ( $Status == "" ) then
+	    if ( $Status == "" && `ls -tr $TASKDIR/status/$short/*.txt | head -n -1 | wc -l` != 0 ) then
                 set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | head -n -1 | tail -1`
                 set Status=`if ( $status_txt != "" ) grep "Task status:" $status_txt | awk '{ print $3 }'`
 	    endif
@@ -221,6 +222,10 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	    eval_or_echo "rm -rf $dir"
 	    eval_or_echo "crab submit -c $dir.py"
 	    echo
+	else if ( `echo $Status | grep SUBMITFAILED | wc -l` && `grep "does not generate any job" $status_txt | wc -l` != 0 ) then
+	    echo "  -> Task submission failed, because dataset is outside of the JSON file ...\n"
+	    echo "rm -rf $dir"
+	    echo
 	else if ( `echo $Status | grep SUBMITFAILED | wc -l` && `find $dir -maxdepth 0 -type d -mmin +120 | wc -l` && `grep "\%.*\(" $status_txt | wc -l` == 0 ) then
 	    echo "  -> Task submission failed after more than 2 hours and no jobs are running. Delete and submit again ...\n"
 	    eval_or_echo "rm -rf $dir"
@@ -228,11 +233,6 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	    echo
 	else if ( `grep "The server answered with an error" $status_txt | wc -l` ) then
 	    echo "  -> Server error. Do nothing ...\n"
-	else if ( `grep "jobs failed with exit code 50660" $status_txt | wc -l` ) then
-	    echo "  -> Jobs found that exceeded 2000MB memory, resubmitting with 2500MB ...\n"
-	    eval_or_echo "crab resubmit --maxmemory=2500 -d $dir"
-	    echo
-	
 	#else if ( `echo $Status | grep NEW | wc -l` && `find $dir -maxdepth 0 -type d -mmin +120 | wc -l` ) then
 	#    echo "  -> Task stuck in NEW state for more than 2 hours. Kill, delete and submit again ...\n"
 	#    crab kill -d $dir
@@ -248,8 +248,21 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
         else if ( `echo $Status | grep COMPLETED | wc -l` == 0 ) then
 	    grep "%.*\(.*\)" $status_txt
             if ( $nfail != 0 ) then
-		echo "  -> Resubmitting failed jobs ...\n"
-		eval_or_echo "crab resubmit -d $dir"
+		if ( `grep "jobs failed with exit code 50660" $status_txt | wc -l` == 0 ) then
+		    echo "  -> Resubmitting failed jobs ...\n"
+		    eval_or_echo "crab resubmit -d $dir"
+		else
+		    # Exceed Memory
+		    if ( `find $dir -maxdepth 0 -type d -mtime 2 | wc -l` == 0 ) then
+			# Resubmit with 2500 MB initially
+			echo "  -> Jobs found that exceeded 2000MB memory, resubmitting with 2500MB ...\n"
+			eval_or_echo "crab resubmit -d $dir --maxmemory=2500"
+                    else
+			# Then after two days, 3000 MB
+			echo "  -> Jobs found that exceeded allocated memory after 2 days, resubmitting with 3000MB ...\n"
+			eval_or_echo "crab resubmit -d $dir --maxmemory=3000"
+		    endif
+		endif
 		echo
 	    else
 		# Get more info about tasks not failing but near completion
@@ -385,34 +398,6 @@ else if ( `echo $cmd | grep "getoutput" | wc -l` ) then
 	eval_or_echo "mkdir -p $DLDIR/$short"
         eval_or_echo "crab getoutput -d $dir --outputpath=$DLDIR/$short/"
     end
-
-#else if ( `echo $cmd | grep "download" | wc -l` ) then
-#    if ( $#argv < 3 ) then
-#	cat Usage.txt; rm Usage.txt; exit
-#    endif
-#    set DLDIR=`echo $3"/"$TASKNAME | sed "s;//;/;"`
-#    set SE_SITE=`grep SE_SITE $TASKDIR/config.txt | awk '{ print $2 }'`
-#    set SE_USERDIR=`grep SE_USERDIR $TASKDIR/config.txt | awk '{ print $2 }'`
-#    if ( $dry == "1" ) echo "source dl_$TASKNAME.csh $DLDIR\nOR add --run after command to excecute following lines:\n"
-#    echo 'if ( $#argv < 1 ) echo "Please specify directory where you want to download files"' >! dl_$TASKNAME.csh
-#    echo 'alias par_source "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/source_parallel.csh \\!*"' >> dl_$TASKNAME.csh
-#    echo 'alias se         "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/se_util.csh \\!*"\n' >> dl_$TASKNAME.csh
-#    set N=`cat $TASKDIR/input_datasets.txt | wc -l`
-#    foreach i ( `seq 1 $N` )
-#        set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
-#        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
-#	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
-#	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
-#        set pubname=`grep outputDatasetTag $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
-#	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
-#        eval_or_echo "mkdir -p $DLDIR/$short"
-#        echo "mkdir -p "'$1'"/$short" >> dl_$TASKNAME.csh
-#	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp` )
-#	    eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand $DLDIR/$short --par 4 --run"
-#	    echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand "'$1'"/$short --par 4 --run" >> dl_$TASKNAME.csh
-#	end
-#    end
-#    if ( ( `grep "EDM_NTUPLE" $TASKDIR/config.txt | wc -l` == 1 ) && ( $dry == "0" ) ) echo "EDM_NTUPLE $DLDIR" >> $TASKDIR/config.txt
 
 else if ( `echo $cmd | grep "download" | wc -l` ) then
     if ( $#argv < 3 ) then

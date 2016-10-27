@@ -1,39 +1,31 @@
 # ------------- Data ---------------
-JetHT_Run2016B_PRv1                               /JetHT/Run2016B-PromptReco-v1/MINIAOD
 JetHT_Run2016B_PRv2                               /JetHT/Run2016B-PromptReco-v2/MINIAOD
 JetHT_Run2016C_PRv2                               /JetHT/Run2016C-PromptReco-v2/MINIAOD
 JetHT_Run2016D_PRv2                               /JetHT/Run2016D-PromptReco-v2/MINIAOD
 JetHT_Run2016E_PRv2                               /JetHT/Run2016E-PromptReco-v2/MINIAOD
 JetHT_Run2016F_PRv1                               /JetHT/Run2016F-PromptReco-v1/MINIAOD
 JetHT_Run2016G_PRv1                               /JetHT/Run2016G-PromptReco-v1/MINIAOD
-JetHT_Run2016H_PRv1                               /JetHT/Run2016H-PromptReco-v1/MINIAOD
 
-MET_Run2016B_PRv1                                 /MET/Run2016B-PromptReco-v1/MINIAOD
 MET_Run2016B_PRv2                                 /MET/Run2016B-PromptReco-v2/MINIAOD
 MET_Run2016C_PRv2                                 /MET/Run2016C-PromptReco-v2/MINIAOD
 MET_Run2016D_PRv2                                 /MET/Run2016D-PromptReco-v2/MINIAOD
 MET_Run2016E_PRv2                                 /MET/Run2016E-PromptReco-v2/MINIAOD
 MET_Run2016F_PRv1                                 /MET/Run2016F-PromptReco-v1/MINIAOD
 MET_Run2016G_PRv1                                 /MET/Run2016G-PromptReco-v1/MINIAOD
-MET_Run2016H_PRv1                                 /MET/Run2016H-PromptReco-v1/MINIAOD
 
-SingleElectron_Run2016B_PRv1                      /SingleElectron/Run2016B-PromptReco-v1/MINIAOD
 SingleElectron_Run2016B_PRv2                      /SingleElectron/Run2016B-PromptReco-v2/MINIAOD
 SingleElectron_Run2016C_PRv2                      /SingleElectron/Run2016C-PromptReco-v2/MINIAOD
 SingleElectron_Run2016D_PRv2                      /SingleElectron/Run2016D-PromptReco-v2/MINIAOD
 SingleElectron_Run2016E_PRv2                      /SingleElectron/Run2016E-PromptReco-v2/MINIAOD
 SingleElectron_Run2016F_PRv1                      /SingleElectron/Run2016F-PromptReco-v1/MINIAOD
 SingleElectron_Run2016G_PRv1                      /SingleElectron/Run2016G-PromptReco-v1/MINIAOD
-SingleElectron_Run2016H_PRv1                      /SingleElectron/Run2016H-PromptReco-v1/MINIAOD
 
-SingleMuon_Run2016B_PRv1                          /SingleMuon/Run2016B-PromptReco-v1/MINIAOD
 SingleMuon_Run2016B_PRv2                          /SingleMuon/Run2016B-PromptReco-v2/MINIAOD
 SingleMuon_Run2016C_PRv2                          /SingleMuon/Run2016C-PromptReco-v2/MINIAOD
 SingleMuon_Run2016D_PRv2                          /SingleMuon/Run2016D-PromptReco-v2/MINIAOD
 SingleMuon_Run2016E_PRv2                          /SingleMuon/Run2016E-PromptReco-v2/MINIAOD
 SingleMuon_Run2016F_PRv1                          /SingleMuon/Run2016F-PromptReco-v1/MINIAOD
 SingleMuon_Run2016G_PRv1                          /SingleMuon/Run2016G-PromptReco-v1/MINIAOD
-SingleMuon_Run2016H_PRv1                          /SingleMuon/Run2016H-PromptReco-v1/MINIAOD
 
 # ------------ Signal --------------
 
