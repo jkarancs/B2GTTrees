@@ -33,6 +33,7 @@ private:
   
   // Input
   bool isData_;
+  bool isFastSim_;
   double cross_section_;
   
   std::string lhe_label_;
@@ -99,6 +100,7 @@ private:
 
 B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(edm::ParameterSet const& iConfig) :
   isData_(iConfig.getUntrackedParameter<bool>("isData", false)),
+  isFastSim_(iConfig.getUntrackedParameter<bool>("isFastSim", false)),
   cross_section_(-9999),
   lhe_label_(iConfig.getUntrackedParameter<std::string>("lhe_label")),
   filter_label_(iConfig.getUntrackedParameter<std::string>("filter_label")),

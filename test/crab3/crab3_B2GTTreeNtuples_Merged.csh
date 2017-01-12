@@ -101,10 +101,8 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
     set XSEC_FILE=$5
     set SE_SITE=$6
     set SE_USERDIR=$7
-    set CERT_DIR="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions16/13TeV"
-    set LATEST_GOLDEN_JSON=`ls -lrt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV | awk '{ print $NF }' | grep -vE "MuonPhys|LowPU" | grep "\.txt" | tail -1`
-    #set JSON="$LATEST_GOLDEN_JSON"
-    set ICHEP_GOLDEN_JSON="Cert_271036-276811_13TeV_PromptReco_Collisions16_JSON_NoL1T.txt"
+    set CERT_DIR="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions16/13TeV/ReReco/Final"
+    set LATEST_GOLDEN_JSON=`ls -lrt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/ReReco/Final | awk '{ print $NF }' | grep -vE "MuonPhys|LowPU" | grep "\.txt" | tail -1`
     set JSON="$LATEST_GOLDEN_JSON"
     mkdir $TASKDIR
     echo "SE_SITE "$SE_SITE >! $TASKDIR/config.txt
@@ -125,25 +123,36 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	set primary=`echo $DATASET | sed "s;/; ;g" | awk '{ print $1 }'`
 	set PROCESSED_DS_NAME=`echo $DATASET | sed "s;/; ;g" | awk '{ print $2 }'`
 	set isData=`echo $DATASET | grep 'MINIAOD$' | wc -l`
-	# 2016 Data
 	#echo $primary
-	if ( `echo $PROCESSED_DS_NAME | grep "Run2016" | wc -l`) then
-	    set DATAPROC="Data_80X"
-	    set JEC_ERA="EMPTY"
+	# 2016 Data
+	if ( `echo $PROCESSED_DS_NAME | grep "Run2016[B,C,D]" | wc -l`) then
+	    set DATAPROC="Data_80X_Run2016BCD_23Sep2016"
+	    set JEC_ERA="Spring16_25nsV10All_DATA"
 	    set RUNS="1-999999"
-	# Spring16 MC
-	else if ( `echo $PROCESSED_DS_NAME | grep "RunIISpring16MiniAODv2" | wc -l` ) then
-	    # FastSim
-	    if ( `echo $PROCESSED_DS_NAME | grep "PUSpring16Fast" | wc -l` ) then
-		set DATAPROC="MC_MiniAODv2_80X_FastSim"
-		set JEC_ERA="Spring16_25nsFastSimMC_V1"
-	    else if ( `echo $PROCESSED_DS_NAME | grep "reHLT" | wc -l` ) then
-		set DATAPROC="MC_MiniAODv2_80X_reHLT"
-		set JEC_ERA="EMPTY"
-	    else
-		set DATAPROC="MC_MiniAODv2_80X"
-		set JEC_ERA="EMPTY"
-	    endif
+	else if ( `echo $PROCESSED_DS_NAME | grep "Run2016E" | wc -l`) then
+	    set DATAPROC="Data_80X_Run2016E_23Sep2016"
+	    set JEC_ERA="Spring16_25nsV10All_DATA"
+	    set RUNS="1-999999"
+	else if ( `echo $PROCESSED_DS_NAME | grep "Run2016F" | wc -l`) then
+	    set DATAPROC="Data_80X_Run2016F_23Sep2016"
+	    set JEC_ERA="Spring16_25nsV10All_DATA"
+	    set RUNS="1-999999"
+	else if ( `echo $PROCESSED_DS_NAME | grep "Run2016G" | wc -l`) then
+	    set DATAPROC="Data_80X_Run2016G_23Sep2016"
+	    set JEC_ERA="Spring16_25nsV10All_DATA"
+	    set RUNS="1-999999"
+	else if ( `echo $PROCESSED_DS_NAME | grep "Run2016H" | wc -l`) then
+	    set DATAPROC="Data_80X_Run2016H_PromptReco"
+	    set JEC_ERA="Spring16_25nsV10All_DATA"
+	    set RUNS="1-999999"
+	# Spring16 FastSim MC - Only Signal is needed from here
+	else if ( `echo $PROCESSED_DS_NAME | grep "RunIISpring16MiniAODv2.*PUSpring16Fast" | wc -l` ) then
+	    set DATAPROC="MC_MiniAODv2_80X_FastSim"
+	    set JEC_ERA="Spring16_25nsFastSimMC_V1"
+	else if ( `echo $PROCESSED_DS_NAME | grep "RunIISummer16MiniAODv2" | wc -l` ) then
+	    # FullSim
+	    set DATAPROC="MC_MiniAODv2_80X_Summer16"
+	    set JEC_ERA="Spring16_25nsV10_MC"
 	else
 	    echo "ERROR - Dataset not defined (probably because not using latest): "$DATASET
 	    rm -r $TASKDIR Usage.txt

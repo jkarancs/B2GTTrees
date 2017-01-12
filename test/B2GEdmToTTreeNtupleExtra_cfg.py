@@ -18,6 +18,12 @@ useMINIAOD = True # True: Use on top of B2GAnaFW to produce TTrees, False: Use a
 if useMINIAOD:
     from Analysis.B2GTTrees.b2gedmntuples_cfg import *
     process.endPath = cms.EndPath()
+    process.skimmedPatElectrons.cut = "pt >= 5 && abs(eta) < 2.5"
+    process.electronUserData.eleVetoIdFullInfoMap   = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-veto")
+    process.electronUserData.eleLooseIdFullInfoMap  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-loose")
+    process.electronUserData.eleMediumIdFullInfoMap = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-medium")
+    process.electronUserData.eleTightIdFullInfoMap  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-tight")
+    setupAllVIDIdsInModule(process,'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Spring15_25ns_V1_cff',setupVIDElectronSelection)
 else:
     process = cms.Process("b2gAnalysisTTrees")
     
@@ -51,6 +57,12 @@ else:
                      opts.VarParsing.multiplicity.singleton,
                      opts.VarParsing.varType.bool,
                      'Is data?')
+    
+    options.register('isFastSim',
+                     False,
+                     opts.VarParsing.multiplicity.singleton,
+                     opts.VarParsing.varType.bool,
+                     'Is FastSim?')
     
     #options.register('globalTag',
     #                 '',
@@ -108,6 +120,7 @@ else:
 # TTree code specific options
 ttreeOutputLabel = options.outputLabel
 isData = ("Data" in options.DataProcessing) if useMINIAOD else options.isData
+isFastSim = ("FastSim" in options.DataProcessing) if useMINIAOD else options.isFastSim
 runOnGrid = True
 usePrivateSQLite = False
 if useMINIAOD:
@@ -126,7 +139,7 @@ genHtFilter = False
 process.TFileService = cms.Service("TFileService", fileName = cms.string(ttreeOutputLabel))
 
 ### B2GEdmExtraVarProducer
-from Analysis.B2GAnaFW.b2gedmntuples_cff import puppimetFull, genPart, electrons, muons, photons, photonjets, jetsAK4CHS, jetsAK4Puppi, jetsAK8CHS, jetsAK8Puppi, subjetsAK8CHS, subjetsAK8Puppi, genJetsAK8, genJetsAK8SoftDrop, eventInfo # metNoHF off since 76X
+from Analysis.B2GAnaFW.b2gedmntuples_cff import metFull, puppimetFull, genPart, electrons, muons, photons, photonjets, jetsAK4CHS, jetsAK4Puppi, jetsAK8CHS, jetsAK8Puppi, subjetsAK8CHS, subjetsAK8Puppi, genJetsAK8, genJetsAK8SoftDrop, eventInfo # metNoHF off since 76X
 
 # import DB content from sqlite
 
@@ -170,8 +183,41 @@ if usePrivateSQLite and not useMINIAOD:
 		    )
     process.es_prefer_jec = cms.ESPrefer("PoolDBESSource",'jec')
 
+# Revert back to CHS - 22 December 2016
+usePuppiJets = False # Also make sure B2GTTreeMaker_cff.py is consistent
+usePuppiMet  = False # Used for Razor calculation
+
+if usePuppiJets:
+    AK4_label     = "jetsAK4Puppi"
+    AK4_prefix    = "jetAK4Puppi"
+    AK4_key       = "jetKeysAK4Puppi"
+    AK8_label     = "jetsAK8Puppi"
+    AK8_prefix    = "jetAK8Puppi"
+    AK8_key       = "jetKeysAK8Puppi"
+    AK8sub_label  = "subjetsAK8Puppi"
+    AK8sub_prefix = "subjetAK8Puppi"
+    AK8sub_key    = "subjetKeysAK8Puppi"
+else:
+    AK4_label     = "jetsAK4CHS"
+    AK4_prefix    = "jetAK4CHS"
+    AK4_key       = "jetKeysAK4CHS"
+    AK8_label     = "jetsAK8CHS"
+    AK8_prefix    = "jetAK8CHS"
+    AK8_key       = "jetKeysAK8CHS"
+    AK8sub_label  = "subjetsAK8CHS"
+    AK8sub_prefix = "subjetAK8CHS"
+    AK8sub_key    = "subjetKeysAK8CHS"
+    
+if usePuppiMet:
+    met_label  = "puppimetFull"
+    met_prefix = puppimetFull.prefix
+else:
+    met_label  = "metFull"
+    met_prefix = metFull.prefix
+
 process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
     isData = cms.untracked.bool(isData),
+    isFastSim = cms.untracked.bool(isFastSim),
     lhe_label = cms.untracked.string(lheLabel),
     filter_label = cms.untracked.string("METUserData"),
     trigger_label = cms.untracked.string("TriggerUserData"),
@@ -179,23 +225,23 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
     evt_prefix = cms.untracked.string(""),
     vtx_label = cms.untracked.string("vertexInfo"),
     vtx_prefix = cms.untracked.string(""),
-    met_label = cms.untracked.string("puppimetFull"), # New 13 September 2016
-    met_prefix = puppimetFull.prefix,
+    met_label  = cms.untracked.string(met_label),
+    met_prefix = met_prefix,
     gen_label = cms.untracked.string("genPart"),
     gen_prefix = genPart.prefix,
     electrons_label = cms.untracked.string("electrons"),
     electrons_prefix = electrons.prefix,
     muons_label = cms.untracked.string("muons"),
     muons_prefix = muons.prefix,
-    AK4Jets_label = cms.untracked.string("jetsAK4Puppi"),
-    AK4Jets_prefix = jetsAK4Puppi.prefix,
-    AK8Jets_label = cms.untracked.string("jetsAK8Puppi"),
-    AK8Jets_prefix = jetsAK8Puppi.prefix,
-    AK8Subjets_label = cms.untracked.string("subjetsAK8Puppi"),
-    AK8Subjets_prefix = subjetsAK8Puppi.prefix,
-    AK4JetKeys_label = cms.untracked.string("jetKeysAK4Puppi"),
-    AK8JetKeys_label = cms.untracked.string("jetKeysAK8Puppi"),
-    AK8SubjetKeys_label = cms.untracked.string("subjetKeysAK8Puppi"),
+    AK4Jets_label  = cms.untracked.string(AK4_label),
+    AK4Jets_prefix = cms.untracked.string(AK4_prefix),
+    AK4JetKeys_label = cms.untracked.string(AK4_key),
+    AK8Jets_label  = cms.untracked.string(AK8_label),
+    AK8Jets_prefix = cms.untracked.string(AK8_prefix),
+    AK8JetKeys_label = cms.untracked.string(AK8_key),
+    AK8Subjets_label  = cms.untracked.string(AK8sub_label),
+    AK8Subjets_prefix = cms.untracked.string(AK8sub_prefix),
+    AK8SubjetKeys_label = cms.untracked.string(AK8sub_key),
     singleI = cms.untracked.vstring(
         # Event filters (these are automatically picked up)
         "Flag_HBHENoiseFilter",
@@ -220,42 +266,31 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "Flag_trkPOG_logErrorTooManyClusters",
         "Flag_METFilters",
         # Add trigger names below (these are automatically picked up)
-        # Hadronic
-        #"HLT_PFJet40",
-        #"HLT_PFJet60",
-        #"HLT_PFJet80",
-        #"HLT_PFJet140",
+        # Single Jet
+        "HLT_PFJet40",
+        "HLT_PFJet60",
+        "HLT_PFJet80",
+        "HLT_PFJet140",
         "HLT_PFJet200",
         "HLT_PFJet260",
         "HLT_PFJet320",
         "HLT_PFJet400",
         "HLT_PFJet450",
         "HLT_PFJet500",
+        "HLT_AK8PFJet40",
+        "HLT_AK8PFJet60",
+        "HLT_AK8PFJet80",
+        "HLT_AK8PFJet140",
+        "HLT_AK8PFJet200",
+        "HLT_AK8PFJet260",
+        "HLT_AK8PFJet320",
         "HLT_AK8PFJet360_TrimMass30",
-        "HLT_AK8PFJet40",  # New in 80X
-        "HLT_AK8PFJet60",  # New in 80X
-        "HLT_AK8PFJet80",  # New in 80X
-        "HLT_AK8PFJet140", # New in 80X
-        "HLT_AK8PFJet200", # New in 80X
-        "HLT_AK8PFJet260", # New in 80X
-        "HLT_AK8PFJet320", # New in 80X
-        "HLT_AK8PFJet400", # New in 80X
-        "HLT_AK8PFJet450", # New in 80X
-        "HLT_AK8PFJet500", # New in 80X
-        "HLT_AK8DiPFJet250_200_TrimMass30", # New in 80X
-        "HLT_AK8DiPFJet280_200_TrimMass30", # New in 80X
-        "HLT_AK8DiPFJet250_200_TrimMass30_BTagCSV_p20", # New in 80X
-        "HLT_AK8DiPFJet280_200_TrimMass30_BTagCSV_p20", # New in 80X
-        "HLT_AK8DiPFJet250_200_TrimMass30_BTagCSV0p45",
-        "HLT_AK8DiPFJet280_200_TrimMass30_BTagCSV0p45",
-        "HLT_AK8PFHT600_TrimR0p1PT0p03Mass50_BTagCSV_p20_v2", # New in 80X
-        "HLT_AK8PFHT600_TrimR0p1PT0p03Mass50_BTagCSV0p45",
-        "HLT_AK8PFHT650_TrimR0p1PT0p03Mass50",
-        "HLT_AK8PFHT700_TrimR0p1PT0p03Mass50",
-        "HLT_PFHT550_4JetPt50",
-        "HLT_PFHT650_4JetPt50",
-        "HLT_PFHT750_4JetPt50",
-        "HLT_ECALHT800",
+        "HLT_AK8PFJet400_TrimMass30",
+        "HLT_AK8PFJet400",
+        "HLT_AK8PFJet450",
+        "HLT_AK8PFJet500",
+        # HT
+        "HLT_PFHT125",
         "HLT_PFHT200",
         "HLT_PFHT250",
         "HLT_PFHT300",
@@ -266,123 +301,115 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "HLT_PFHT650",
         "HLT_PFHT800",
         "HLT_PFHT900",
+        "HLT_AK8PFHT650_TrimR0p1PT0p03Mass50",
+        "HLT_AK8PFHT700_TrimR0p1PT0p03Mass50",
+        "HLT_AK8PFHT750_TrimMass50",
+        "HLT_AK8PFHT800_TrimMass50",
+        "HLT_PFHT550_4JetPt50",
+        "HLT_PFHT650_4JetPt50",
+        "HLT_PFHT750_4JetPt50",
+        "HLT_PFHT750_4JetPt70",
+        "HLT_PFHT750_4JetPt80",
+        "HLT_PFHT800_4JetPt50",
+        "HLT_PFHT850_4JetPt50",
+        # 2 AK8 Jet
+        "HLT_AK8DiPFJet250_200_TrimMass30",
+        "HLT_AK8DiPFJet280_200_TrimMass30",
+        "HLT_AK8DiPFJet300_200_TrimMass30",
         # MET
+        "HLT_MET100",
+        "HLT_MET150",
         "HLT_MET200",
         "HLT_MET250",
         "HLT_MET300",
         "HLT_MET600",
         "HLT_MET700",
+        "HLT_PFMET170_BeamHaloCleaned",
+        "HLT_PFMET170_HBHECleaned",
+        "HLT_PFMET170_HBHE_BeamHaloCleaned",
+        "HLT_PFMET170_JetIdCleaned",
+        "HLT_PFMET170_NoiseCleaned",
+        "HLT_PFMET170_NotCleaned",
+        "HLT_PFMETTypeOne190_HBHE_BeamHaloCleaned",
         "HLT_PFMET300",
         "HLT_PFMET400",
         "HLT_PFMET500",
         "HLT_PFMET600",
-        "HLT_PFHT300_PFMET100",
-        "HLT_PFHT300_PFMET110",
-        # Razor
-        "HLT_Rsq0p25",
-        "HLT_Rsq0p30",
-        "HLT_RsqMR240_Rsq0p09_MR200",
-        "HLT_RsqMR240_Rsq0p09_MR200_4jet",
-        "HLT_RsqMR270_Rsq0p09_MR200",
-        "HLT_RsqMR270_Rsq0p09_MR200_4jet",
-        # Lepton + Jet
+        # MHT
+        "HLT_CaloMHTNoPU90_PFMET90_PFMHT90_IDTight_BTagCSV_p067",
+        "HLT_CaloMHTNoPU90_PFMET90_PFMHT90_IDTight",
+        "HLT_PFMET100_PFMHT100_IDTight_BeamHaloCleaned",
+        "HLT_PFMET100_PFMHT100_IDTight",
+        "HLT_PFMET110_PFMHT110_IDTight",
+        "HLT_PFMET120_PFMHT120_IDTight",
+        "HLT_PFMET90_PFMHT90_IDTight",
+        "HLT_PFMETNoMu100_PFMHTNoMu100_IDTight",
+        "HLT_PFMETNoMu110_PFMHTNoMu110_IDTight",
+        "HLT_PFMETNoMu120_PFMHTNoMu120_IDTight",
+        "HLT_PFMETNoMu90_PFMHTNoMu90_IDTight",
+        # Single Mu
+        "HLT_Mu17",
+        "HLT_Mu20",
+        "HLT_Mu27",
+        "HLT_Mu50",
+        "HLT_Mu55",
+        "HLT_TkMu17",
+        "HLT_TkMu20",
+        "HLT_TkMu27",
+        "HLT_TkMu50",
+        "HLT_IsoMu18",
+        "HLT_IsoMu20",
+        "HLT_IsoMu22",
+        "HLT_IsoMu24",
+        "HLT_IsoMu27",
+        "HLT_IsoTkMu18",
+        "HLT_IsoTkMu20",
+        "HLT_IsoTkMu22",
+        "HLT_IsoTkMu24",
+        "HLT_IsoTkMu27",
+        # Single Ele
+        "HLT_Ele17_CaloIdL_GsfTrkIdVL",
+        "HLT_Ele22_eta2p1_WPLoose_Gsf",
+        "HLT_Ele23_WPLoose_Gsf",
+        "HLT_Ele24_eta2p1_WPLoose_Gsf",
+        "HLT_Ele25_WPTight_Gsf",
+        "HLT_Ele25_eta2p1_WPLoose_Gsf",
+        "HLT_Ele25_eta2p1_WPTight_Gsf",
+        "HLT_Ele27_WPLoose_Gsf",
+        "HLT_Ele27_WPTight_Gsf",
+        "HLT_Ele27_eta2p1_WPLoose_Gsf",
+        "HLT_Ele27_eta2p1_WPTight_Gsf",
+        "HLT_Ele30_WPTight_Gsf",
+        "HLT_Ele30_eta2p1_WPLoose_Gsf",
+        "HLT_Ele30_eta2p1_WPTight_Gsf",
+        "HLT_Ele32_WPTight_Gsf",
+        "HLT_Ele32_eta2p1_WPLoose_Gsf",
+        "HLT_Ele32_eta2p1_WPTight_Gsf",
+        "HLT_Ele35_WPLoose_Gsf",
+        "HLT_Ele45_WPLoose_Gsf",
+        "HLT_Ele105_CaloIdVT_GsfTrkIdT",
+        "HLT_Ele115_CaloIdVT_GsfTrkIdT",
+        "HLT_Ele145_CaloIdVT_GsfTrkIdT",
+        "HLT_Ele200_CaloIdVT_GsfTrkIdT",
+        "HLT_Ele250_CaloIdVT_GsfTrkIdT",
+        "HLT_Ele300_CaloIdVT_GsfTrkIdT",
+        # Lepton + 2 Jet
         "HLT_Mu30_eta2p1_PFJet150_PFJet50",
         "HLT_Mu40_eta2p1_PFJet200_PFJet50",
         "HLT_Ele35_CaloIdVT_GsfTrkIdT_PFJet150_PFJet50",
         "HLT_Ele45_CaloIdVT_GsfTrkIdT_PFJet200_PFJet50",
-        "HLT_Ele50_CaloIdVT_GsfTrkIdT_PFJet140",
-        "HLT_Ele50_CaloIdVT_GsfTrkIdT_PFJet165",
-        #"HLT_Ele8_CaloIdM_TrackIdM_PFJet30",
-        #"HLT_Ele12_CaloIdM_TrackIdM_PFJet30",
-        #"HLT_Ele18_CaloIdM_TrackIdM_PFJet30",
-        #"HLT_Ele23_CaloIdM_TrackIdM_PFJet30",
-        #"HLT_Ele33_CaloIdM_TrackIdM_PFJet30",
-        #"HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30",
-        #"HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30",
-        #"HLT_Ele33_CaloIdL_TrackIdL_IsoVL_PFJet30",
-        # Lepton + BTag/HT/MET
-        "HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p54PF",
-        "HLT_Ele15_IsoVVVL_BTagCSV0p72_PFHT400",
-        "HLT_Ele15_IsoVVVL_PFHT350_PFMET50",
-        "HLT_Ele15_IsoVVVL_PFHT400_PFMET50", # New in 80X
-        "HLT_Ele15_IsoVVVL_PFHT600",
-        "HLT_Ele15_IsoVVVL_PFHT350",
-        "HLT_Ele15_IsoVVVL_PFHT400", # New in 80X
-        "HLT_Ele50_IsoVVVL_PFHT400", # New in 80X
-        "HLT_Ele23_WPLoose_Gsf_CentralPFJet30_BTagCSV07",
-        "HLT_Ele27_WPLoose_Gsf_CentralPFJet30_BTagCSV07",
-        "HLT_Ele27_eta2p1_WPLoose_Gsf_HT200",
-        "HLT_Mu3er_PFHT140_PFMET125",
-        "HLT_Mu6_PFHT200_PFMET80_BTagCSV0p72",
-        "HLT_Mu6_PFHT200_PFMET100",
-        "HLT_Mu10_CentralPFJet30_BTagCSV0p54PF",
-        "HLT_Mu15_IsoVVVL_BTagCSV0p72_PFHT400",
-        "HLT_Mu15_IsoVVVL_PFHT350_PFMET50",
-        "HLT_Mu15_IsoVVVL_PFHT400_PFMET50", # New in 80X
-        "HLT_Mu15_IsoVVVL_PFHT600",
-        "HLT_Mu15_IsoVVVL_PFHT350",
-        "HLT_Mu15_IsoVVVL_PFHT400", # New in 80X
-        "HLT_Mu50_IsoVVVL_PFHT400", # New in 80X
-        # Lepton - Non-isolated
-        #"HLT_Mu8",
-        #"HLT_Mu17",
-        #"HLT_Mu20",
-        #"HLT_TkMu20",
-        #"HLT_Mu24_eta2p1",
-        #"HLT_TkMu24_eta2p1",
-        #"HLT_Mu27",
-        #"HLT_TkMu27",
-        "HLT_Mu45_eta2p1",
-        "HLT_Mu50",
-        "HLT_Mu55",
-        "HLT_Mu300",
-        "HLT_Mu350",
-        "HLT_Ele105_CaloIdVT_GsfTrkIdT",
-        "HLT_Ele115_CaloIdVT_GsfTrkIdT",
-        # Lepton - Isolated
-        "HLT_IsoMu18",
-        "HLT_IsoTkMu18",
-        #"HLT_OldIsoMu18",
-        #"HLT_OldIsoTkMu18",
-        "HLT_IsoMu20",
-        "HLT_IsoTkMu20",
-        "HLT_IsoMu22",
-        "HLT_IsoTkMu22",
-        "HLT_IsoMu24",
-        "HLT_IsoTkMu24",
-        "HLT_IsoTkMu24_eta2p1",
-        "HLT_IsoMu27",
-        "HLT_IsoTkMu27",
-        #"HLT_Mu8_TrkIsoVVL",
-        #"HLT_Mu17_TrkIsoVVL",
-        "HLT_Ele22_eta2p1_WPLoose_Gsf",
-        "HLT_Ele22_eta2p1_WPTight_Gsf",
-        "HLT_Ele23_WPLoose_Gsf",
-        "HLT_Ele24_WPLoose_Gsf", # New in 80X
-        "HLT_Ele24_eta2p1_WPLoose_Gsf", # New in 80X
-        "HLT_Ele25_eta2p1_WPLoose_Gsf", # New in 80X
-        "HLT_Ele25_eta2p1_WPTight_Gsf", # New in 80X
-        "HLT_Ele27_WPLoose_Gsf",
-        "HLT_Ele27_WPTight_Gsf", # New in 80X
-        "HLT_Ele27_eta2p1_WPLoose_Gsf",
-        "HLT_Ele27_eta2p1_WPTight_Gsf",
-        "HLT_Ele32_eta2p1_WPTight_Gsf",
-        #"HLT_Ele12_CaloIdL_TrackIdL_IsoVL",
-        #"HLT_Ele17_CaloIdL_TrackIdL_IsoVL",
-        #"HLT_Ele23_CaloIdL_TrackIdL_IsoVL",
-        # event variables
+        # end of triggers
+        # Event variables
         "evt_NGoodVtx",
         "evt_LHA_PDF_ID",
+        "evt_NIsoTrk",
     ),
     singleF = cms.untracked.vstring(
         "evt_MR",
         "evt_MTR",
         "evt_R",
         "evt_R2",
-        "evt_AK8_MR",
-        "evt_AK8_MTR",
-        "evt_AK8_R",
-        "evt_AK8_R2",
+        "evt_MR_Smear",
         "evt_XSec",
         "evt_Gen_Weight",
         "evt_Gen_Ht",
@@ -401,21 +428,21 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "gen_Dau0Status",
         "gen_Dau1ID",
         "gen_Dau1Status",
-        "jetAK8Puppi_HasNearGenTop",
-        "jetAK8Puppi_NearGenTopIsHadronic",
-        "jetAK8Puppi_NearGenWIsHadronic",
-        "jetAK8Puppi_NearGenWToENu",
-        "jetAK8Puppi_NearGenWToMuNu",
-        "jetAK8Puppi_NearGenWToTauNu",
-        "jetAK4Puppi_looseJetID",
-        "jetAK4Puppi_tightJetID",
-        "jetAK4Puppi_tightLepVetoJetID",
-        "jetAK8Puppi_looseJetID",
-        "jetAK8Puppi_tightJetID",
-        "jetAK8Puppi_tightLepVetoJetID",
-        "subjetAK8Puppi_looseJetID",
-        "subjetAK8Puppi_tightJetID",
-        "subjetAK8Puppi_tightLepVetoJetID",
+        AK8_prefix+"_HasNearGenTop",
+        AK8_prefix+"_NearGenTopIsHadronic",
+        AK8_prefix+"_NearGenWIsHadronic",
+        AK8_prefix+"_NearGenWToENu",
+        AK8_prefix+"_NearGenWToMuNu",
+        AK8_prefix+"_NearGenWToTauNu",
+        AK4_prefix+"_looseJetID",
+        AK4_prefix+"_tightJetID",
+        AK4_prefix+"_tightLepVetoJetID",
+        AK8_prefix+"_looseJetID",
+        AK8_prefix+"_tightJetID",
+        AK8_prefix+"_tightLepVetoJetID",
+        AK8sub_prefix+"_looseJetID",
+        AK8sub_prefix+"_tightJetID",
+        AK8sub_prefix+"_tightLepVetoJetID",
         "el_IsPartOfNearAK4Jet",
         "el_IsPartOfNearAK8Jet",
         "el_IsPartOfNearSubjet",
@@ -426,10 +453,10 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         #"el_IDLoose_NoIso",
         #"el_IDMedium_NoIso",
         #"el_IDTight_NoIso",
-        "el_IsoVeto",
-        "el_IsoLoose",
-        "el_IsoMedium",
-        "el_IsoTight",
+        #"el_IsoVeto",
+        #"el_IsoLoose",
+        #"el_IsoMedium",
+        #"el_IsoTight",
         #"el_IDVeto",
         #"el_IDLoose",
         #"el_IDMedium",
@@ -439,22 +466,28 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "scale_Weights",
         "pdf_Weights",
         "alphas_Weights",
+        "metsyst_Pt",
+        "metsyst_Phi",
+        "puppimetsyst_Pt",
+        "puppimetsyst_Phi",
         "gen_Pt",
         "gen_Eta",
         "gen_Phi",
         "gen_E",
         "gen_Mass",
         "gen_Charge",
-        "jetAK8Puppi_DRNearGenTop",
-        "jetAK8Puppi_DRNearGenWFromTop",
-        "jetAK8Puppi_DRNearGenBFromTop",
-        "jetAK8Puppi_DRNearGenLepFromSLTop",
-        "jetAK8Puppi_DRNearGenNuFromSLTop",
-        "jetAK8Puppi_PtNearGenTop",
-        "jetAK8Puppi_PtNearGenBFromTop",
-        "jetAK8Puppi_PtNearGenWFromTop",
-        "jetAK8Puppi_PtNearGenLepFromSLTop",
-        "jetAK8Puppi_PtNearGenNuFromSLTop",
+        AK8_prefix+"_maxSubjetCSVv2",
+        AK8_prefix+"_maxSubjetCMVAv2",
+        AK8_prefix+"_DRNearGenTop",
+        AK8_prefix+"_DRNearGenWFromTop",
+        AK8_prefix+"_DRNearGenBFromTop",
+        AK8_prefix+"_DRNearGenLepFromSLTop",
+        AK8_prefix+"_DRNearGenNuFromSLTop",
+        AK8_prefix+"_PtNearGenTop",
+        AK8_prefix+"_PtNearGenBFromTop",
+        AK8_prefix+"_PtNearGenWFromTop",
+        AK8_prefix+"_PtNearGenLepFromSLTop",
+        AK8_prefix+"_PtNearGenNuFromSLTop",
         "el_DRNearGenEleFromSLTop",
         "el_PtNearGenEleFromSLTop",
         "el_PtNearGenTop",
@@ -524,7 +557,7 @@ process.PtMinAK8JetCountFilter = cms.EDFilter("PatJetCountFilter", # This one wo
 # Filter For Edm ntuple - Use this here
 #process.EdmNtupleCountFilter = cms.EDFilter("EdmNtupleCountFilter", # This one works on EdmNtuple
 #    filter = cms.bool(True), # False also filters for some reason (disable in Path instead)
-#    src = cms.InputTag("jetsAK8Puppi","jetAK8PuppiPt"),
+#    src = cms.InputTag(AK8_label,AK8_prefix+"Pt"),
 #    #min = cms.double(350),
 #    #minNumber = cms.uint32(2)
 #    min = cms.double(150),
@@ -532,13 +565,13 @@ process.PtMinAK8JetCountFilter = cms.EDFilter("PatJetCountFilter", # This one wo
 #)
 process.Min3AK4JetFilter = cms.EDFilter("EdmNtupleCountFilter", # This one works on EdmNtuple
     filter = cms.bool(True), # False also filters for some reason (disable in Path instead)
-    src = cms.InputTag("jetsAK4Puppi","jetAK4PuppiPt"),
+    src = cms.InputTag(AK4_label,AK4_prefix+"Pt"),
     min = cms.double(0),
     minNumber = cms.uint32(3)
 )
 process.Min1AK8JetFilter = cms.EDFilter("EdmNtupleCountFilter", # This one works on EdmNtuple
     filter = cms.bool(True), # False also filters for some reason (disable in Path instead)
-    src = cms.InputTag("jetsAK8Puppi","jetAK8PuppiPt"),
+    src = cms.InputTag(AK8_label,AK8_prefix+"Pt"),
     min = cms.double(0),
     minNumber = cms.uint32(1)
 )

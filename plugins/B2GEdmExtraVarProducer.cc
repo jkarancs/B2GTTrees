@@ -6,6 +6,10 @@
 #include "SimDataFormats/GeneratorProducts/interface/GenLumiInfoHeader.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "DataFormats/PatCandidates/interface/MET.h"
+#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
+#include "DataFormats/VertexReco/interface/Vertex.h"
+#include "DataFormats/Math/interface/deltaR.h"
 
 void B2GEdmExtraVarProducer::init_tokens_() {
   edm::EDGetTokenT<std::vector<std::string> >(mayConsume<std::vector<std::string>, edm::InRun>(edm::InputTag(trigger_label_, "triggerNameTree")));
@@ -29,6 +33,7 @@ void B2GEdmExtraVarProducer::init_tokens_() {
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"E")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"jecFactor0")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"jetArea")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"SmearedPt")));
   
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Pt")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Eta")));
@@ -53,6 +58,8 @@ void B2GEdmExtraVarProducer::init_tokens_() {
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"E")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"jecFactor0")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"jetArea")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"CSVv2")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"CMVAv2")));
   
   // Jet ID variables
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"neutralHadronEnergyFrac")));
@@ -109,6 +116,11 @@ void B2GEdmExtraVarProducer::init_tokens_() {
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(muons_label_, muons_prefix_+"Charge")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(muons_label_, muons_prefix_+"IsTightMuon")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(muons_label_, muons_prefix_+"Key")));
+
+  edm::EDGetTokenT<reco::VertexCollection>(consumes<reco::VertexCollection>(edm::InputTag("offlineSlimmedPrimaryVertices")));
+  edm::EDGetTokenT<pat::PackedCandidateCollection>(consumes<pat::PackedCandidateCollection>(edm::InputTag("packedPFCandidates")));
+  edm::EDGetTokenT<pat::METCollection>(consumes<pat::METCollection>(edm::InputTag("slimmedMETs")));
+  edm::EDGetTokenT<pat::METCollection>(consumes<pat::METCollection>(edm::InputTag("slimmedMETsPuppi")));
   
   if (!isData_) {
     edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"Pt")));
@@ -251,6 +263,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   iEvent.getByLabel(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"E"),          h_floats_["AK4_E"]);
   iEvent.getByLabel(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"jecFactor0"), h_floats_["AK4_jecFactor0"]);
   iEvent.getByLabel(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"jetArea"),    h_floats_["AK4_jetArea"]);
+  iEvent.getByLabel(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"SmearedPt"),  h_floats_["AK4_SmearedPt"]);
   
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Pt"),              h_floats_["AK8_Pt"]);
   iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Eta"),             h_floats_["AK8_Eta"]);
@@ -275,6 +288,8 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"E"),          h_floats_["AK8Sub_E"]);
   iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"jecFactor0"), h_floats_["AK8Sub_jecFactor0"]);
   iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"jetArea"),    h_floats_["AK8Sub_jetArea"]);
+  iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"CSVv2"),      h_floats_["AK8Sub_CSVv2"]);
+  iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"CMVAv2"),     h_floats_["AK8Sub_CMVAv2"]);
   
   iEvent.getByLabel(edm::InputTag(AK4JetKeys_label_),      h_keys_["AK4"]);
   iEvent.getByLabel(edm::InputTag(AK8JetKeys_label_),      h_keys_["AK8"]);
@@ -452,6 +467,8 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       // Madgraph nf4 uses NNPDF30_lo_as_0130_nf_4 (ID=263400)
       // Which is the second 101 pdf set, again has to skip first weight
       if (lha_pdf_id_ == 263400) first = 111;
+      // FastSim indices are larger by 1
+      if (isFastSim_) ++first;
       if (lheEvtInfo->weights().size()>=first+100) for (size_t i=first; i<first+100; ++i)
         vector_float_["pdf_Weights"].push_back(lheEvtInfo->weights()[i].wgt/lheOrigWeight);
       
@@ -462,12 +479,17 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       // is given --> scale result uncertainty by 0.75
       if ( lheEvtInfo->weights().size()>=111 &&
             ( (lha_pdf_id_ == 260000) || // Powheg 5nf
-             (lha_pdf_id_ == 260400) || // Powheg 4nf 
-             (lha_pdf_id_ == 292000) || // aMC@NLO 5nf
-             (lha_pdf_id_ == 292200)    // aMC@NLO 5nf
-             ) ) {
-        vector_float_["alphas_Weights"].push_back(lheEvtInfo->weights()[109].wgt/lheOrigWeight);
-        vector_float_["alphas_Weights"].push_back(lheEvtInfo->weights()[110].wgt/lheOrigWeight);
+	      (lha_pdf_id_ == 260400) || // Powheg 4nf 
+	      (lha_pdf_id_ == 292000) || // aMC@NLO 5nf
+	      (lha_pdf_id_ == 292200)    // aMC@NLO 5nf
+	      ) ) {
+	if (isFastSim_) {
+	  vector_float_["alphas_Weights"].push_back(lheEvtInfo->weights()[110].wgt/lheOrigWeight);
+	  vector_float_["alphas_Weights"].push_back(lheEvtInfo->weights()[111].wgt/lheOrigWeight);
+	} else {
+	  vector_float_["alphas_Weights"].push_back(lheEvtInfo->weights()[109].wgt/lheOrigWeight);
+	  vector_float_["alphas_Weights"].push_back(lheEvtInfo->weights()[110].wgt/lheOrigWeight);
+	}
       }
     } else if (genEvtInfo.isValid()) {
       // SUSY MC only has genEvtInfo
@@ -705,6 +727,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       bool sameDau = 0;
       for (size_t j=0, ndau=p.numberOfDaughters(); j<ndau; ++j) if (p.daughter(j)->pdgId()==Id) sameDau = 1;
       if (!sameDau) {
+	std::cout<<i<<" "<<Id<<std::endl;
 	if (abs(Id)==6) {
 	  gen_top.push_back(p4);
 	  gen_top_ID.push_back(Id);
@@ -950,35 +973,35 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   JME::JetResolutionScaleFactor res_sf_AK4 = JME::JetResolutionScaleFactor(JER_location_+"_SF_AK4PFchs.txt");
   JME::JetResolutionScaleFactor res_sf_AK8 = JME::JetResolutionScaleFactor(JER_location_+"_SF_AK8PFchs.txt");
   
-  vector_float_["jetAK4Puppi_jecUncertainty"].assign(njet_AK4,-9999);
-  vector_float_["jetAK4Puppi_PtResolution"].assign(njet_AK4,-9999);
-  vector_float_["jetAK4Puppi_JERSF"].assign(njet_AK4,-9999);
-  vector_float_["jetAK4Puppi_JERSFDown"].assign(njet_AK4,-9999);
-  vector_float_["jetAK4Puppi_JERSFUp"].assign(njet_AK4,-9999);
+  vector_float_[AK4Jets_prefix_+"_jecUncertainty"].assign(njet_AK4,-9999);
+  vector_float_[AK4Jets_prefix_+"_PtResolution"].assign(njet_AK4,-9999);
+  vector_float_[AK4Jets_prefix_+"_JERSF"].assign(njet_AK4,-9999);
+  vector_float_[AK4Jets_prefix_+"_JERSFDown"].assign(njet_AK4,-9999);
+  vector_float_[AK4Jets_prefix_+"_JERSFUp"].assign(njet_AK4,-9999);
   for (size_t iJet=0; iJet<njet_AK4; ++iJet) {
     jecUnc_AK4.setJetPt(h_floats_["AK4_Pt"]->at(iJet));
     jecUnc_AK4.setJetEta(h_floats_["AK4_Eta"]->at(iJet));
     jetParam.setJetPt(h_floats_["AK4_Pt"]->at(iJet)).setJetEta(h_floats_["AK4_Eta"]->at(iJet)).setRho(*h_double_["evt_rho"]);
-    vector_float_["jetAK4Puppi_jecUncertainty"][iJet] = jecUnc_AK4.getUncertainty(true);
-    vector_float_["jetAK4Puppi_PtResolution"][iJet] = resolution_AK4.getResolution(jetParam);
-    vector_float_["jetAK4Puppi_JERSF"][iJet]     = res_sf_AK4.getScaleFactor(jetParam);
-    vector_float_["jetAK4Puppi_JERSFDown"][iJet] = res_sf_AK4.getScaleFactor(jetParam, Variation::UP);
-    vector_float_["jetAK4Puppi_JERSFUp"][iJet]   = res_sf_AK4.getScaleFactor(jetParam, Variation::DOWN);
+    vector_float_[AK4Jets_prefix_+"_jecUncertainty"][iJet] = jecUnc_AK4.getUncertainty(true);
+    vector_float_[AK4Jets_prefix_+"_PtResolution"][iJet] = resolution_AK4.getResolution(jetParam);
+    vector_float_[AK4Jets_prefix_+"_JERSF"][iJet]     = res_sf_AK4.getScaleFactor(jetParam);
+    vector_float_[AK4Jets_prefix_+"_JERSFDown"][iJet] = res_sf_AK4.getScaleFactor(jetParam, Variation::UP);
+    vector_float_[AK4Jets_prefix_+"_JERSFUp"][iJet]   = res_sf_AK4.getScaleFactor(jetParam, Variation::DOWN);
   }
-  vector_float_["jetAK8Puppi_jecUncertainty"].assign(njet_AK8,-9999);
-  vector_float_["jetAK8Puppi_PtResolution"].assign(njet_AK8,-9999);
-  vector_float_["jetAK8Puppi_JERSF"].assign(njet_AK8,-9999);
-  vector_float_["jetAK8Puppi_JERSFDown"].assign(njet_AK8,-9999);
-  vector_float_["jetAK8Puppi_JERSFUp"].assign(njet_AK8,-9999);
+  vector_float_[AK8Jets_prefix_+"_jecUncertainty"].assign(njet_AK8,-9999);
+  vector_float_[AK8Jets_prefix_+"_PtResolution"].assign(njet_AK8,-9999);
+  vector_float_[AK8Jets_prefix_+"_JERSF"].assign(njet_AK8,-9999);
+  vector_float_[AK8Jets_prefix_+"_JERSFDown"].assign(njet_AK8,-9999);
+  vector_float_[AK8Jets_prefix_+"_JERSFUp"].assign(njet_AK8,-9999);
   for (size_t iJet=0; iJet<njet_AK8; ++iJet) {
     jecUnc_AK8.setJetPt(h_floats_["AK8_Pt"]->at(iJet));
     jecUnc_AK8.setJetEta(h_floats_["AK8_Eta"]->at(iJet));
     jetParam.setJetPt(h_floats_["AK8_Pt"]->at(iJet)).setJetEta(h_floats_["AK8_Eta"]->at(iJet)).setRho(*h_double_["evt_rho"]);
-    vector_float_["jetAK8Puppi_jecUncertainty"][iJet] = jecUnc_AK8.getUncertainty(true);
-    vector_float_["jetAK8Puppi_PtResolution"][iJet] = resolution_AK8.getResolution(jetParam);
-    vector_float_["jetAK8Puppi_JERSF"][iJet]     = res_sf_AK8.getScaleFactor(jetParam);
-    vector_float_["jetAK8Puppi_JERSFDown"][iJet] = res_sf_AK8.getScaleFactor(jetParam, Variation::UP);
-    vector_float_["jetAK8Puppi_JERSFUp"][iJet]   = res_sf_AK8.getScaleFactor(jetParam, Variation::DOWN);
+    vector_float_[AK8Jets_prefix_+"_jecUncertainty"][iJet] = jecUnc_AK8.getUncertainty(true);
+    vector_float_[AK8Jets_prefix_+"_PtResolution"][iJet] = resolution_AK8.getResolution(jetParam);
+    vector_float_[AK8Jets_prefix_+"_JERSF"][iJet]     = res_sf_AK8.getScaleFactor(jetParam);
+    vector_float_[AK8Jets_prefix_+"_JERSFDown"][iJet] = res_sf_AK8.getScaleFactor(jetParam, Variation::UP);
+    vector_float_[AK8Jets_prefix_+"_JERSFUp"][iJet]   = res_sf_AK8.getScaleFactor(jetParam, Variation::DOWN);
   }
   */
   
@@ -997,54 +1020,54 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   FactorizedJetCorrector AK8_JetCorrector(AK8_vPar);
   
   // GEN infos
-  vector_int_["jetAK8Puppi_HasNearGenTop"].assign(njet_AK8,-9999);
-  vector_int_["jetAK8Puppi_NearGenTopIsHadronic"].assign(njet_AK8,-9999);
-  vector_int_["jetAK8Puppi_NearGenWIsHadronic"].assign(njet_AK8,-9999);
-  vector_int_["jetAK8Puppi_NearGenWToENu"].assign(njet_AK8,-9999);
-  vector_int_["jetAK8Puppi_NearGenWToMuNu"].assign(njet_AK8,-9999);
-  vector_int_["jetAK8Puppi_NearGenWToTauNu"].assign(njet_AK8,-9999);
-  vector_float_["jetAK8Puppi_DRNearGenTop"].assign(njet_AK8,9999);
-  vector_float_["jetAK8Puppi_DRNearGenWFromTop"].assign(njet_AK8,9999);
-  vector_float_["jetAK8Puppi_DRNearGenBFromTop"].assign(njet_AK8,9999);
-  vector_float_["jetAK8Puppi_DRNearGenLepFromSLTop"].assign(njet_AK8,9999);
-  vector_float_["jetAK8Puppi_DRNearGenNuFromSLTop"].assign(njet_AK8,9999);
-  vector_float_["jetAK8Puppi_PtNearGenTop"].assign(njet_AK8,-9999);
-  vector_float_["jetAK8Puppi_PtNearGenBFromTop"].assign(njet_AK8,-9999);
-  vector_float_["jetAK8Puppi_PtNearGenWFromTop"].assign(njet_AK8,-9999);
-  vector_float_["jetAK8Puppi_PtNearGenLepFromSLTop"].assign(njet_AK8,-9999);
-  vector_float_["jetAK8Puppi_PtNearGenNuFromSLTop"].assign(njet_AK8,-9999);
+  vector_int_[AK8Jets_prefix_+"_HasNearGenTop"].assign(njet_AK8,-9999);
+  vector_int_[AK8Jets_prefix_+"_NearGenTopIsHadronic"].assign(njet_AK8,-9999);
+  vector_int_[AK8Jets_prefix_+"_NearGenWIsHadronic"].assign(njet_AK8,-9999);
+  vector_int_[AK8Jets_prefix_+"_NearGenWToENu"].assign(njet_AK8,-9999);
+  vector_int_[AK8Jets_prefix_+"_NearGenWToMuNu"].assign(njet_AK8,-9999);
+  vector_int_[AK8Jets_prefix_+"_NearGenWToTauNu"].assign(njet_AK8,-9999);
+  vector_float_[AK8Jets_prefix_+"_DRNearGenTop"].assign(njet_AK8,9999);
+  vector_float_[AK8Jets_prefix_+"_DRNearGenWFromTop"].assign(njet_AK8,9999);
+  vector_float_[AK8Jets_prefix_+"_DRNearGenBFromTop"].assign(njet_AK8,9999);
+  vector_float_[AK8Jets_prefix_+"_DRNearGenLepFromSLTop"].assign(njet_AK8,9999);
+  vector_float_[AK8Jets_prefix_+"_DRNearGenNuFromSLTop"].assign(njet_AK8,9999);
+  vector_float_[AK8Jets_prefix_+"_PtNearGenTop"].assign(njet_AK8,-9999);
+  vector_float_[AK8Jets_prefix_+"_PtNearGenBFromTop"].assign(njet_AK8,-9999);
+  vector_float_[AK8Jets_prefix_+"_PtNearGenWFromTop"].assign(njet_AK8,-9999);
+  vector_float_[AK8Jets_prefix_+"_PtNearGenLepFromSLTop"].assign(njet_AK8,-9999);
+  vector_float_[AK8Jets_prefix_+"_PtNearGenNuFromSLTop"].assign(njet_AK8,-9999);
   
   if (!isData_) for (size_t i=0; i<njet_AK8; ++i) {
     TLorentzVector jet; jet.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(i), h_floats_["AK8_Eta"]->at(i),
 					 h_floats_["AK8_Phi"]->at(i), h_floats_["AK8_E"]->at(i));
-    vector_int_["jetAK8Puppi_HasNearGenTop"][i]=0;
+    vector_int_[AK8Jets_prefix_+"_HasNearGenTop"][i]=0;
     // Unsing Gen Particle Info
     if (jet_gentop_index.count(i)) {
       size_t top_index = jet_gentop_index[i];
-      vector_int_["jetAK8Puppi_HasNearGenTop"][i]=1;                                                  /* jetAK8Puppi_HasNearGenTop */
-      vector_float_["jetAK8Puppi_PtNearGenTop"][i] = gen_top[top_index].Pt();			      /* jetAK8Puppi_PtNearGenTop */
-      vector_float_["jetAK8Puppi_DRNearGenTop"][i] = gen_top[top_index].DeltaR(jet);		      /* jetAK8Puppi_DRNearGenTop */
+      vector_int_[AK8Jets_prefix_+"_HasNearGenTop"][i]=1;                                                  /* jetAK8_HasNearGenTop */
+      vector_float_[AK8Jets_prefix_+"_PtNearGenTop"][i] = gen_top[top_index].Pt();			      /* jetAK8_PtNearGenTop */
+      vector_float_[AK8Jets_prefix_+"_DRNearGenTop"][i] = gen_top[top_index].DeltaR(jet);		      /* jetAK8_DRNearGenTop */
       // If W matching was successful, more information is available
       if (good_W_matches) {
-        vector_float_["jetAK8Puppi_DRNearGenWFromTop"][i] = gen_top_matched_W[top_index].DeltaR(jet); /* jetAK8Puppi_DRNearGenWFromTop */
+        vector_float_[AK8Jets_prefix_+"_DRNearGenWFromTop"][i] = gen_top_matched_W[top_index].DeltaR(jet); /* jetAK8_DRNearGenWFromTop */
 	if (gen_top_matched_b[top_index])
-	  vector_float_["jetAK8Puppi_DRNearGenBFromTop"][i] = gen_top_matched_q[top_index].DeltaR(jet); /* jetAK8Puppi_DRNearGenBFromTop */
-        vector_float_["jetAK8Puppi_DRNearGenLepFromSLTop"][i] = 				      /* jetAK8Puppi_DRNearGenLepFromSLTop */
+	  vector_float_[AK8Jets_prefix_+"_DRNearGenBFromTop"][i] = gen_top_matched_q[top_index].DeltaR(jet); /* jetAK8_DRNearGenBFromTop */
+        vector_float_[AK8Jets_prefix_+"_DRNearGenLepFromSLTop"][i] = 				      /* jetAK8_DRNearGenLepFromSLTop */
 	  W_type[top_index] ? gen_top_matched_W_matched_lep[top_index].DeltaR(jet) : -9999;
-        vector_float_["jetAK8Puppi_DRNearGenNuFromSLTop"][i]  = 				      /* jetAK8Puppi_DRNearGenNuFromSLTop */
+        vector_float_[AK8Jets_prefix_+"_DRNearGenNuFromSLTop"][i]  = 				      /* jetAK8_DRNearGenNuFromSLTop */
 	  W_type[top_index] ? gen_top_matched_W_matched_neu[top_index].DeltaR(jet) : -9999;
-        vector_float_["jetAK8Puppi_PtNearGenWFromTop"][i] = gen_top_matched_W[top_index].Pt();	      /* jetAK8Puppi_PtNearGenWFromTop */
+        vector_float_[AK8Jets_prefix_+"_PtNearGenWFromTop"][i] = gen_top_matched_W[top_index].Pt();	      /* jetAK8_PtNearGenWFromTop */
 	if (gen_top_matched_b[top_index])
-	  vector_float_["jetAK8Puppi_PtNearGenBFromTop"][i] = gen_top_matched_q[top_index].Pt();      /* jetAK8Puppi_PtNearGenBFromTop */
-        vector_float_["jetAK8Puppi_PtNearGenLepFromSLTop"][i] = 				      /* jetAK8Puppi_PtNearGenLepFromSLTop */
+	  vector_float_[AK8Jets_prefix_+"_PtNearGenBFromTop"][i] = gen_top_matched_q[top_index].Pt();      /* jetAK8_PtNearGenBFromTop */
+        vector_float_[AK8Jets_prefix_+"_PtNearGenLepFromSLTop"][i] = 				      /* jetAK8_PtNearGenLepFromSLTop */
 	  W_type[top_index] ? gen_top_matched_W_matched_lep[top_index].Pt() : -9999;
-        vector_float_["jetAK8Puppi_PtNearGenNuFromSLTop"][i]  = 				      /* jetAK8Puppi_PtNearGenNuFromSLTop */
+        vector_float_[AK8Jets_prefix_+"_PtNearGenNuFromSLTop"][i]  = 				      /* jetAK8_PtNearGenNuFromSLTop */
 	  W_type[top_index] ? gen_top_matched_W_matched_neu[top_index].Pt() : -9999;
-	vector_int_["jetAK8Puppi_NearGenTopIsHadronic"][i] = !W_type[top_index];		      /* jetAK8Puppi_NearGenTopIsHadronic */
-	vector_int_["jetAK8Puppi_NearGenWIsHadronic"][i] = !W_type[top_index];			      /* jetAK8Puppi_NearGenWIsHadronic */
-	vector_int_["jetAK8Puppi_NearGenWToENu"][i] = W_type[top_index]==1;			      /* jetAK8Puppi_NearGenWToENu */
-	vector_int_["jetAK8Puppi_NearGenWToMuNu"][i] = W_type[top_index]==2;			      /* jetAK8Puppi_NearGenWToMuNu */
-	vector_int_["jetAK8Puppi_NearGenWToTauNu"][i] = W_type[top_index]==3;			      /* jetAK8_NearGenWToTauNu */
+	vector_int_[AK8Jets_prefix_+"_NearGenTopIsHadronic"][i] = !W_type[top_index];		      /* jetAK8_NearGenTopIsHadronic */
+	vector_int_[AK8Jets_prefix_+"_NearGenWIsHadronic"][i] = !W_type[top_index];			      /* jetAK8_NearGenWIsHadronic */
+	vector_int_[AK8Jets_prefix_+"_NearGenWToENu"][i] = W_type[top_index]==1;			      /* jetAK8_NearGenWToENu */
+	vector_int_[AK8Jets_prefix_+"_NearGenWToMuNu"][i] = W_type[top_index]==2;			      /* jetAK8_NearGenWToMuNu */
+	vector_int_[AK8Jets_prefix_+"_NearGenWToTauNu"][i] = W_type[top_index]==3;			      /* jetAK8_NearGenWToTauNu */
       }
     }
   }
@@ -1067,9 +1090,9 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     tightJetID = (NEMF<0.90 && NumNeutralParticle>10 && abs(eta)>3.0 ) 
   */
   
-  vector_int_["jetAK4Puppi_looseJetID"].clear();
-  vector_int_["jetAK4Puppi_tightJetID"].clear();
-  vector_int_["jetAK4Puppi_tightLepVetoJetID"].clear();
+  vector_int_[AK4Jets_prefix_+"_looseJetID"].clear();
+  vector_int_[AK4Jets_prefix_+"_tightJetID"].clear();
+  vector_int_[AK4Jets_prefix_+"_tightLepVetoJetID"].clear();
   for (size_t i=0; i<njet_AK4; ++i) {
     float eta  = h_floats_["AK4_Eta"]->at(i);
     float NHF  = h_floats_["AK4_neutralHadronEnergyFrac"]->at(i);
@@ -1092,14 +1115,16 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       looseJetID = (NEMF<0.90 && NumNeutralParticle>10);
       tightJetID = (NEMF<0.90 && NumNeutralParticle>10);
     }
-    vector_int_["jetAK4Puppi_looseJetID"].push_back(looseJetID);                       /* jetAK4Puppi_looseJetID  */
-    vector_int_["jetAK4Puppi_tightJetID"].push_back(tightJetID);                       /* jetAK4Puppi_tightJetID  */
-    vector_int_["jetAK4Puppi_tightLepVetoJetID"].push_back(tightLepVetoJetID);         /* jetAK4Puppi_tightLepVetoJetID  */
+    vector_int_[AK4Jets_prefix_+"_looseJetID"].push_back(looseJetID);                       /* jetAK4_looseJetID  */
+    vector_int_[AK4Jets_prefix_+"_tightJetID"].push_back(tightJetID);                       /* jetAK4_tightJetID  */
+    vector_int_[AK4Jets_prefix_+"_tightLepVetoJetID"].push_back(tightLepVetoJetID);         /* jetAK4_tightLepVetoJetID  */
   }
   
-  vector_int_["jetAK8Puppi_looseJetID"].clear();
-  vector_int_["jetAK8Puppi_tightJetID"].clear();
-  vector_int_["jetAK8Puppi_tightLepVetoJetID"].clear();
+  vector_int_[AK8Jets_prefix_+"_looseJetID"].clear();
+  vector_int_[AK8Jets_prefix_+"_tightJetID"].clear();
+  vector_int_[AK8Jets_prefix_+"_tightLepVetoJetID"].clear();
+  vector_float_[AK8Jets_prefix_+"_maxSubjetCSVv2"].clear();
+  vector_float_[AK8Jets_prefix_+"_maxSubjetCMVAv2"].clear();
   for (size_t i=0; i<njet_AK8; ++i) {
     float eta  = h_floats_["AK8_Eta"]->at(i);
     float NHF  = h_floats_["AK8_neutralHadronEnergyFrac"]->at(i);
@@ -1122,14 +1147,24 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       looseJetID = (NEMF<0.90 && NumNeutralParticle>10);
       tightJetID = (NEMF<0.90 && NumNeutralParticle>10);
     }
-    vector_int_["jetAK8Puppi_looseJetID"].push_back(looseJetID);                       /* jetAK8Puppi_looseJetID  */
-    vector_int_["jetAK8Puppi_tightJetID"].push_back(tightJetID);                       /* jetAK8Puppi_tightJetID  */
-    vector_int_["jetAK8Puppi_tightLepVetoJetID"].push_back(tightLepVetoJetID);         /* jetAK8Puppi_tightLepVetoJetID  */
+    vector_int_[AK8Jets_prefix_+"_looseJetID"].push_back(looseJetID);                       /* jetAK8_looseJetID  */
+    vector_int_[AK8Jets_prefix_+"_tightJetID"].push_back(tightJetID);                       /* jetAK8_tightJetID  */
+    vector_int_[AK8Jets_prefix_+"_tightLepVetoJetID"].push_back(tightLepVetoJetID);         /* jetAK8_tightLepVetoJetID  */
+
+    // Subjet btag info
+    int i_sj0 = h_floats_["AK8_vSubjetIndex0"]->at(i), i_sj1 = h_floats_["AK8_vSubjetIndex1"]->at(i);
+    float maxCSVv2 = -9999, maxCMVAv2 = -9999;
+    if (i_sj0 != -1) if (h_floats_["AK8Sub_CSVv2"]->at(i_sj0) > maxCSVv2) maxCSVv2 = h_floats_["AK8Sub_CSVv2"]->at(i_sj0);
+    if (i_sj1 != -1) if (h_floats_["AK8Sub_CSVv2"]->at(i_sj1) > maxCSVv2) maxCSVv2 = h_floats_["AK8Sub_CSVv2"]->at(i_sj1);
+    if (i_sj0 != -1) if (h_floats_["AK8Sub_CMVAv2"]->at(i_sj0) > maxCMVAv2) maxCMVAv2 = h_floats_["AK8Sub_CMVAv2"]->at(i_sj0);
+    if (i_sj1 != -1) if (h_floats_["AK8Sub_CMVAv2"]->at(i_sj1) > maxCMVAv2) maxCMVAv2 = h_floats_["AK8Sub_CMVAv2"]->at(i_sj1);
+    vector_float_[AK8Jets_prefix_+"_maxSubjetCSVv2"].push_back(maxCSVv2);
+    vector_float_[AK8Jets_prefix_+"_maxSubjetCMVAv2"].push_back(maxCMVAv2);
   }
   
-  vector_int_["subjetAK8Puppi_looseJetID"].clear();
-  vector_int_["subjetAK8Puppi_tightJetID"].clear();
-  vector_int_["subjetAK8Puppi_tightLepVetoJetID"].clear();
+  vector_int_[AK8Subjets_prefix_+"_looseJetID"].clear();
+  vector_int_[AK8Subjets_prefix_+"_tightJetID"].clear();
+  vector_int_[AK8Subjets_prefix_+"_tightLepVetoJetID"].clear();
   for (size_t i=0; i<njet_AK8Sub; ++i) {
     float eta  = h_floats_["AK8Sub_Eta"]->at(i);
     float NHF  = h_floats_["AK8Sub_neutralHadronEnergyFrac"]->at(i);
@@ -1152,10 +1187,39 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       looseJetID = (NEMF<0.90 && NumNeutralParticle>10);
       tightJetID = (NEMF<0.90 && NumNeutralParticle>10);
     }
-    vector_int_["subjetAK8Puppi_looseJetID"].push_back(looseJetID);                       /* subjetAK8Puppi_looseJetID  */
-    vector_int_["subjetAK8Puppi_tightJetID"].push_back(tightJetID);                       /* subjetAK8Puppi_tightJetID  */
-    vector_int_["subjetAK8Puppi_tightLepVetoJetID"].push_back(tightLepVetoJetID);         /* subjetAK8Puppi_tightLepVetoJetID  */
+    vector_int_[AK8Subjets_prefix_+"_looseJetID"].push_back(looseJetID);                       /* subjetAK8_looseJetID  */
+    vector_int_[AK8Subjets_prefix_+"_tightJetID"].push_back(tightJetID);                       /* subjetAK8_tightJetID  */
+    vector_int_[AK8Subjets_prefix_+"_tightLepVetoJetID"].push_back(tightLepVetoJetID);         /* subjetAK8_tightLepVetoJetID  */
   }
+
+  // ---------------------
+  // -        MET        -
+  // ---------------------
+  
+  // Uncertainties
+  edm::Handle<pat::METCollection> mets;
+  iEvent.getByLabel(edm::InputTag("slimmedMETs"), mets);
+  const pat::MET &met = mets->front();
+  edm::Handle<pat::METCollection> puppimets;
+  iEvent.getByLabel(edm::InputTag("slimmedMETsPuppi"), puppimets);
+  const pat::MET &puppimet = puppimets->front();
+  
+  vector_float_["metsyst_Pt"].clear();
+  vector_float_["metsyst_Phi"].clear();
+  vector_float_["puppimetsyst_Pt"].clear();
+  vector_float_["puppimetsyst_Phi"].clear();
+  for (int shift=0; shift<pat::MET::METUncertainty::METUncertaintySize; ++shift)
+    if (shift != pat::MET::METUncertainty::NoShift) {
+      float met_shiftedPt  = met.shiftedPt ((pat::MET::METUncertainty)shift, pat::MET::METCorrectionLevel::Type1);
+      float met_shiftedPhi = met.shiftedPhi((pat::MET::METUncertainty)shift, pat::MET::METCorrectionLevel::Type1);
+      float puppimet_shiftedPt  = puppimet.shiftedPt ((pat::MET::METUncertainty)shift, pat::MET::METCorrectionLevel::Type1);
+      float puppimet_shiftedPhi = puppimet.shiftedPhi((pat::MET::METUncertainty)shift, pat::MET::METCorrectionLevel::Type1);
+      vector_float_["metsyst_Pt"].push_back(met_shiftedPt);
+      vector_float_["metsyst_Phi"].push_back(met_shiftedPhi);
+      vector_float_["puppimetsyst_Pt"].push_back(puppimet_shiftedPt);
+      vector_float_["puppimetsyst_Phi"].push_back(puppimet_shiftedPhi);
+    }
+  
   
   // ---------------------
   // - Lepton Selection  -
@@ -1704,73 +1768,85 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       }
     }
   }
+
+  // ---------------------
+  // -- Isolated tracks --
+  // ---------------------
+  
+  edm::Handle<pat::PackedCandidateCollection> packedPFCands;
+  iEvent.getByLabel(edm::InputTag("packedPFCandidates"), packedPFCands);
+  const pat::PackedCandidateCollection& pfCands = *packedPFCands.product();
+  
+  single_int_["evt_NIsoTrk"] = 0;
+  for (size_t i=0, n=pfCands.size(); i<n; ++i) {
+    if (pfCands[i].charge()==0) continue;
+    if (pfCands[i].pt()<5) continue;
+    if (std::abs(pfCands[i].dz())>=0.1) continue;
+    
+    // Calculate track isolation
+    float iso_trk = 0;
+    for (size_t j=0; j<n; ++j) {
+      if (j==i) continue;
+      if (pfCands[j].charge()==0) continue;
+      float dR = reco::deltaR(pfCands[i].eta(), pfCands[i].phi(), pfCands[j].eta(), pfCands[j].phi());
+      if (dR >= 0.3) continue;
+      if (std::abs(pfCands[j].dz())>=0.1) continue;
+      iso_trk += pfCands[j].pt();
+    }
+    iso_trk /= pfCands[i].pt();
+    if (std::abs(pfCands[i].pdgId())==11||std::abs(pfCands[i].pdgId())==13) {
+      if (iso_trk<0.2) ++single_int_["evt_NIsoTrk"];
+    } else {
+      if (iso_trk<0.1 && pfCands[i].pt()>=10) ++single_int_["evt_NIsoTrk"];
+    }
+  }
   
   // ---------------------
   // -- Razor variables --
   // ---------------------
   
-  // Select the best pair of jets (AK8, pt>40, |eta| < 3.0)
-  std::vector<TLorentzVector> jets_AK8;
-  for (size_t i=0; i<njet_AK8; ++i) {
-    // Cut in B2G/MINIAOD: pt>170, |eta|<2.4
-    // 2016/10/14: Loose JetID cut added
-    if ((h_floats_["AK8_Pt"]->at(i) >= 30) && std::abs(h_floats_["AK8_Eta"]->at(i)) < 2.4 && vector_int_["jetAK8Puppi_looseJetID"][i]) {
-      TLorentzVector jl;
-      jl.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(i), h_floats_["AK8_Eta"]->at(i),
-                      h_floats_["AK8_Phi"]->at(i), h_floats_["AK8_E"]->at(i));
-      jets_AK8.push_back(jl);
-    }
-  }
-
-  // Same for AK4 jets
-  std::vector<TLorentzVector> jets_AK4;
+  // Jet selection for jet combiner
+  std::vector<TLorentzVector> jets_AK4, jets_AK4_smear;
   for (size_t i=0; i<njet_AK4; ++i) {
     // Cut in MINIAOD: pt>20
     // 2016/10/14: JetID cut added, pt lowered from 40 to 30, |eta| lowered to 2.4
-    if ((h_floats_["AK4_Pt"]->at(i) >= 30) && std::abs(h_floats_["AK4_Eta"]->at(i)) < 2.4 && vector_int_["jetAK4Puppi_looseJetID"][i]) {
+    if (std::abs(h_floats_["AK4_Eta"]->at(i)) < 2.4 && vector_int_[AK4Jets_prefix_+"_looseJetID"][i]) {
       TLorentzVector jl;
       jl.SetPtEtaPhiE(h_floats_["AK4_Pt"]->at(i), h_floats_["AK4_Eta"]->at(i),
                       h_floats_["AK4_Phi"]->at(i), h_floats_["AK4_E"]->at(i));
-      jets_AK4.push_back(jl);
+      float pt = h_floats_["AK4_Pt"]->at(i), smeared_pt = h_floats_["AK4_SmearedPt"]->at(i);
+      if (pt >= 30) jets_AK4.push_back(jl);
+      // Use also JER Smeared jets in order to propagate the uncertainty
+      if (smeared_pt >= 30) jets_AK4_smear.push_back(jl*(smeared_pt/pt));
     }
   }
   
   TVector3 metl;
   metl.SetPtEtaPhi(h_floats_["met_Pt"]->at(0), 0, h_floats_["met_Phi"]->at(0));
   
-  // Default variables - AK8
-  single_float_["evt_AK8_MR"]  = -9999;
-  single_float_["evt_AK8_MTR"] = -9999;
-  single_float_["evt_AK8_R"]   = -9999;
-  single_float_["evt_AK8_R2"]  = -9999;
-  if (jets_AK8.size() >= 2) {
-    if (njet_AK4<60) {
-      std::vector<TLorentzVector> hemis_AK8 = Razor::CombineJets(jets_AK8);
-      single_float_["evt_AK8_MR"]  = Razor::CalcMR(hemis_AK8[0], hemis_AK8[1]);              /* evt_AK8_MR */
-      single_float_["evt_AK8_MTR"] = Razor::CalcMTR(hemis_AK8[0], hemis_AK8[1], metl);       /* evt_AK8_MTR */
-      single_float_["evt_AK8_R"]   = single_float_["evt_AK8_MTR"] / single_float_["evt_AK8_MR"]; /* evt_AK8_R */
-      single_float_["evt_AK8_R2"]  = std::pow(single_float_["evt_AK8_R"], 2);                /* evt_AK8_R2 */
-    } else {
-      std::cout<<"Too many AK8: "<<jets_AK8.size()<<" "<<njet_AK8<<std::endl;
-    }
-  }
-  
-  // AK4
+  // Razor calculation
   single_float_["evt_MR"]  = -9999;
   single_float_["evt_MTR"] = -9999;
   single_float_["evt_R"]   = -9999;
   single_float_["evt_R2"]  = -9999;
-  if (jets_AK4.size() >= 2) {
-    if (njet_AK4<60) {
+  single_float_["evt_MR_Smear"]      = -9999;
+  if (njet_AK4<60) {
+    if (jets_AK4.size() >= 2) {
       std::vector<TLorentzVector> hemis_AK4 = Razor::CombineJets(jets_AK4);
       single_float_["evt_MR"]  = Razor::CalcMR(hemis_AK4[0], hemis_AK4[1]);          /* evt_MR */
       single_float_["evt_MTR"] = Razor::CalcMTR(hemis_AK4[0], hemis_AK4[1], metl);   /* evt_MTR */
       single_float_["evt_R"]   = single_float_["evt_MTR"] / single_float_["evt_MR"]; /* evt_R */
       single_float_["evt_R2"]  = std::pow(single_float_["evt_R"], 2);                /* evt_R2 */
-    } else {
-      std::cout<<"Too many AK4: "<<jets_AK4.size()<<" "<<njet_AK4<<std::endl;
     }
+    // JER Smearing propagated to MR
+    if (jets_AK4_smear.size() >= 2) {
+      std::vector<TLorentzVector> hemis_AK4 = Razor::CombineJets(jets_AK4_smear);
+      single_float_["evt_MR_Smear"] = Razor::CalcMR(hemis_AK4[0], hemis_AK4[1]);
+    }
+  } else {
+    std::cout<<"Too many AK4: "<<jets_AK4.size()<<" "<<njet_AK4<<std::endl;
   }
+
 }
 
 // Electron ID
