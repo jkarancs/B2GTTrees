@@ -727,7 +727,6 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       bool sameDau = 0;
       for (size_t j=0, ndau=p.numberOfDaughters(); j<ndau; ++j) if (p.daughter(j)->pdgId()==Id) sameDau = 1;
       if (!sameDau) {
-	std::cout<<i<<" "<<Id<<std::endl;
 	if (abs(Id)==6) {
 	  gen_top.push_back(p4);
 	  gen_top_ID.push_back(Id);
