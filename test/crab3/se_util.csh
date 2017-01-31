@@ -108,7 +108,8 @@ if ( $use_rfio == 1 ) then
     #alias se-ls        '/usr/bin/rfdir \!* | awk '\''{ print $NF }'\'
     #alias se-ls-l      '/usr/bin/rfdir \!* | awk '\''{ printf "%s %4d %4d %3d %12d %s %s %5s %s\n",$1,$2,$3,$4,$5,$6,$7,$8,$9 }'\'
     if ( $cmd =~ "cp"* || $cmd == "dl" || $cmd == "dl_mis" ) then
-	set se_ls='lcg-ls -b -D srmv2 --vo cms'
+	#set se_ls='lcg-ls -b -D srmv2 --vo cms'
+	set se_ls='env --unset=LD_LIBRARY_PATH gfal-ls'
     else
 	set se_ls='/usr/bin/rfdir'
     endif
@@ -136,8 +137,10 @@ else
     else
 	#alias se-ls    'lcg-ls -b -D srmv2 --vo cms \!* | sed "s;/; ;g" | awk '\''{ print $NF }'\'
 	#alias se-ls-l  'lcg-ls -b -D srmv2 --vo cms -l \!* | sed "s;/; ;g" | awk '\''{ printf "%s %4d %4d %3d %12d %12s %s\n",$1,$2,$3,$4,$5,$6,$NF }'\'
-	set se_ls='lcg-ls -b -D srmv2 --vo cms'
-	set se_ls_l='lcg-ls -b -D srmv2 --vo cms -l'
+	#set se_ls='lcg-ls -b -D srmv2 --vo cms'
+	#set se_ls_l='lcg-ls -b -D srmv2 --vo cms -l'
+	set se_ls='env --unset=LD_LIBRARY_PATH gfal-ls'
+	set se_ls_l='env --unset=LD_LIBRARY_PATH gfal-ls -l'
 	set se_rm='lcg-del -b -D srmv2 --vo cms -l' # much faster than srmrm
 	set se_rmdir='srmrmdir'
 	set se_mv='srmmv'
@@ -147,11 +150,14 @@ else
 	set se_chmod_775='srm-set-permissions -type=CHANGE -group=RWX'
     endif
 endif
-set se_cp='lcg-cp -b -D srmv2 --vo cms'
+#set se_cp='lcg-cp -b -D srmv2 --vo cms'
 #set se_cp='env -i gfal-copy -p -n 4 -t 86400 -T 86400'
+set se_cp='env --unset=LD_LIBRARY_PATH gfal-copy -r'
 set se_cp_v='$se_cp -v'
-set se2_ls='lcg-ls -b -D srmv2 --vo cms'
-set se2_ls_l='lcg-ls -b -D srmv2 --vo cms -l'
+#set se2_ls='lcg-ls -b -D srmv2 --vo cms'
+#set se2_ls_l='lcg-ls -b -D srmv2 --vo cms -l'
+set se2_ls='env --unset=LD_LIBRARY_PATH gfal-ls'
+set se2_ls_l='env --unset=LD_LIBRARY_PATH gfal-ls -l'
 
 #-------------------- Options ------------------------
 
