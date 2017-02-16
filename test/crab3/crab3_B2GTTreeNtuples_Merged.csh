@@ -457,12 +457,12 @@ else if ( `echo $cmd | grep "recovery" | wc -l` ) then
 	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
 	set Status=`if ( $status_txt != "" ) grep "Task status:" $status_txt | awk '{ print $3 }'`
 	if ( $isData && `echo $Status | grep COMPLETED | wc -l` == 0 ) then
-	    #das_client --limit=10000 --query "run dataset=$in_dataset" | tail -n+4 | sort -V > "$short"_runs.txt
-	    #set MINRUN=`head -1 "$short"_runs.txt`
-	    #set MAXRUN=`tail -1 "$short"_runs.txt`
-	    #rm "$short"_runs.txt
-	    #./print_lumis.sh $DLDIR/$short $CERT $MINRUN $MAXRUN > $TASKDIR/missing_lumis/missing_"$short"_JSON.txt
-	    sed "15s;$short;$short""_recovery;;s;$CERT;$TASKDIR/missing_lumis/missing_"$short"_JSON.txt;;" $TASKDIR/crab_$short.py > $TASKDIR/crab_"$short"_recovery.py
+	    das_client --limit=10000 --query "run dataset=$in_dataset" | tail -n+4 | sort -V > "$short"_runs.txt
+	    set MINRUN=`head -1 "$short"_runs.txt`
+	    set MAXRUN=`tail -1 "$short"_runs.txt`
+	    rm "$short"_runs.txt
+	    ./print_lumis.sh $DLDIR/$short $CERT $MINRUN $MAXRUN > $TASKDIR/missing_lumis/missing_"$short"_JSON.txt
+	    sed "14s;$short;$short""_recovery;;s;$CERT;$TASKDIR/missing_lumis/missing_"$short"_JSON.txt;;" $TASKDIR/crab_$short.py > $TASKDIR/crab_"$short"_recovery.py
 	    ls -l $TASKDIR/crab_"$short"_recovery.py
 	endif
     end
