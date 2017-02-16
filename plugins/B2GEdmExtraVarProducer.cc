@@ -8,6 +8,7 @@
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
+#include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/Math/interface/deltaR.h"
 
@@ -41,7 +42,7 @@ void B2GEdmExtraVarProducer::init_tokens_() {
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"E")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"tau2")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"tau3")));
-  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"softDropMass")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"softDropMassPuppi")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"jecFactor0")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"jetArea")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"nSubJets")));
@@ -121,6 +122,7 @@ void B2GEdmExtraVarProducer::init_tokens_() {
   edm::EDGetTokenT<pat::PackedCandidateCollection>(consumes<pat::PackedCandidateCollection>(edm::InputTag("packedPFCandidates")));
   edm::EDGetTokenT<pat::METCollection>(consumes<pat::METCollection>(edm::InputTag("slimmedMETs")));
   edm::EDGetTokenT<pat::METCollection>(consumes<pat::METCollection>(edm::InputTag("slimmedMETsPuppi")));
+  edm::EDGetTokenT<pat::JetCollection>(consumes<pat::JetCollection>(edm::InputTag("slimmedJetsAK8")));
   
   if (!isData_) {
     edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"Pt")));
@@ -265,22 +267,22 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   iEvent.getByLabel(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"jetArea"),    h_floats_["AK4_jetArea"]);
   iEvent.getByLabel(edm::InputTag(AK4Jets_label_, AK4Jets_prefix_+"SmearedPt"),  h_floats_["AK4_SmearedPt"]);
   
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Pt"),              h_floats_["AK8_Pt"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Eta"),             h_floats_["AK8_Eta"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Phi"),             h_floats_["AK8_Phi"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"E"),               h_floats_["AK8_E"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"tau2"),            h_floats_["AK8_tau2"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"tau3"),            h_floats_["AK8_tau3"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"softDropMass"),    h_floats_["AK8_softDropMass"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"jecFactor0"),      h_floats_["AK8_jecFactor0"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"jetArea"),         h_floats_["AK8_jetArea"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"nSubJets"),        h_floats_["AK8_nSubJets"]);
-  //iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex0"), h_floats_["AK8_topSubjetIndex0"]);
-  //iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex1"), h_floats_["AK8_topSubjetIndex1"]);
-  //iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex2"), h_floats_["AK8_topSubjetIndex2"]);
-  //iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex3"), h_floats_["AK8_topSubjetIndex3"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"vSubjetIndex0"),   h_floats_["AK8_vSubjetIndex0"]);
-  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"vSubjetIndex1"),   h_floats_["AK8_vSubjetIndex1"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Pt"),                h_floats_["AK8_Pt"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Eta"),               h_floats_["AK8_Eta"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"Phi"),               h_floats_["AK8_Phi"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"E"),                 h_floats_["AK8_E"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"tau2"),              h_floats_["AK8_tau2"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"tau3"),              h_floats_["AK8_tau3"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"softDropMassPuppi"), h_floats_["AK8_softDropMassPuppi"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"jecFactor0"),        h_floats_["AK8_jecFactor0"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"jetArea"),           h_floats_["AK8_jetArea"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"nSubJets"),          h_floats_["AK8_nSubJets"]);
+  //iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex0"),   h_floats_["AK8_topSubjetIndex0"]);
+  //iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex1"),   h_floats_["AK8_topSubjetIndex1"]);
+  //iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex2"),   h_floats_["AK8_topSubjetIndex2"]);
+  //iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"topSubjetIndex3"),   h_floats_["AK8_topSubjetIndex3"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"vSubjetIndex0"),     h_floats_["AK8_vSubjetIndex0"]);
+  iEvent.getByLabel(edm::InputTag(AK8Jets_label_, AK8Jets_prefix_+"vSubjetIndex1"),     h_floats_["AK8_vSubjetIndex1"]);
   
   iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"Pt"),         h_floats_["AK8Sub_Pt"]);
   iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"Eta"),        h_floats_["AK8Sub_Eta"]);
@@ -1073,7 +1075,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   
   /*
     Jet ID
-    https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetID?rev=95#Recommendations_for_13_TeV_data
+    https://twiki.cern.ch/twiki/bin/view/CMS/JetID13TeVRun2016?rev=4
         
     For |eta|<=2.7 Apply
     looseJetID = (NHF<0.99 && NEMF<0.99 && NumConst>1) && ((abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || abs(eta)>2.4) && abs(eta)<=2.7
@@ -1081,8 +1083,8 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     tightLepVetoJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1 && MUF<0.8) && ((abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.90) || abs(eta)>2.4) && abs(eta)<=2.7
 
     For 2.7<|eta|<= 3.0 Apply
-    looseJetID = (NEMF<0.90 && NumNeutralParticle>2 && abs(eta)>2.7 && abs(eta)<=3.0 )
-    tightJetID = (NEMF<0.90 && NumNeutralParticle>2 && abs(eta)>2.7 && abs(eta)<=3.0 )
+    looseJetID = (NHF<0.98 && NEMF>0.01 && NumNeutralParticle>2 && abs(eta)>2.7 && abs(eta)<=3.0 )
+    tightJetID = (NHF<0.98 && NEMF>0.01 && NumNeutralParticle>2 && abs(eta)>2.7 && abs(eta)<=3.0 )
 
     For |eta|> 3.0 Apply
     looseJetID = (NEMF<0.90 && NumNeutralParticle>10 && abs(eta)>3.0 )
@@ -1108,8 +1110,8 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       tightJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || std::abs(eta)>2.4);
       tightLepVetoJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1 && MUF<0.8) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.90) || std::abs(eta)>2.4);
     } else if (std::abs(eta)>2.7&&std::abs(eta)<=3.0) {
-      looseJetID = (NEMF<0.90 && NumNeutralParticle>2);
-      tightJetID = (NEMF<0.90 && NumNeutralParticle>2);
+      looseJetID = (NHF<0.98 && NEMF>0.01 && NumNeutralParticle>2);
+      tightJetID = (NHF<0.98 && NEMF>0.01 && NumNeutralParticle>2);
     } else {
       looseJetID = (NEMF<0.90 && NumNeutralParticle>10);
       tightJetID = (NEMF<0.90 && NumNeutralParticle>10);
@@ -1140,8 +1142,8 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       tightJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || std::abs(eta)>2.4);
       tightLepVetoJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1 && MUF<0.8) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.90) || std::abs(eta)>2.4);
     } else if (std::abs(eta)>2.7&&std::abs(eta)<=3.0) {
-      looseJetID = (NEMF<0.90 && NumNeutralParticle>2);
-      tightJetID = (NEMF<0.90 && NumNeutralParticle>2);
+      looseJetID = (NHF<0.98 && NEMF>0.01 && NumNeutralParticle>2);
+      tightJetID = (NHF<0.98 && NEMF>0.01 && NumNeutralParticle>2);
     } else {
       looseJetID = (NEMF<0.90 && NumNeutralParticle>10);
       tightJetID = (NEMF<0.90 && NumNeutralParticle>10);
@@ -1180,8 +1182,8 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       tightJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.99) || std::abs(eta)>2.4);
       tightLepVetoJetID = (NHF<0.90 && NEMF<0.90 && NumConst>1 && MUF<0.8) && ((std::abs(eta)<=2.4 && CHF>0 && CHM>0 && CEMF<0.90) || std::abs(eta)>2.4);
     } else if (std::abs(eta)>2.7&&std::abs(eta)<=3.0) {
-      looseJetID = (NEMF<0.90 && NumNeutralParticle>2);
-      tightJetID = (NEMF<0.90 && NumNeutralParticle>2);
+      looseJetID = (NHF<0.98 && NEMF>0.01 && NumNeutralParticle>2);
+      tightJetID = (NHF<0.98 && NEMF>0.01 && NumNeutralParticle>2);
     } else {
       looseJetID = (NEMF<0.90 && NumNeutralParticle>10);
       tightJetID = (NEMF<0.90 && NumNeutralParticle>10);
@@ -1190,6 +1192,37 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     vector_int_[AK8Subjets_prefix_+"_tightJetID"].push_back(tightJetID);                       /* subjetAK8_tightJetID  */
     vector_int_[AK8Subjets_prefix_+"_tightLepVetoJetID"].push_back(tightLepVetoJetID);         /* subjetAK8_tightLepVetoJetID  */
   }
+
+  // Get uncorrected Puppi softdrop mass and match jets to B2G jet collection
+  edm::Handle<pat::JetCollection> AK8_handle;
+  iEvent.getByLabel(edm::InputTag("slimmedJetsAK8"), AK8_handle);
+
+  // Match to B2G collection
+  vector_float_[AK8Jets_prefix_+"_uncorrSoftDropMassPuppi"].clear();
+  for (size_t i=0; i<njet_AK8; ++i) {
+    TLorentzVector jet;
+    jet.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(i), h_floats_["AK8_Eta"]->at(i),
+        	     h_floats_["AK8_Phi"]->at(i), h_floats_["AK8_E"]->at(i));
+    float minDR = 9999;
+    float uncorrSoftDropMassPuppi = -9999;
+    for (const pat::Jet& j : *AK8_handle) {
+      TLorentzVector jet_MINIAOD;
+      jet_MINIAOD.SetPtEtaPhiE(j.pt(),j.eta(),j.phi(),j.energy());
+      float DR = jet.DeltaR(jet_MINIAOD);
+      if (DR<minDR) {
+        minDR = DR;
+        TLorentzVector puppi_softdrop, puppi_softdrop_subjet;
+        auto const & sdSubjetsPuppi = j.subjets("SoftDropPuppi");
+        for ( auto const & it : sdSubjetsPuppi ) {
+          puppi_softdrop_subjet.SetPtEtaPhiM(it->correctedP4(0).pt(),it->correctedP4(0).eta(),it->correctedP4(0).phi(),it->correctedP4(0).mass());
+          puppi_softdrop+=puppi_softdrop_subjet;
+        }
+        uncorrSoftDropMassPuppi = puppi_softdrop.M();
+      }
+    }
+    vector_float_[AK8Jets_prefix_+"_uncorrSoftDropMassPuppi"].push_back(uncorrSoftDropMassPuppi);
+  }
+
 
   // ---------------------
   // -        MET        -
@@ -1828,7 +1861,8 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   single_float_["evt_MTR"] = -9999;
   single_float_["evt_R"]   = -9999;
   single_float_["evt_R2"]  = -9999;
-  single_float_["evt_MR_Smear"]      = -9999;
+  single_float_["evt_MR_Smear"] = -9999;
+  single_float_["evt_MTR_Smear"] = -9999;
   if (njet_AK4<60) {
     if (jets_AK4.size() >= 2) {
       std::vector<TLorentzVector> hemis_AK4 = Razor::CombineJets(jets_AK4);
@@ -1840,7 +1874,8 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     // JER Smearing propagated to MR
     if (jets_AK4_smear.size() >= 2) {
       std::vector<TLorentzVector> hemis_AK4 = Razor::CombineJets(jets_AK4_smear);
-      single_float_["evt_MR_Smear"] = Razor::CalcMR(hemis_AK4[0], hemis_AK4[1]);
+      single_float_["evt_MR_Smear"]  = Razor::CalcMR(hemis_AK4[0], hemis_AK4[1]);        /* evt_MR_Smear */
+      single_float_["evt_MTR_Smear"] = Razor::CalcMTR(hemis_AK4[0], hemis_AK4[1], metl); /* evt_MTR_Smear */
     }
   } else {
     std::cout<<"Too many AK4: "<<jets_AK4.size()<<" "<<njet_AK4<<std::endl;

@@ -185,6 +185,10 @@ else:
         #'IsPFMuon',
         #'IsGlobalMuon',
         #'IsTrackerMuon',
+        #'CombQualChi2LocalPos',
+        #'CombQualTrkKink',
+        #'InTrkValidFraction',
+        #'SegmentCompatibility',
         #'GlbTrkNormChi2',
         #'NumberValidMuonHits',
         #'NumberMatchedStations',
@@ -319,8 +323,8 @@ else:
     )
 
     jetToolboxAK8Vars = cms.untracked.vstring(
-        'DoubleBAK8',
-        'DoubleBCA15',
+        #'DoubleBAK8',
+        #'DoubleBCA15',
         'vSubjetIndex0',
         'vSubjetIndex1',
         #'vSubjetPuppiIndex0',
