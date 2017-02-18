@@ -95,6 +95,9 @@ else
     set dry="1"
 endif
 
+set recov=0
+if ( `echo "$rest_args" | grep "\-\-recov" | wc -l` ) set recov=1
+
 set DATE=`date | cut -f2- -d" " | sed "s; ;_;g;s;:;h;1;s;:;m;1"`
 
 if ( `echo $cmd | grep "create" | wc -l` ) then
@@ -202,8 +205,10 @@ else if ( `echo $cmd | grep "submit" | wc -l` ) then
 else if ( `echo $cmd | grep "status" | wc -l` ) then
     set N=`cat $TASKDIR/input_datasets.txt | wc -l`
     foreach i ( `seq 1 $N` )
-        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	if ( $recov ) set short=`echo "$short""_recovery"`
 	set dir=`echo $TASKDIR"/crab_"$short`
+	if ( ! -f $dir.py && $recov ) continue
 	if ( ! -d $dir ) then
 	    set Status="MISSING"
 	else
