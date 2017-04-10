@@ -431,11 +431,14 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
     echo 'alias se         "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/se_util.csh \\!*"\n' >> dl_$TASKNAME.csh
     set N=`cat $TASKDIR/input_datasets.txt | wc -l`
     foreach i ( `seq 1 $N` )
+	set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	if ( $recov ) set short=`echo "$short""_recovery"`
+	set dir=`echo $TASKDIR"/crab_"$short`
+	if ( ! -f $dir.py && $recov ) continue
         set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
-	#if ( `echo $in_dataset | grep Tprime | wc -l` == 0 ) then
 	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
-        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
-	set pubname=`grep outputDatasetTag $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
+	if ( `echo $in_dataset | grep Tprime | wc -l` ) continue
+	set pubname=`grep outputDatasetTag $dir.py | sed "s;'; ;g" | awk '{ print $3 }'`
 	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
 	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
         eval_or_echo "mkdir -p $DLDIR/$short"
@@ -444,7 +447,6 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
 	    eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand $DLDIR/$short/ --par $NPar --run"
 	    echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand "'$1'"/$short --par $NPar --run" >> dl_$TASKNAME.csh
 	end
-        #endif
     end
 
 else if ( `echo $cmd | grep "recovery" | wc -l` ) then

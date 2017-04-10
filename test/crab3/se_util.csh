@@ -43,18 +43,22 @@ end
 set USERNAME=`whoami`
 # Add your site srm paths here
 set SITE_INFO=( \
-    "T1_US_FNAL"      "srm://cmssrm.fnal.gov:8443/srm/managerv2"          "SFN=/" \
+#    "T1_US_FNAL"      "srm://cmssrm.fnal.gov:8443/srm/managerv2"          "SFN=/" \
     "T1_US_FNAL_Disk" "srm://cmsdcadisk01.fnal.gov:8443/srm/managerv2"    "SFN=/dcache/uscmsdisk/" \
-    "T3_US_FNALLPC"   "srm://cmseos.fnal.gov:8443/srm/v2/server"          "SFN=/" \
-    "T2_IT_Rome"      "srm://cmsrm-se01.roma1.infn.it:8443/srm/managerv2" "SFN=/pnfs/roma1.infn.it/data/cms/" \
+#    "T3_US_FNALLPC"   "srm://cmseos.fnal.gov:8443/srm/v2/server"          "SFN=/" \
+#    "T2_IT_Rome"      "srm://cmsrm-se01.roma1.infn.it:8443/srm/managerv2" "SFN=/pnfs/roma1.infn.it/data/cms/" \
     "T2_DE_DESY"      "srm://dcache-se-cms.desy.de:8443/srm/managerv2"    "SFN=/pnfs/desy.de/cms/tier2/" \
-    "T2_CH_CERN"      "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/" \
+    "T2_CH_CERN"      "gsiftp://eoscmsftp.cern.ch"                        "/eos/cms/" \
+    "T2_RU_JINR"      "srm://lcgsedc01.jinr.ru:8443/srm/managerv2"        "SFN=/pnfs/jinr.ru/data/cms/" \
     "T2_HU_Budapest"  "srm://grid143.kfki.hu:8446/srm/managerv2"          "SFN=/dpm/kfki.hu/home/cms/phedex/" \
-    "T3_HU_Debrecen"  "srm://grid143.kfki.hu:8446"                        "/dpm/kfki.hu/home/cms/phedex/" \
+#    "T3_HU_Debrecen"  "srm://grid143.kfki.hu:8446"                        "/dpm/kfki.hu/home/cms/phedex/" \
     "desy"            "srm://dcache-se-cms.desy.de:8443/srm/managerv2"    "SFN=/pnfs/desy.de/cms/tier2/" \
-    "cern"            "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/" \
-    "pixel"           "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/store/group/dpg_tracker_pixel/comm_pixel/" \
-    "caf"             "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/store/caf/user/$USERNAME/" \
+#    "cern"            "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/" \
+#    "pixel"           "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/store/group/dpg_tracker_pixel/comm_pixel/" \
+#    "caf"             "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/store/caf/user/$USERNAME/" \
+    "cern"            "gsiftp://eoscmsftp.cern.ch"                        "/eos/cms/" \
+    "pixel"           "gsiftp://eoscmsftp.cern.ch"                        "/eos/cms/store/group/dpg_tracker_pixel/comm_pixel/" \
+    "caf"             "gsiftp://eoscmsftp.cern.ch"                        "/eos/cms/store/caf/user/$USERNAME/" \
     "kfki"            "srm://grid143.kfki.hu:8446/srm/managerv2"          "SFN=/dpm/kfki.hu/home/cms/phedex/store/user/$USERNAME/" \
     "deb"             "srm://grid143.kfki.hu:8446"                        "/dpm/kfki.hu/home/cms/phedex/" \
 )
@@ -75,7 +79,11 @@ foreach arg ( $rest_args )
         set k=`expr $i \* 3 - 1`
         set l=`expr $i \* 3`
 	set SITE=$SITE_INFO[$j]
-	set PATH="$SITE_INFO[$k]\\?$SITE_INFO[$l]"
+	if ( `echo $SITE_INFO[$k] | grep "gsiftp" | wc -l` ) then
+	    set PATH="$SITE_INFO[$k]$SITE_INFO[$l]"	    
+	else
+	    set PATH="$SITE_INFO[$k]\\?$SITE_INFO[$l]"
+	endif
 	# Check whether you can use eos/rfio commands and set suitable path for commands
         if ( `echo "$arg" | grep $SITE":" | wc -l` ) then
 	    if ( `echo $SITE | grep "cern" | wc -l` && $has_eos == 1 ) then
@@ -121,34 +129,38 @@ if ( $use_rfio == 1 ) then
     set se_get_perm='/usr/bin/rfstat'
     set se_chmod_664='/usr/bin/rfchmod 664'
     set se_chmod_775='/usr/bin/rfchmod 775'
+else if ( $use_eos == 1 ) then
+    #alias se-ls    'eos ls \!*'
+    #alias se-ls-l  'eos ls -l \!*'
+   #set se_cp='eos cp' # Works and is fast to copy locally, has to specify a local/eos directory
+    set se_ls='eos ls'
+    set se_ls_l='eos ls -l'
+    set se_rm_r='eos rm -r'
+    #set se_mv='eos mv' # there is no known command to move files on EOS on lxplus
+    set se_mkdir='eos mkdir'
+    set se_get_perm='eos stat' # Instead using this flawed command, we do a workaround with ls -l
+    set se_chmod_664='eos chmod 664'
+    set se_chmod_775='eos chmod 775'
 else
-    if ( $use_eos == 1 ) then
-	#alias se-ls    'eos ls \!*'
-	#alias se-ls-l  'eos ls -l \!*'
-       #set se_cp='eos cp' # Works and is fast to copy locally, has to specify a local/eos directory
-	set se_ls='eos ls'
-	set se_ls_l='eos ls -l'
-	set se_rm_r='eos rm -r'
-	#set se_mv='eos mv' # there is no known command to move files on EOS on lxplus
-	set se_mkdir='eos mkdir'
-	set se_get_perm='eos stat' # Instead using this flawed command, we do a workaround with ls -l
-	set se_chmod_664='eos chmod 664'
-	set se_chmod_775='eos chmod 775'
-    else
-	#alias se-ls    'lcg-ls -b -D srmv2 --vo cms \!* | sed "s;/; ;g" | awk '\''{ print $NF }'\'
-	#alias se-ls-l  'lcg-ls -b -D srmv2 --vo cms -l \!* | sed "s;/; ;g" | awk '\''{ printf "%s %4d %4d %3d %12d %12s %s\n",$1,$2,$3,$4,$5,$6,$NF }'\'
-	#set se_ls='lcg-ls -b -D srmv2 --vo cms'
-	#set se_ls_l='lcg-ls -b -D srmv2 --vo cms -l'
-	set se_ls='env --unset=LD_LIBRARY_PATH gfal-ls'
-	set se_ls_l='env --unset=LD_LIBRARY_PATH gfal-ls -l'
-	set se_rm='lcg-del -b -D srmv2 --vo cms -l' # much faster than srmrm
-	set se_rmdir='srmrmdir'
-	set se_mv='srmmv'
-	set se_mkdir='srmmkdir'
-	set se_get_perm='srm-get-permissions'
-	set se_chmod_664='srm-set-permissions -type=CHANGE -group=RW'
-	set se_chmod_775='srm-set-permissions -type=CHANGE -group=RWX'
-    endif
+    #alias se-ls    'lcg-ls -b -D srmv2 --vo cms \!* | sed "s;/; ;g" | awk '\''{ print $NF }'\'
+    #alias se-ls-l  'lcg-ls -b -D srmv2 --vo cms -l \!* | sed "s;/; ;g" | awk '\''{ printf "%s %4d %4d %3d %12d %12s %s\n",$1,$2,$3,$4,$5,$6,$NF }'\'
+    #set se_ls='lcg-ls -b -D srmv2 --vo cms'
+    #set se_ls_l='lcg-ls -b -D srmv2 --vo cms -l'
+    #set se_mkdir='srmmkdir'
+    #set se_mv='srmmv'
+    #set se_get_perm='srm-get-permissions'
+    #set se_chmod_664='srm-set-permissions -type=CHANGE -group=RW'
+    #set se_chmod_775='srm-set-permissions -type=CHANGE -group=RWX'
+    #set se_rm='lcg-del -b -D srmv2 --vo cms -l' # much faster than srmrm
+    set se_ls='env --unset=LD_LIBRARY_PATH gfal-ls'
+    set se_ls_l='env --unset=LD_LIBRARY_PATH gfal-ls -l'
+    set se_mkdir='env --unset=LD_LIBRARY_PATH gfal-mkdir'
+    set se_mv='env --unset=LD_LIBRARY_PATH gfal-rename'
+    set se_get_perm='env --unset=LD_LIBRARY_PATH gfal-stat'
+    set se_chmod_664='env --unset=LD_LIBRARY_PATH gfal-chmod 0664' # did not work on 29/03/17
+    set se_chmod_775='env --unset=LD_LIBRARY_PATH gfal-chmod 0775' # did not work on 29/03/17
+    set se_rm='env --unset=LD_LIBRARY_PATH gfal-rm -r'
+    set se_rmdir='env --unset=LD_LIBRARY_PATH gfal-rm -r'
 endif
 #set se_cp='lcg-cp -b -D srmv2 --vo cms'
 #set se_cp='env -i gfal-copy -p -n 4 -t 86400 -T 86400'
