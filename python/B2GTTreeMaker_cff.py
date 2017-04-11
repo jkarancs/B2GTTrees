@@ -46,7 +46,7 @@ if getVariablesFromConfig:
         photons_var.append(s)
     
     photonjets_var = cms.untracked.vstring()
-    for pset in photonjets.variables:
+    for pset in photonjets:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
         photonjets_var.append(s)
     
@@ -95,7 +95,7 @@ if getVariablesFromConfig:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
         genJetsAK8SoftDrop_var.append(s)
 else:
-    # Currrent B2GAnaFW ver: 11 Jan (v8.0.x_v2.4 + PR66 ntuple version)
+    # Currrent B2GAnaFW ver: 11 Apr 2017 (CMSSW_8_0_X_V3 -PR74 +PR76)
     metNoHF_var = cms.untracked.vstring(
         "Pt",
         #"Px",
@@ -164,6 +164,10 @@ else:
         'vidMediumnoiso',
         'vidTightnoiso',
         'vidHEEPnoiso',
+        'vidMvaGPvalue',
+        'vidMvaGPcateg',
+        'vidMvaHZZvalue',
+        'vidMvaHZZcateg',
     )
     
     muonVars = cms.untracked.vstring(
@@ -233,7 +237,6 @@ else:
     )
     
     photonjetVars = cms.untracked.vstring(
-        'JetIndex',
         'PhotonIndex',
         'SubwGammatIndex',
         'PhotonSubjetFrac',
@@ -344,6 +347,8 @@ else:
         'tau1Puppi',
         'tau2Puppi',
         'tau3Puppi',
+        'uncorrSDMassPuppi',
+        'corrSDMassPuppi',
     )
     
     jetToolboxAK8PuppiVars = cms.untracked.vstring(
@@ -383,8 +388,6 @@ else:
     
     photons_var    = copy.deepcopy(photonVars)
     
-    photonjets_var = copy.deepcopy(photonjetVars)
-    
     jetsAK4CHS_var      = copy.deepcopy(basicVars)
     jetsAK4CHS_var     += jetVars
     jetsAK4CHS_var     += qglVars
@@ -398,6 +401,7 @@ else:
     jetsAK8CHS_var     += jetVars
     jetsAK8CHS_var     += jetVarsForSys
     jetsAK8CHS_var     += jetToolboxAK8Vars
+    jetsAK8CHS_var     += photonjetVars
     
     jetsAK8Puppi_var    = copy.deepcopy(basicVars)
     jetsAK8Puppi_var   += jetVars
