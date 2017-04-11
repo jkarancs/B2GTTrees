@@ -122,7 +122,7 @@ void B2GEdmExtraVarProducer::init_tokens_() {
   edm::EDGetTokenT<pat::PackedCandidateCollection>(consumes<pat::PackedCandidateCollection>(edm::InputTag("packedPFCandidates")));
   edm::EDGetTokenT<pat::METCollection>(consumes<pat::METCollection>(edm::InputTag("slimmedMETs")));
   edm::EDGetTokenT<pat::METCollection>(consumes<pat::METCollection>(edm::InputTag("slimmedMETsPuppi")));
-  edm::EDGetTokenT<pat::JetCollection>(consumes<pat::JetCollection>(edm::InputTag("slimmedJetsAK8")));
+  //edm::EDGetTokenT<pat::JetCollection>(consumes<pat::JetCollection>(edm::InputTag("slimmedJetsAK8")));
   
   if (!isData_) {
     edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"Pt")));
@@ -210,16 +210,16 @@ void B2GEdmExtraVarProducer::beginRun(edm::Run const& iRun, edm::EventSetup cons
   for ( auto filter : filter_names_ ) for (size_t i=0; i<nfilt_; ++i) 
     if (h_strings_["filter_names"]->at(i).find(filter)==0) filters_[filter] = i;
   std::cout<<"Filters found: "<<std::endl;
-  if (print_all) for ( auto filter : filters_ ) std::cout<<filter.first<<std::endl;
-  else for (size_t i=0; i<nfilt_; ++i) std::cout<<h_strings_["filter_names"]->at(i)<<std::endl;
+  if (print_all) for (size_t i=0; i<nfilt_; ++i) std::cout<<h_strings_["filter_names"]->at(i)<<std::endl;
+  else for ( auto filter : filters_ ) std::cout<<filter.first<<std::endl;
   
   ntrig_=h_strings_["trigger_names"]->size();
   triggers_.clear();
   for ( auto trig : trigger_names_ ) for (size_t i=0; i<ntrig_; ++i) 
     if (h_strings_["trigger_names"]->at(i).find(trig+"_v")==0) triggers_[trig] = i;
   std::cout<<"Triggers found: "<<std::endl;
-  if (print_all) for ( auto trigger : triggers_ ) std::cout<<trigger.first<<std::endl;
-  else for (size_t i=0; i<ntrig_; ++i) std::cout<<h_strings_["trigger_names"]->at(i)<<std::endl;
+  if (print_all) for (size_t i=0; i<ntrig_; ++i) std::cout<<h_strings_["trigger_names"]->at(i)<<std::endl;
+  else for ( auto trigger : triggers_ ) std::cout<<trigger.first<<std::endl;
 }
 
 void B2GEdmExtraVarProducer::beginLuminosityBlock(edm::LuminosityBlock const& iLumi, edm::EventSetup const& iSetup) {
@@ -1193,35 +1193,41 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     vector_int_[AK8Subjets_prefix_+"_tightLepVetoJetID"].push_back(tightLepVetoJetID);         /* subjetAK8_tightLepVetoJetID  */
   }
 
-  // Get uncorrected Puppi softdrop mass and match jets to B2G jet collection
-  edm::Handle<pat::JetCollection> AK8_handle;
-  iEvent.getByLabel(edm::InputTag("slimmedJetsAK8"), AK8_handle);
-
-  // Match to B2G collection
-  vector_float_[AK8Jets_prefix_+"_uncorrSoftDropMassPuppi"].clear();
-  for (size_t i=0; i<njet_AK8; ++i) {
-    TLorentzVector jet;
-    jet.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(i), h_floats_["AK8_Eta"]->at(i),
-        	     h_floats_["AK8_Phi"]->at(i), h_floats_["AK8_E"]->at(i));
-    float minDR = 9999;
-    float uncorrSoftDropMassPuppi = -9999;
-    for (const pat::Jet& j : *AK8_handle) {
-      TLorentzVector jet_MINIAOD;
-      jet_MINIAOD.SetPtEtaPhiE(j.pt(),j.eta(),j.phi(),j.energy());
-      float DR = jet.DeltaR(jet_MINIAOD);
-      if (DR<minDR) {
-        minDR = DR;
-        TLorentzVector puppi_softdrop, puppi_softdrop_subjet;
-        auto const & sdSubjetsPuppi = j.subjets("SoftDropPuppi");
-        for ( auto const & it : sdSubjetsPuppi ) {
-          puppi_softdrop_subjet.SetPtEtaPhiM(it->correctedP4(0).pt(),it->correctedP4(0).eta(),it->correctedP4(0).phi(),it->correctedP4(0).mass());
-          puppi_softdrop+=puppi_softdrop_subjet;
-        }
-        uncorrSoftDropMassPuppi = puppi_softdrop.M();
-      }
-    }
-    vector_float_[AK8Jets_prefix_+"_uncorrSoftDropMassPuppi"].push_back(uncorrSoftDropMassPuppi);
-  }
+  // Get (un)corrected Puppi softdrop mass and match jets to B2G jet collection
+  //edm::Handle<pat::JetCollection> AK8_handle;
+  //iEvent.getByLabel(edm::InputTag("slimmedJetsAK8"), AK8_handle);
+  //
+  //// Match to B2G collection
+  //vector_float_[AK8Jets_prefix_+"_softDropMassPuppiUncorr"].clear(); // For W Tagging
+  //vector_float_[AK8Jets_prefix_+"_softDropMassPuppiCorr"].clear();   // For top tagging
+  //for (size_t i=0; i<njet_AK8; ++i) {
+  //  TLorentzVector jet;
+  //  jet.SetPtEtaPhiE(h_floats_["AK8_Pt"]->at(i), h_floats_["AK8_Eta"]->at(i),
+  //      	     h_floats_["AK8_Phi"]->at(i), h_floats_["AK8_E"]->at(i));
+  //  float minDR = 9999;
+  //  float softDropMassPuppiUncorr = -9999, softDropMassPuppiCorr = -9999;
+  //  for (const pat::Jet& j : *AK8_handle) {
+  //    TLorentzVector jet_MINIAOD;
+  //    jet_MINIAOD.SetPtEtaPhiE(j.pt(),j.eta(),j.phi(),j.energy());
+  //    float DR = jet.DeltaR(jet_MINIAOD);
+  //    if (DR<0.8 && DR<minDR) {
+  //      minDR = DR;
+  //      TLorentzVector puppi_softdrop_uncorr, puppi_softdrop_subjet_uncorr;
+  //      TLorentzVector puppi_softdrop_corr, puppi_softdrop_subjet_corr;
+  //      auto const & sdSubjetsPuppi = j.subjets("SoftDropPuppi");
+  //      for ( auto const & it : sdSubjetsPuppi ) {
+  //        puppi_softdrop_subjet_uncorr.SetPtEtaPhiM(it->correctedP4(0).pt(),it->correctedP4(0).eta(),it->correctedP4(0).phi(),it->correctedP4(0).mass());
+  //        puppi_softdrop_uncorr+=puppi_softdrop_subjet_uncorr;
+  //        puppi_softdrop_subjet_corr.SetPtEtaPhiM(it->pt(),it->eta(),it->phi(),it->mass());
+  //        puppi_softdrop_corr+=puppi_softdrop_subjet_corr;
+  //      }
+  //      softDropMassPuppiUncorr = puppi_softdrop_uncorr.M();
+  //      softDropMassPuppiCorr   = puppi_softdrop_corr.M();
+  //    }
+  //  }
+  //  vector_float_[AK8Jets_prefix_+"_softDropMassPuppiUncorr"].push_back(softDropMassPuppiUncorr);
+  //  vector_float_[AK8Jets_prefix_+"_softDropMassPuppiCorr"]  .push_back(softDropMassPuppiCorr);
+  //}
 
 
   // ---------------------

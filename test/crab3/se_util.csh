@@ -96,7 +96,7 @@ foreach arg ( $rest_args )
 	        set use_rfio="1"
 	        setenv DPNS_HOST grid143.kfki.hu
 	        setenv DPM_HOST grid143.kfki.hu
-	        if ( ! ( $cmd =~ "cp"* || $cmd == "dl" || $cmd == "dl_mis" ) ) set PATH=`echo $SITE_INFO[$l] | sed "s;SFN=;;"`
+	        if ( ! ( $cmd =~ "cp"* || $cmd == "dl" || $cmd == "dl_mis" || $cmd == "sync" ) ) set PATH=`echo $SITE_INFO[$l] | sed "s;SFN=;;"`
 	    endif
 	    set arg=`echo "$arg" | sed "s;$SITE\:;$PATH;"`
 	    break
@@ -115,13 +115,14 @@ end
 if ( $use_rfio == 1 ) then
     #alias se-ls        '/usr/bin/rfdir \!* | awk '\''{ print $NF }'\'
     #alias se-ls-l      '/usr/bin/rfdir \!* | awk '\''{ printf "%s %4d %4d %3d %12d %s %s %5s %s\n",$1,$2,$3,$4,$5,$6,$7,$8,$9 }'\'
-    if ( $cmd =~ "cp"* || $cmd == "dl" || $cmd == "dl_mis" ) then
+    if ( $cmd =~ "cp"* || $cmd == "dl" || $cmd == "dl_mis" || $cmd == "sync" ) then
 	#set se_ls='lcg-ls -b -D srmv2 --vo cms'
 	set se_ls='env --unset=LD_LIBRARY_PATH gfal-ls'
+	set se_ls_l='env --unset=LD_LIBRARY_PATH gfal-ls -l'
     else
 	set se_ls='/usr/bin/rfdir'
+	set se_ls_l='/usr/bin/rfdir'
     endif
-    set se_ls_l='/usr/bin/rfdir'
    #set se_cp='/usr/bin/rfcp' # rfcp can not copy from SE to an other SE
     set se_mv='/usr/bin/rfrename'
     set se_rm_r='/usr/bin/rfrm -rf'
@@ -165,7 +166,7 @@ endif
 #set se_cp='lcg-cp -b -D srmv2 --vo cms'
 #set se_cp='env -i gfal-copy -p -n 4 -t 86400 -T 86400'
 set se_cp='env --unset=LD_LIBRARY_PATH gfal-copy -r'
-set se_cp_v='$se_cp -v'
+set se_cpv="$se_cp -v"
 #set se2_ls='lcg-ls -b -D srmv2 --vo cms'
 #set se2_ls_l='lcg-ls -b -D srmv2 --vo cms -l'
 set se2_ls='env --unset=LD_LIBRARY_PATH gfal-ls'
@@ -240,7 +241,7 @@ else if ( $cmd == "cp" ) then # specify filename
     peek_or_source "cp_$DATE.csh"
 
 else if ( $cmd == "cp-v" ) then
-    echo "$se_cp_v $arg1 $arg2" >! cp_$DATE.csh
+    echo "$se_cpv $arg1 $arg2" >! cp_$DATE.csh
     peek_or_source "cp_$DATE.csh"
 
 else if ( $cmd == "cplfn" ) then
@@ -384,7 +385,7 @@ else if ( $cmd == "dl_mis" ) then
 	echo "se dl_mis <se_dir> <local_dir>"
     else
 	eval "$se_ls $arg1" >! lsout_$RAND.txt;
-	sed "s;/; ;g" lsout_$RAND.txt | awk '{ print "'"$se_cp_v"' ARG1/"$NF" ARG2/"$NF }' | sed "s;ARG1;$arg1;;s;ARG2;$arg2;;s;?;\\?;g" >! dl_temp_$RAND.csh
+	sed "s;/; ;g" lsout_$RAND.txt | awk '{ print "'"$se_cp"' ARG1/"$NF" ARG2/"$NF }' | sed "s;ARG1;$arg1;;s;ARG2;$arg2;;s;?;\\?;g" >! dl_temp_$RAND.csh
 	sed "s;_[0-9]*_[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]\.root;\.root;;s;\.root;;;s;_; ;g" lsout_$RAND.txt | awk '{ printf "%d\n",$NF }' >! jobnums_se_$RAND.txt
 	rm lsout_$RAND.txt
 	if ( `echo "$arg2" | grep "srm:" | wc -l` ) then
@@ -408,6 +409,63 @@ else if ( $cmd == "dl_mis" ) then
 	else
 	    peek_or_source "dl_mis_$DATE.csh"
 	endif
+    endif
+
+else if ( $cmd == "sync" ) then
+    if ( $narg < 2 ) then
+	echo "Need more arguments, Use:"
+	echo "se sync <se_dir> <local_dir>"
+    else
+	# Check recursively all files on SE (similar to find)
+	echo "$arg1" >! se_subdirs_$RAND.txt
+	set Ndone=0
+	set Ntotal=0
+	echo -n "" >! unsorted_se_files_$RAND.txt
+	echo -n "" >! local_dirs_$RAND.txt
+	while ( `cat se_subdirs_$RAND.txt | wc -l` )
+	    set curr_dir=`head -1 se_subdirs_$RAND.txt`
+	    sed -i -e "1d" se_subdirs_$RAND.txt
+	    eval "$se_ls_l $curr_dir" >! lsout_$RAND.txt
+	    # Remove the same directory (stupid behaviour of lcg-ls for empty directories)
+	    grep '^d' lsout_$RAND.txt >! dirs_$RAND.txt
+	    if ( -f dirs_clean_$RAND.txt ) rm dirs_clean_$RAND.txt
+	    touch dirs_clean_$RAND.txt
+	    while ( `cat dirs_$RAND.txt | grep '^d' | wc -l` )
+	        set curr=`head -1 dirs_$RAND.txt | awk '{ print $NF }'`
+	        if ( ! `echo "$curr_dir" | grep $curr | wc -l` ) then
+	            head -1 dirs_$RAND.txt >> dirs_clean_$RAND.txt
+	        endif
+	        sed -i -e "1d" dirs_$RAND.txt
+	    end
+	    # Append new subdirs in front
+	    cat dirs_clean_$RAND.txt | sed "s;/; ;g" | awk '{ print $NF }' | sed 's;^;'"$curr_dir/"';;s;\?;\\\?;' >! newsubdirs_$RAND.txt
+	    if ( $Ntotal == 0 ) then
+	        set Ntotal=`cat newsubdirs_$RAND.txt | wc -l`
+	    endif
+	    cat se_subdirs_$RAND.txt >> newsubdirs_$RAND.txt
+	    mv newsubdirs_$RAND.txt se_subdirs_$RAND.txt
+	    rm dirs_$RAND.txt dirs_clean_$RAND.txt
+	    # Append list of root files found
+	    set arg1mod=`echo "$arg1" | sed "s;\\;;"`
+	    grep "\.root" lsout_$RAND.txt | awk '{ print "CURR_DIR/"$NF }' | sed "s;CURR_DIR;$curr_dir;;s;$arg1mod/;;;" >> unsorted_se_files_$RAND.txt
+	    # Append list of directories to create
+	    echo "CURR_DIR" | sed "s;CURR_DIR;$curr_dir;;s;$arg1mod;mkdir -p $arg2;;" >> local_dirs_$RAND.txt
+	end
+	sort unsorted_se_files_$RAND.txt > se_files_$RAND.txt
+	rm se_subdirs_$RAND.txt lsout_$RAND.txt unsorted_se_files_$RAND.txt
+	# Check local directories (First create if needed and look for root files)
+	source local_dirs_$RAND.txt
+	find "$arg2" | sed "s;$arg2/;;;s;$arg2;;" | grep "\.root" | sort > local_files_$RAND.txt
+	# Diff file lists and create directories for copy
+	diff local_files_$RAND.txt se_files_$RAND.txt | grep '^>' | awk '{ print "'"$se_cp"' ARG1/"$NF" ARG2/"$NF }' | sed "s;ARG1;$arg1;;s;ARG2;$arg2;;s;?;\\?;g" > sync_$DATE.sh
+	# Download missing files
+	if ( ! -e sync_$DATE.sh ) then
+	    echo "All files are downloaded already"
+	else
+	    peek_or_source "sync_$DATE.sh"
+	endif
+	# delete temp files
+	rm se_files_$RAND.txt local_files_$RAND.txt
     endif
 
 else if ( $cmd == "dirsize" || $cmd == "ds" ) then
