@@ -134,24 +134,20 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	#echo $primary
 	# 2016 Data
 	if ( `echo $PROCESSED_DS_NAME | grep "Run2016[B,C,D]" | wc -l`) then
-	    set DATAPROC="Data_80X_Run2016BCD_23Sep2016"
-	    set JEC_ERA="Spring16_25nsV10All_DATA"
+	    set DATAPROC="Data_80X_Run2016BCD_03Feb2017"
+	    set JEC_ERA="Summer16_23Sep2016AllV4_DATA"
 	    set RUNS="1-999999"
-	else if ( `echo $PROCESSED_DS_NAME | grep "Run2016E" | wc -l`) then
-	    set DATAPROC="Data_80X_Run2016E_23Sep2016"
-	    set JEC_ERA="Spring16_25nsV10All_DATA"
-	    set RUNS="1-999999"
-	else if ( `echo $PROCESSED_DS_NAME | grep "Run2016F" | wc -l`) then
-	    set DATAPROC="Data_80X_Run2016F_23Sep2016"
-	    set JEC_ERA="Spring16_25nsV10All_DATA"
+	else if ( `echo $PROCESSED_DS_NAME | grep "Run2016[E,F]" | wc -l`) then
+	    set DATAPROC="Data_80X_Run2016EF_03Feb2017"
+	    set JEC_ERA="Summer16_23Sep2016AllV4_DATA"
 	    set RUNS="1-999999"
 	else if ( `echo $PROCESSED_DS_NAME | grep "Run2016G" | wc -l`) then
-	    set DATAPROC="Data_80X_Run2016G_23Sep2016"
-	    set JEC_ERA="Spring16_25nsV10All_DATA"
+	    set DATAPROC="Data_80X_Run2016G_03Feb2017"
+	    set JEC_ERA="Summer16_23Sep2016AllV4_DATA"
 	    set RUNS="1-999999"
 	else if ( `echo $PROCESSED_DS_NAME | grep "Run2016H" | wc -l`) then
-	    set DATAPROC="Data_80X_Run2016H_PromptReco"
-	    set JEC_ERA="Spring16_25nsV10All_DATA"
+	    set DATAPROC="Data_80X_Run2016H_03Feb2017"
+	    set JEC_ERA="Summer16_23Sep2016AllV4_DATA"
 	    set RUNS="1-999999"
 	# Spring16 FastSim MC - Only Signal is needed from here
 	else if ( `echo $PROCESSED_DS_NAME | grep "RunIISpring16MiniAODv2.*PUSpring16Fast" | wc -l` ) then
@@ -160,7 +156,7 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
 	else if ( `echo $PROCESSED_DS_NAME | grep "RunIISummer16MiniAODv2" | wc -l` ) then
 	    # FullSim
 	    set DATAPROC="MC_MiniAODv2_80X_Summer16"
-	    set JEC_ERA="Spring16_25nsV10_MC"
+	    set JEC_ERA="Summer16_23Sep2016V4_MC"
 	else
 	    echo "ERROR - Dataset not defined (probably because not using latest): "$DATASET
 	    rm -r $TASKDIR Usage.txt
@@ -431,14 +427,11 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
     echo 'alias se         "source $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3/se_util.csh \\!*"\n' >> dl_$TASKNAME.csh
     set N=`cat $TASKDIR/input_datasets.txt | wc -l`
     foreach i ( `seq 1 $N` )
-	set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
-	if ( $recov ) set short=`echo "$short""_recovery"`
-	set dir=`echo $TASKDIR"/crab_"$short`
-	if ( ! -f $dir.py && $recov ) continue
         set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
+	#if ( `echo $in_dataset | grep Tprime | wc -l` == 0 ) then
 	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
-	if ( `echo $in_dataset | grep Tprime | wc -l` ) continue
-	set pubname=`grep outputDatasetTag $dir.py | sed "s;'; ;g" | awk '{ print $3 }'`
+        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	set pubname=`grep outputDatasetTag $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
 	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
 	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
         eval_or_echo "mkdir -p $DLDIR/$short"
@@ -447,6 +440,7 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
 	    eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand $DLDIR/$short/ --par $NPar --run"
 	    echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand "'$1'"/$short --par $NPar --run" >> dl_$TASKNAME.csh
 	end
+        #endif
     end
 
 else if ( `echo $cmd | grep "recovery" | wc -l` ) then
