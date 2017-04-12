@@ -19,14 +19,16 @@ config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = os.environ['CMSSW_BASE']+'/src/Analysis/B2GTTrees/test/B2GEdmToTTreeNtupleExtra_cfg.py'
 config.JobType.pyCfgParams = ['DataProcessing=DATAPROC', 'wantSummary=False', 'outputLabel=B2GTTreeNtupleExtra.root']
 config.JobType.inputFiles = input_files
-config.JobType.sendExternalFolder = True
+#config.JobType.sendExternalFolder = True
+config.JobType.maxMemoryMB = 2500
+config.JobType.maxJobRuntimeMin = 1900
 
 config.section_('Data')
 config.Data.outLFNDirBase = 'SE_USERDIR'
 config.Data.inputDataset = 'DATASET'
 config.Data.inputDBS = 'global'
-config.Data.splitting = 'FileBased'
-config.Data.unitsPerJob = 1
+config.Data.splitting = 'EventAwareLumiBased'
+config.Data.unitsPerJob = 100000
 config.Data.publication = False
 config.Data.outputDatasetTag = 'PUBNAME' # outLFNDirBase/primary_dataset/outputDatasetTag/timestamp/000X/
 

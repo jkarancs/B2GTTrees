@@ -1,5 +1,6 @@
 mc_datasets=(
     "dataset=/*/RunIISummer16*/MINIAODSIM"
+    "dataset=/*/RunIISpring16*Fast*/MINIAODSIM"
 )
 
 
@@ -7,9 +8,11 @@ mc_find_exclude_list=(
     #'strings to grep on, use regular expressions:strings separated by , to exclude'
 #    '/SMS-T[1,2,5]tt.*Fast:2Lfilter'
 #    '/SMS-T[1,2,5]tt:Fast'
-#    '/TT_|/TTJets_:_HT-,Lept,Mtt,RECODEBUG,mtop,mpiOFF,noCR,up,down,alphaS,widthx,RAWAODSIM_80X' # OLD
+#    #'/TT_|/TTJets_:_HT-,Lept,Mtt,RECODEBUG,mtop,mpiOFF,noCR,up,down,alphaS,widthx,RAWAODSIM_80X' # OLD
 #    '/TTJets_HT-:'
-#    '/TT_|/TTJets_:HT-,Lept,lept,down,up,mtop,evtgen'
+#    '/TT_|/TTJets_:HT-,Lept,lept,down,up,mtop,evtgen,hdamp,Mtt,erdON,width,colourFlip,Fast'
+#    '/TT_.*Fast|/TTJets_.*Fast:HT-,Lept,lept,down,up,mtop,evtgen,hdamp,Mtt,erdON,width,colourFlip'
+#    '/TT_.*backup|/TTJets_.*backup:HT-,Lept,lept,down,mtop,evtgen,hdamp,Mtt,erdON,width,colourFlip'
 #    '/TTWJetsToLNu_|/TTWJetsToQQ_:_ext2'
 #    '/TTZToLLNuNu_|/TTZToQQ_:'
 #    '/TTGJets_:_ext'
@@ -17,20 +20,18 @@ mc_find_exclude_list=(
 #    '/ST.*inclusiveDecays.*TuneCUETP8M2T4|/ST_s-channel:up,down,mtop,_DS'
 #    #'/QCD:Enriched,ALCATkAlMinBias,HcalNZSRAW,RECODEBUG'
 #    '/QCD_HT:BGenFilter,GenJets5,_ext' 
-#    #'/QCD_HT.*_ext:BGenFilter,GenJets5'
+#    '/QCD_HT.*_ext:BGenFilter,GenJets5'
 #    '/DYJetsToLL_M.*_HT:_ext,DYJetsToLL_M-50_HT-600toInf'
 #    #'/DYJetsToLL_M.*_HT.*_ext:'
-#    '/DYJetsToQQ_:'
 #    '/ZJetsToNuNu_HT:_ext'
 #    #'/ZJetsToNuNu_HT.*_ext:'
-#    '/ZJetsToQQ_:'
 #    '/WJetsToLNu_HT:_ext'
 #    '/WJetsToLNu_HT.*_ext:'
-#    '/WJetsToQQ_:HT-600ToInf'
+#    '/DYJetsToQQ_|/ZJetsToQQ_|/WJetsToQQ_:'
 #    '/WWTo.*powheg:Up,Down,Mll,herwigpp,_ext'
 #    '/WZTo.*amcatnloFXFX:PtZ'
-#    '/ZZTo:ZZTo4L_13TeV-amcatnloFXFX,sherpa'
-#    '/WWW|/WWZ|/WZZ|/ZZZ:'
+#    '/ZZTo:sherpa,ZZOnShell,Jets'
+    '/WWW|/WWZ|/WZZ|/ZZZ:'
 )
 
 
