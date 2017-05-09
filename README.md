@@ -8,16 +8,16 @@ Checkout Instructions (with B2GAnaFW)
 ```Shell
 export CMSSW_GIT_REFERENCE=/cvmfs/cms.cern.ch/cmssw.git.daily
 export SCRAM_ARCH=slc6_amd64_gcc530
-cmsrel CMSSW_8_0_26_patch2
-cd CMSSW_8_0_26_patch2/src
+cmsrel CMSSW_8_0_26_patch1
+cd CMSSW_8_0_26_patch1/src
 cmsenv
 git cms-init
 git cms-merge-topic -u cms-btv-pog:BoostedDoubleSVTaggerV4-WithWeightFiles-v1_from-CMSSW_8_0_21
 git cms-merge-topic cms-met:METRecipe_8020
 git cms-merge-topic ikrav:egm_id_80X_v3_photons
 git clone https://github.com/cms-jet/JetToolbox.git JMEAnalysis/JetToolbox -b jetToolbox_80X_V3
-git clone https://github.com/jkarancs/B2GAnaFW.git  Analysis/B2GAnaFW  -b v8.0.x_v3.1_pre_PR76_Apr12
-git clone https://github.com/jkarancs/B2GTTrees.git Analysis/B2GTTrees -b v8.0.x_v3.1_pre_PR76_Apr12
+git clone https://github.com/cmsb2g/B2GAnaFW.git  Analysis/B2GAnaFW -b v8.0.x_v3.1
+git clone https://github.com/jkarancs/B2GTTrees.git Analysis/B2GTTrees -b v8.0.x_v3.1_May09
 scram b -j 20
 ```
 
@@ -67,13 +67,13 @@ Examples:
    * Make TTree ntuples from MINIAOD(SIM) on grid
 ```Shell
 cd $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3
-merged create Apr12 B2GAnaFW_80X_V3p1_pre_PR76_Apr12 MINIAODv2_80X_Apr12_input.txt cross_sections.txt T2_HU_Budapest /store/user/jkarancs/SusyAnalysis/B2GTTreeNtuple/Apr12
-merged submit Apr12
-merged status Apr12
-merged status Apr12 --run #if you want automatic job handling, otherwise it prints resubmit commands
-merged download Apr12 /data/gridout/jkarancs/SusyAnalysis/B2G/TTreeNtuple --run
-merged find_missing Apr12
-merged checkup Apr12
-merged report Apr12 --run
-merged get_lumi Apr12
+merged create May09 B2GAnaFW_80X_V3p1_May09 MINIAODv2_80X_May09_input.txt cross_sections.txt T2_HU_Budapest /store/user/jkarancs/SusyAnalysis/B2GTTreeNtuple/May09
+merged submit May09
+merged status May09
+merged status May09 --run #if you want automatic job handling, otherwise it prints resubmit commands
+merged download May09 /data/gridout/jkarancs/SusyAnalysis/B2G/TTreeNtuple --run
+merged find_missing May09
+merged checkup May09
+merged report May09 --run
+merged get_lumi May09
 ```

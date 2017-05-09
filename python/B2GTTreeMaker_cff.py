@@ -95,7 +95,7 @@ if getVariablesFromConfig:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
         genJetsAK8SoftDrop_var.append(s)
 else:
-    # Currrent B2GAnaFW ver: 11 Apr 2017 (CMSSW_8_0_X_V3 -PR74 +PR76)
+    # Currrent B2GAnaFW ver: v8.0.x_v3.1
     metNoHF_var = cms.untracked.vstring(
         "Pt",
         #"Px",
@@ -401,7 +401,7 @@ else:
     jetsAK8CHS_var     += jetVars
     jetsAK8CHS_var     += jetVarsForSys
     jetsAK8CHS_var     += jetToolboxAK8Vars
-    jetsAK8CHS_var     += photonjetVars
+    #jetsAK8CHS_var     += photonjetVars
     
     jetsAK8Puppi_var    = copy.deepcopy(basicVars)
     jetsAK8Puppi_var   += jetVars
