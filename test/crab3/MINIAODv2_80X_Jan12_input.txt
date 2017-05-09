@@ -1,5 +1,4 @@
 # ------------- Data ---------------
-JetHT_Run2016B_RRv1                               /JetHT/Run2016B-23Sep2016-v1/MINIAOD
 JetHT_Run2016B_RRv3                               /JetHT/Run2016B-23Sep2016-v3/MINIAOD
 JetHT_Run2016C_RRv1                               /JetHT/Run2016C-23Sep2016-v1/MINIAOD
 JetHT_Run2016D_RRv1                               /JetHT/Run2016D-23Sep2016-v1/MINIAOD
@@ -9,7 +8,6 @@ JetHT_Run2016G_RRv1                               /JetHT/Run2016G-23Sep2016-v1/M
 JetHT_Run2016H_PRv2                               /JetHT/Run2016H-PromptReco-v2/MINIAOD
 JetHT_Run2016H_PRv3                               /JetHT/Run2016H-PromptReco-v3/MINIAOD
 
-MET_Run2016B_RRv1                                 /MET/Run2016B-23Sep2016-v1/MINIAOD
 MET_Run2016B_RRv3                                 /MET/Run2016B-23Sep2016-v3/MINIAOD
 MET_Run2016C_RRv1                                 /MET/Run2016C-23Sep2016-v1/MINIAOD
 MET_Run2016D_RRv1                                 /MET/Run2016D-23Sep2016-v1/MINIAOD
@@ -19,7 +17,6 @@ MET_Run2016G_RRv1                                 /MET/Run2016G-23Sep2016-v1/MIN
 MET_Run2016H_PRv2                                 /MET/Run2016H-PromptReco-v2/MINIAOD
 MET_Run2016H_PRv3                                 /MET/Run2016H-PromptReco-v3/MINIAOD
 
-SingleElectron_Run2016B_RRv1                      /SingleElectron/Run2016B-23Sep2016-v1/MINIAOD
 SingleElectron_Run2016B_RRv3                      /SingleElectron/Run2016B-23Sep2016-v3/MINIAOD
 SingleElectron_Run2016C_RRv1                      /SingleElectron/Run2016C-23Sep2016-v1/MINIAOD
 SingleElectron_Run2016D_RRv1                      /SingleElectron/Run2016D-23Sep2016-v1/MINIAOD
@@ -29,7 +26,6 @@ SingleElectron_Run2016G_RRv1                      /SingleElectron/Run2016G-23Sep
 SingleElectron_Run2016H_PRv2                      /SingleElectron/Run2016H-PromptReco-v2/MINIAOD
 SingleElectron_Run2016H_PRv3                      /SingleElectron/Run2016H-PromptReco-v3/MINIAOD
 
-SingleMuon_Run2016B_RRv1                          /SingleMuon/Run2016B-23Sep2016-v1/MINIAOD
 SingleMuon_Run2016B_RRv3                          /SingleMuon/Run2016B-23Sep2016-v3/MINIAOD
 SingleMuon_Run2016C_RRv1                          /SingleMuon/Run2016C-23Sep2016-v1/MINIAOD
 SingleMuon_Run2016D_RRv1                          /SingleMuon/Run2016D-23Sep2016-v1/MINIAOD
@@ -133,7 +129,7 @@ WJetsToLNu_HT-1200To2500                          /WJetsToLNu_HT-1200To2500_Tune
 WJetsToLNu_HT-2500ToInf                           /WJetsToLNu_HT-2500ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
 WJetsToQQ_HT180                                   /WJetsToQQ_HT180_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
 
-# Multibboson
+# Multiboson
 WWTo2L2Nu                                         /WWTo2L2Nu_13TeV-powheg/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
 WWTo4Q                                            /WWTo4Q_13TeV-powheg/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
 WWToLNuQQ                                         /WWToLNuQQ_13TeV-powheg/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM

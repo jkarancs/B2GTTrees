@@ -49,7 +49,12 @@ echo "  element to a local directory DLDIR"                      >> Usage.txt
 echo "  Check that the SRM site name and url is defined for"     >> Usage.txt
 echo "  SE_SITE in the se_util.csh script (look for SITE_INFO)"  >> Usage.txt
 echo "" 						         >> Usage.txt
-echo "9) make_ttrees <TASKNAME> <DIR> <NPARALLEL>"               >> Usage.txt
+echo "9) recovery <TASKNAME> <DLDIR>"                            >> Usage.txt
+echo "  Check which lumisections are missing in output files"    >> Usage.txt
+echo "  downloaded in DLDIR and create recovery tasks for"       >> Usage.txt
+echo "  each dataset (only for data)"                            >> Usage.txt
+echo "" 						         >> Usage.txt
+echo "10) make_ttrees <TASKNAME> <DIR> <NPARALLEL>"              >> Usage.txt
 echo "  Produce locally TTreeNtuples from EdmNtuples"            >> Usage.txt
 echo "  Files need to be downloaded with the download command"   >> Usage.txt
 echo "  Multiple background cmsRuns can be run in parallel"      >> Usage.txt
@@ -422,19 +427,44 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
     set N=`cat $TASKDIR/input_datasets.txt | wc -l`
     foreach i ( `seq 1 $N` )
         set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
-	if ( `echo $in_dataset | grep Tprime | wc -l` == 0 ) then
-	    set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
-            set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
-	    set pubname=`grep outputDatasetTag $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
-	    set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
-	    set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
-            eval_or_echo "mkdir -p $DLDIR/$short"
-            echo "mkdir -p "'$1'"/$short" >> dl_$TASKNAME.csh
-	    foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp` )
-	        eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand $DLDIR/$short --par $NPar --run"
-	        echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand "'$1'"/$short --par $NPar --run" >> dl_$TASKNAME.csh
-	    end
-        endif
+	#if ( `echo $in_dataset | grep Tprime | wc -l` == 0 ) then
+	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
+        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	set pubname=`grep outputDatasetTag $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
+	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
+	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
+        eval_or_echo "mkdir -p $DLDIR/$short"
+        echo "mkdir -p "'$1'"/$short" >> dl_$TASKNAME.csh
+	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp` )
+	    eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand $DLDIR/$short/ --par $NPar --run"
+	    echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand "'$1'"/$short --par $NPar --run" >> dl_$TASKNAME.csh
+	end
+        #endif
+    end
+
+else if ( `echo $cmd | grep "recovery" | wc -l` ) then
+    if ( $#argv < 3 ) then
+	cat Usage.txt; rm Usage.txt; exit
+    endif
+    eval_or_echo "mkdir -p $TASKDIR/missing_lumis"
+    set DLDIR=`echo $3"/"$TASKNAME | sed "s;//;/;"`
+    set N=`cat $TASKDIR/input_datasets.txt | wc -l`
+    foreach i ( `seq 1 $N` )
+        set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
+	set isData=`echo $in_dataset | grep '/MINIAOD$' | wc -l`
+        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	set CERT=`grep lumiMask $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
+	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
+	set Status=`if ( $status_txt != "" ) grep "Task status:" $status_txt | awk '{ print $3 }'`
+	if ( $isData && `echo $Status | grep COMPLETED | wc -l` == 0 ) then
+	    #das_client --limit=10000 --query "run dataset=$in_dataset" | tail -n+4 | sort -V > "$short"_runs.txt
+	    #set MINRUN=`head -1 "$short"_runs.txt`
+	    #set MAXRUN=`tail -1 "$short"_runs.txt`
+	    #rm "$short"_runs.txt
+	    #./print_lumis.sh $DLDIR/$short $CERT $MINRUN $MAXRUN > $TASKDIR/missing_lumis/missing_"$short"_JSON.txt
+	    sed "15s;$short;$short""_recovery;;s;$CERT;$TASKDIR/missing_lumis/missing_"$short"_JSON.txt;;" $TASKDIR/crab_$short.py > $TASKDIR/crab_"$short"_recovery.py
+	    ls -l $TASKDIR/crab_"$short"_recovery.py
+	endif
     end
 
 else if ( `echo $cmd | grep "find_missing" | wc -l` ) then

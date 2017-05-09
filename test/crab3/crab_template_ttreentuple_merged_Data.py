@@ -25,8 +25,8 @@ config.section_('Data')
 config.Data.outLFNDirBase = 'SE_USERDIR'
 config.Data.inputDataset = 'DATASET'
 config.Data.inputDBS = 'global'
-config.Data.splitting = 'FileBased'
-config.Data.unitsPerJob = 1
+config.Data.splitting = 'LumiBased'
+config.Data.unitsPerJob = 10
 config.Data.publication = False
 config.Data.outputDatasetTag = 'PUBNAME' # outLFNDirBase/primary_dataset/outputDatasetTag/timestamp/000X/
 
