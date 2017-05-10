@@ -73,13 +73,13 @@ Examples:
    * Make TTree ntuples from MINIAOD(SIM) on grid
 ```Shell
 cd $CMSSW_BASE/src/Analysis/B2GTTrees/test/crab3
-merged create May09 B2GAnaFW_80X_V3p1_May09 MINIAODv2_80X_May09_input.txt cross_sections.txt T2_HU_Budapest /store/user/jkarancs/SusyAnalysis/B2GTTreeNtuple/May09
-merged submit May09
-merged status May09
-merged status May09 --run #if you want automatic job handling, otherwise it prints resubmit commands
-merged download May09 /data/gridout/jkarancs/SusyAnalysis/B2G/TTreeNtuple --run
-merged find_missing May09
-merged checkup May09
-merged report May09 --run
-merged get_lumi May09
+merged create May10 B2GAnaFW_80X_V3p1_May10 MINIAODv2_80X_May10_input.txt cross_sections.txt T2_HU_Budapest /store/user/jkarancs/SusyAnalysis/B2GTTreeNtuple/May10
+merged submit May10
+merged status May10
+merged status May10 --run #if you want automatic job handling, otherwise it prints resubmit commands
+merged download May10 /data/gridout/jkarancs/SusyAnalysis/B2G/TTreeNtuple --run
+merged find_missing May10
+merged checkup May10
+merged report May10 --run
+merged get_lumi May10
 ```
