@@ -6,7 +6,7 @@ import os
 # Set to false, and define your own lists (eg. comment out unused vairables)
 getVariablesFromConfig = False
 
-from Analysis.B2GAnaFW.b2gedmntuples_cff import puppimetFull, metFull, genPart, electrons, muons, photons, photonjets, jetsAK4CHS, jetsAK4Puppi, jetsAK8CHS, subjetsAK8CHS, jetsAK8Puppi, subjetsAK8Puppi, genJetsAK8, genJetsAK8SoftDrop, eventInfo # metNoHF, subjetsCmsTopTag off since 76X
+from Analysis.B2GAnaFW.b2gedmntuples_cff import puppimetFull, metFull, metFullMuEGClean, genPart, electrons, muons, photons, photonjets, jetsAK4CHS, jetsAK4Puppi, jetsAK8CHS, subjetsAK8CHS, jetsAK8Puppi, subjetsAK8Puppi, genJetsAK8, genJetsAK8SoftDrop, eventInfo # metNoHF, subjetsCmsTopTag off since 76X
 
 if getVariablesFromConfig:
     
@@ -19,6 +19,11 @@ if getVariablesFromConfig:
     for pset in metFull.variables:
         s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
         metFull_var.append(s)
+
+    metFullMuEGClean_var = cms.untracked.vstring()
+    for pset in metFullMuEGClean.variables:
+        s = str(pset.tag).replace("cms.untracked.string('","").replace("')","")
+        metFullMuEGClean_var.append(s)
 
     puppimetFull_var = cms.untracked.vstring()
     for pset in puppimetFull.variables:
@@ -105,8 +110,9 @@ else:
         #"uncorPhi",
         #"uncorSumEt",
     )
-    metFull_var      = copy.deepcopy(metNoHF_var)
-    puppimetFull_var = copy.deepcopy(metNoHF_var)
+    metFull_var          = copy.deepcopy(metNoHF_var)
+    metFullMuEGClean_var = copy.deepcopy(metNoHF_var)
+    puppimetFull_var     = copy.deepcopy(metNoHF_var)
     
     basicVars = cms.untracked.vstring(
         "Pt",
@@ -491,8 +497,14 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
         cms.PSet(
             label = cms.untracked.string("metFull"),
             prefix_in = metFull.prefix,
-            prefix_out = cms.untracked.string("met_"),
+            prefix_out = cms.untracked.string("met_MuCleanOnly_"),
             vectorF = metFull_var,
+        ),
+        cms.PSet(
+            label = cms.untracked.string("metFullMuEGClean"),
+            prefix_in = metFullMuEGClean.prefix,
+            prefix_out = cms.untracked.string("met_"),
+            vectorF = metFullMuEGClean_var,
         ),
         cms.PSet(
             label = cms.untracked.string("puppimetFull"),

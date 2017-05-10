@@ -1,46 +1,46 @@
-# ------------- Data ---------------
-JetHT_Run2016B_03Feb2017_v2                       /JetHT/Run2016B-03Feb2017_ver2-v2/MINIAOD
-JetHT_Run2016C_03Feb2017                          /JetHT/Run2016C-03Feb2017-v1/MINIAOD	 
-JetHT_Run2016D_03Feb2017                          /JetHT/Run2016D-03Feb2017-v1/MINIAOD	 
-JetHT_Run2016E_03Feb2017                          /JetHT/Run2016E-03Feb2017-v1/MINIAOD	 
-JetHT_Run2016F_03Feb2017                          /JetHT/Run2016F-03Feb2017-v1/MINIAOD	 
-JetHT_Run2016G_03Feb2017                          /JetHT/Run2016G-03Feb2017-v1/MINIAOD	 
-JetHT_Run2016H_03Feb2017_v2                       /JetHT/Run2016H-03Feb2017_ver2-v1/MINIAOD
-JetHT_Run2016H_03Feb2017_v3                       /JetHT/Run2016H-03Feb2017_ver3-v1/MINIAOD
-
-MET_Run2016B_03Feb2017_v2                         /MET/Run2016B-03Feb2017_ver2-v2/MINIAOD
-MET_Run2016C_03Feb2017                            /MET/Run2016C-03Feb2017-v1/MINIAOD	 
-MET_Run2016D_03Feb2017                            /MET/Run2016D-03Feb2017-v1/MINIAOD	 
-MET_Run2016E_03Feb2017                            /MET/Run2016E-03Feb2017-v1/MINIAOD	 
-MET_Run2016F_03Feb2017                            /MET/Run2016F-03Feb2017-v1/MINIAOD	 
-MET_Run2016G_03Feb2017                            /MET/Run2016G-03Feb2017-v1/MINIAOD	 
-MET_Run2016H_03Feb2017_v2                         /MET/Run2016H-03Feb2017_ver2-v1/MINIAOD
-MET_Run2016H_03Feb2017_v3                         /MET/Run2016H-03Feb2017_ver3-v1/MINIAOD
-
-SingleElectron_Run2016B_03Feb2017_v2              /SingleElectron/Run2016B-03Feb2017_ver2-v2/MINIAOD
-SingleElectron_Run2016C_03Feb2017                 /SingleElectron/Run2016C-03Feb2017-v1/MINIAOD	 
-SingleElectron_Run2016D_03Feb2017                 /SingleElectron/Run2016D-03Feb2017-v1/MINIAOD	 
-SingleElectron_Run2016E_03Feb2017                 /SingleElectron/Run2016E-03Feb2017-v1/MINIAOD	 
-SingleElectron_Run2016F_03Feb2017                 /SingleElectron/Run2016F-03Feb2017-v1/MINIAOD	 
-SingleElectron_Run2016G_03Feb2017                 /SingleElectron/Run2016G-03Feb2017-v1/MINIAOD	 
-SingleElectron_Run2016H_03Feb2017_v2              /SingleElectron/Run2016H-03Feb2017_ver2-v1/MINIAOD
-SingleElectron_Run2016H_03Feb2017_v3              /SingleElectron/Run2016H-03Feb2017_ver3-v1/MINIAOD
-
-##MEDPRIO  SingleMuon_Run2016B_03Feb2017_v2                  /SingleMuon/Run2016B-03Feb2017_ver2-v2/MINIAOD
-##MEDPRIO  SingleMuon_Run2016C_03Feb2017                     /SingleMuon/Run2016C-03Feb2017-v1/MINIAOD	 
-##MEDPRIO  SingleMuon_Run2016D_03Feb2017                     /SingleMuon/Run2016D-03Feb2017-v1/MINIAOD	 
-##MEDPRIO  SingleMuon_Run2016E_03Feb2017                     /SingleMuon/Run2016E-03Feb2017-v1/MINIAOD	 
-##MEDPRIO  SingleMuon_Run2016F_03Feb2017                     /SingleMuon/Run2016F-03Feb2017-v1/MINIAOD	 
-##MEDPRIO  SingleMuon_Run2016G_03Feb2017                     /SingleMuon/Run2016G-03Feb2017-v1/MINIAOD	 
-##MEDPRIO  SingleMuon_Run2016H_03Feb2017_v2                  /SingleMuon/Run2016H-03Feb2017_ver2-v1/MINIAOD
-##MEDPRIO  SingleMuon_Run2016H_03Feb2017_v3                  /SingleMuon/Run2016H-03Feb2017_ver3-v1/MINIAOD
+#PART1  # ------------- Data ---------------
+#PART1  JetHT_Run2016B_03Feb2017_v2                       /JetHT/Run2016B-03Feb2017_ver2-v2/MINIAOD
+#PART1  JetHT_Run2016C_03Feb2017                          /JetHT/Run2016C-03Feb2017-v1/MINIAOD	 
+#PART1  JetHT_Run2016D_03Feb2017                          /JetHT/Run2016D-03Feb2017-v1/MINIAOD	 
+#PART1  JetHT_Run2016E_03Feb2017                          /JetHT/Run2016E-03Feb2017-v1/MINIAOD	 
+#PART1  JetHT_Run2016F_03Feb2017                          /JetHT/Run2016F-03Feb2017-v1/MINIAOD	 
+#PART1  JetHT_Run2016G_03Feb2017                          /JetHT/Run2016G-03Feb2017-v1/MINIAOD	 
+#PART1  JetHT_Run2016H_03Feb2017_v2                       /JetHT/Run2016H-03Feb2017_ver2-v1/MINIAOD
+#PART1  JetHT_Run2016H_03Feb2017_v3                       /JetHT/Run2016H-03Feb2017_ver3-v1/MINIAOD
+#PART1  
+#PART1  MET_Run2016B_03Feb2017_v2                         /MET/Run2016B-03Feb2017_ver2-v2/MINIAOD
+#PART1  MET_Run2016C_03Feb2017                            /MET/Run2016C-03Feb2017-v1/MINIAOD	 
+#PART1  MET_Run2016D_03Feb2017                            /MET/Run2016D-03Feb2017-v1/MINIAOD	 
+#PART1  MET_Run2016E_03Feb2017                            /MET/Run2016E-03Feb2017-v1/MINIAOD	 
+#PART1  MET_Run2016F_03Feb2017                            /MET/Run2016F-03Feb2017-v1/MINIAOD	 
+#PART1  MET_Run2016G_03Feb2017                            /MET/Run2016G-03Feb2017-v1/MINIAOD	 
+#PART1  MET_Run2016H_03Feb2017_v2                         /MET/Run2016H-03Feb2017_ver2-v1/MINIAOD
+#PART1  MET_Run2016H_03Feb2017_v3                         /MET/Run2016H-03Feb2017_ver3-v1/MINIAOD
+#PART1  
+#PART1  SingleElectron_Run2016B_03Feb2017_v2              /SingleElectron/Run2016B-03Feb2017_ver2-v2/MINIAOD
+#PART1  SingleElectron_Run2016C_03Feb2017                 /SingleElectron/Run2016C-03Feb2017-v1/MINIAOD	 
+#PART1  SingleElectron_Run2016D_03Feb2017                 /SingleElectron/Run2016D-03Feb2017-v1/MINIAOD	 
+#PART1  SingleElectron_Run2016E_03Feb2017                 /SingleElectron/Run2016E-03Feb2017-v1/MINIAOD	 
+#PART1  SingleElectron_Run2016F_03Feb2017                 /SingleElectron/Run2016F-03Feb2017-v1/MINIAOD	 
+#PART1  SingleElectron_Run2016G_03Feb2017                 /SingleElectron/Run2016G-03Feb2017-v1/MINIAOD	 
+#PART1  SingleElectron_Run2016H_03Feb2017_v2              /SingleElectron/Run2016H-03Feb2017_ver2-v1/MINIAOD
+#PART1  SingleElectron_Run2016H_03Feb2017_v3              /SingleElectron/Run2016H-03Feb2017_ver3-v1/MINIAOD
+#PART1  
+#PART1  SingleMuon_Run2016B_03Feb2017_v2                  /SingleMuon/Run2016B-03Feb2017_ver2-v2/MINIAOD
+#PART1  SingleMuon_Run2016C_03Feb2017                     /SingleMuon/Run2016C-03Feb2017-v1/MINIAOD	 
+#PART1  SingleMuon_Run2016D_03Feb2017                     /SingleMuon/Run2016D-03Feb2017-v1/MINIAOD	 
+#PART1  SingleMuon_Run2016E_03Feb2017                     /SingleMuon/Run2016E-03Feb2017-v1/MINIAOD	 
+#PART1  SingleMuon_Run2016F_03Feb2017                     /SingleMuon/Run2016F-03Feb2017-v1/MINIAOD	 
+#PART1  SingleMuon_Run2016G_03Feb2017                     /SingleMuon/Run2016G-03Feb2017-v1/MINIAOD	 
+#PART1  SingleMuon_Run2016H_03Feb2017_v2                  /SingleMuon/Run2016H-03Feb2017_ver2-v1/MINIAOD
+#PART1  SingleMuon_Run2016H_03Feb2017_v3                  /SingleMuon/Run2016H-03Feb2017_ver3-v1/MINIAOD
 
 # ------------ Signal --------------
 
 # FastSim Scans
 ##MEDPRIO  FastSim_SMS-T1tttt                                /SMS-T1tttt_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16Fast_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/MINIAODSIM
 ##MEDPRIO  FastSim_SMS-T1ttbb                                /SMS-T1ttbb_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16Fast_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/MINIAODSIM
-##MEDPRIO  FastSim_SMS-T1ttbb_deltaM5to25                    /SMS-T1ttbb_deltaM5to25_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16Fast_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/MINIAODSIM                                                                                                                                                  
+##MEDPRIO  FastSim_SMS-T1ttbb_deltaM5to25                    /SMS-T1ttbb_deltaM5to25_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16Fast_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/MINIAODSIM
 FastSim_SMS-T2tt_mStop-150to250                   /SMS-T2tt_mStop-150to250_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16Fast_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/MINIAODSIM
 FastSim_SMS-T2tt_mStop-250to350                   /SMS-T2tt_mStop-250to350_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16Fast_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/MINIAODSIM
 FastSim_SMS-T2tt_mStop-350to400                   /SMS-T2tt_mStop-350to400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16Fast_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/MINIAODSIM
@@ -145,9 +145,9 @@ WJetsToLNu_HT-1200To2500                          /WJetsToLNu_HT-1200To2500_Tune
 WJetsToLNu_HT-2500ToInf                           /WJetsToLNu_HT-2500ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
 
 # DY/Z/W to Multijet
-##MEDPRIO  DYJetsToQQ_HT180                                  /DYJetsToQQ_HT180_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
-##MEDPRIO  ZJetsToQQ_HT600toInf                              /ZJetsToQQ_HT600toInf_13TeV-madgraph/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
-##MEDPRIO  WJetsToQQ_HT180                                   /WJetsToQQ_HT180_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
+DYJetsToQQ_HT180                                  /DYJetsToQQ_HT180_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
+ZJetsToQQ_HT600toInf                              /ZJetsToQQ_HT600toInf_13TeV-madgraph/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
+WJetsToQQ_HT180                                   /WJetsToQQ_HT180_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
 
 # Multiboson
 WWTo4Q                                            /WWTo4Q_13TeV-powheg/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
@@ -157,14 +157,14 @@ WWTo2L2Nu                                         /WWTo2L2Nu_13TeV-powheg/RunIIS
 WZTo2Q2Nu                                         /WZTo2Q2Nu_13TeV_amcatnloFXFX_madspin_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
 WZTo1L1Nu2Q                                       /WZTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v3/MINIAODSIM
 WZTo1L3Nu                                         /WZTo1L3Nu_13TeV_amcatnloFXFX_madspin_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
-##MEDPRIO  WZTo2L2Q                                          /WZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
-##MEDPRIO  WZTo3LNu                                          /WZTo3LNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
+WZTo2L2Q                                          /WZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
+WZTo3LNu                                          /WZTo3LNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
 
 ZZTo4Q                                            /ZZTo4Q_13TeV_amcatnloFXFX_madspin_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
 ZZTo2Q2Nu                                         /ZZTo2Q2Nu_13TeV_amcatnloFXFX_madspin_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
-##MEDPRIO  ZZTo2L2Q                                          /ZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
-##MEDPRIO  ZZTo2L2Nu                                         /ZZTo2L2Nu_13TeV_powheg_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
-##MEDPRIO  ZZTo4L                                            /ZZTo4L_13TeV_powheg_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
+ZZTo2L2Q                                          /ZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
+ZZTo2L2Nu                                         /ZZTo2L2Nu_13TeV_powheg_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
+ZZTo4L                                            /ZZTo4L_13TeV_powheg_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
 ##MEDPRIO  WWW                                               /WWW_4F_TuneCUETP8M1_13TeV-amcatnlo-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
 ##MEDPRIO  WWZ                                               /WWZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
 ##MEDPRIO  WZZ                                               /WZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM

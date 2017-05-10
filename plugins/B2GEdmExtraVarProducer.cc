@@ -121,6 +121,7 @@ void B2GEdmExtraVarProducer::init_tokens_() {
   edm::EDGetTokenT<reco::VertexCollection>(consumes<reco::VertexCollection>(edm::InputTag("offlineSlimmedPrimaryVertices")));
   edm::EDGetTokenT<pat::PackedCandidateCollection>(consumes<pat::PackedCandidateCollection>(edm::InputTag("packedPFCandidates")));
   edm::EDGetTokenT<pat::METCollection>(consumes<pat::METCollection>(edm::InputTag("slimmedMETs")));
+  edm::EDGetTokenT<pat::METCollection>(consumes<pat::METCollection>(edm::InputTag("slimmedMETsMuEGClean")));
   edm::EDGetTokenT<pat::METCollection>(consumes<pat::METCollection>(edm::InputTag("slimmedMETsPuppi")));
   //edm::EDGetTokenT<pat::JetCollection>(consumes<pat::JetCollection>(edm::InputTag("slimmedJetsAK8")));
   
@@ -1235,23 +1236,32 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   // ---------------------
   
   // Uncertainties
+  edm::Handle<pat::METCollection> mets_MuCleanOnly;
+  iEvent.getByLabel(edm::InputTag("slimmedMETs"), mets_MuCleanOnly);
+  const pat::MET &met_MuCleanOnly = mets_MuCleanOnly->front();
   edm::Handle<pat::METCollection> mets;
-  iEvent.getByLabel(edm::InputTag("slimmedMETs"), mets);
+  iEvent.getByLabel(edm::InputTag("slimmedMETsMuEGClean"), mets);
   const pat::MET &met = mets->front();
   edm::Handle<pat::METCollection> puppimets;
   iEvent.getByLabel(edm::InputTag("slimmedMETsPuppi"), puppimets);
   const pat::MET &puppimet = puppimets->front();
   
+  vector_float_["metsyst_MuCleanOnly_Pt"].clear();
+  vector_float_["metsyst_MuCleanOnly_Phi"].clear();
   vector_float_["metsyst_Pt"].clear();
   vector_float_["metsyst_Phi"].clear();
   vector_float_["puppimetsyst_Pt"].clear();
   vector_float_["puppimetsyst_Phi"].clear();
   for (int shift=0; shift<pat::MET::METUncertainty::METUncertaintySize; ++shift)
     if (shift != pat::MET::METUncertainty::NoShift) {
+      float met_MuCleanOnly_shiftedPt  = met_MuCleanOnly.shiftedPt ((pat::MET::METUncertainty)shift, pat::MET::METCorrectionLevel::Type1);
+      float met_MuCleanOnly_shiftedPhi = met_MuCleanOnly.shiftedPhi((pat::MET::METUncertainty)shift, pat::MET::METCorrectionLevel::Type1);
       float met_shiftedPt  = met.shiftedPt ((pat::MET::METUncertainty)shift, pat::MET::METCorrectionLevel::Type1);
       float met_shiftedPhi = met.shiftedPhi((pat::MET::METUncertainty)shift, pat::MET::METCorrectionLevel::Type1);
       float puppimet_shiftedPt  = puppimet.shiftedPt ((pat::MET::METUncertainty)shift, pat::MET::METCorrectionLevel::Type1);
       float puppimet_shiftedPhi = puppimet.shiftedPhi((pat::MET::METUncertainty)shift, pat::MET::METCorrectionLevel::Type1);
+      vector_float_["metsyst_MuCleanOnly_Pt"].push_back(met_MuCleanOnly_shiftedPt);
+      vector_float_["metsyst_MuCleanOnly_Phi"].push_back(met_MuCleanOnly_shiftedPhi);
       vector_float_["metsyst_Pt"].push_back(met_shiftedPt);
       vector_float_["metsyst_Phi"].push_back(met_shiftedPhi);
       vector_float_["puppimetsyst_Pt"].push_back(puppimet_shiftedPt);

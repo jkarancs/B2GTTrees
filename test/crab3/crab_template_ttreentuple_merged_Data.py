@@ -21,14 +21,14 @@ config.JobType.pyCfgParams = ['DataProcessing=DATAPROC', 'wantSummary=False', 'o
 config.JobType.inputFiles = input_files
 #config.JobType.sendExternalFolder = True
 config.JobType.maxMemoryMB = 2500
-config.JobType.maxJobRuntimeMin = 1900
+#config.JobType.maxJobRuntimeMin = 1900
 
 config.section_('Data')
 config.Data.outLFNDirBase = 'SE_USERDIR'
 config.Data.inputDataset = 'DATASET'
 config.Data.inputDBS = 'global'
 config.Data.splitting = 'EventAwareLumiBased'
-config.Data.unitsPerJob = 100000
+config.Data.unitsPerJob = 50000
 config.Data.publication = False
 config.Data.outputDatasetTag = 'PUBNAME' # outLFNDirBase/primary_dataset/outputDatasetTag/timestamp/000X/
 

@@ -139,7 +139,7 @@ genHtFilter = False
 process.TFileService = cms.Service("TFileService", fileName = cms.string(ttreeOutputLabel))
 
 ### B2GEdmExtraVarProducer
-from Analysis.B2GAnaFW.b2gedmntuples_cff import metFull, puppimetFull, genPart, electrons, muons, photons, photonjets, jetsAK4CHS, jetsAK4Puppi, jetsAK8CHS, jetsAK8Puppi, subjetsAK8CHS, subjetsAK8Puppi, genJetsAK8, genJetsAK8SoftDrop, eventInfo # metNoHF off since 76X
+from Analysis.B2GAnaFW.b2gedmntuples_cff import metFull, metFullMuEGClean, puppimetFull, genPart, electrons, muons, photons, photonjets, jetsAK4CHS, jetsAK4Puppi, jetsAK8CHS, jetsAK8Puppi, subjetsAK8CHS, subjetsAK8Puppi, genJetsAK8, genJetsAK8SoftDrop, eventInfo # metNoHF off since 76X
 
 # import DB content from sqlite
 
@@ -212,8 +212,8 @@ if usePuppiMet:
     met_label  = "puppimetFull"
     met_prefix = puppimetFull.prefix
 else:
-    met_label  = "metFull"
-    met_prefix = metFull.prefix
+    met_label  = "metFullMuEGClean"
+    met_prefix = metFullMuEGClean.prefix
 
 process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
     isData = cms.untracked.bool(isData),
@@ -471,6 +471,8 @@ process.extraVar = cms.EDProducer("B2GEdmExtraVarProducer",
         "scale_Weights",
         "pdf_Weights",
         "alphas_Weights",
+        "metsyst_MuCleanOnly_Pt",
+        "metsyst_MuCleanOnly_Phi",
         "metsyst_Pt",
         "metsyst_Phi",
         "puppimetsyst_Pt",
