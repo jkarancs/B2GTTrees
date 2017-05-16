@@ -1,6 +1,6 @@
 mc_datasets=(
-    "dataset=/*/RunIISummer16*/MINIAODSIM"
-    "dataset=/*/RunIISpring16*Fast*/MINIAODSIM"
+    "dataset=/*/RunIISummer16MiniAODv2-PUMoriond17_*/MINIAODSIM"
+    "dataset=/*/RunIISpring16MiniAODv2-PUSpring16Fast_*/MINIAODSIM"
 )
 
 
@@ -31,7 +31,7 @@ mc_find_exclude_list=(
 #    '/WWTo.*powheg:Up,Down,Mll,herwigpp,_ext'
 #    '/WZTo.*amcatnloFXFX:PtZ'
 #    '/ZZTo:sherpa,ZZOnShell,Jets'
-    '/WWW|/WWZ|/WZZ|/ZZZ:'
+#    '/WWW|/WWZ|/WZZ|/ZZZ:'
 )
 
 

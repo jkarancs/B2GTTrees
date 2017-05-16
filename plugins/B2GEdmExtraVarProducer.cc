@@ -121,7 +121,8 @@ void B2GEdmExtraVarProducer::init_tokens_() {
   edm::EDGetTokenT<reco::VertexCollection>(consumes<reco::VertexCollection>(edm::InputTag("offlineSlimmedPrimaryVertices")));
   edm::EDGetTokenT<pat::PackedCandidateCollection>(consumes<pat::PackedCandidateCollection>(edm::InputTag("packedPFCandidates")));
   edm::EDGetTokenT<pat::METCollection>(consumes<pat::METCollection>(edm::InputTag("slimmedMETs")));
-  edm::EDGetTokenT<pat::METCollection>(consumes<pat::METCollection>(edm::InputTag("slimmedMETsMuEGClean")));
+  if (isData_) edm::EDGetTokenT<pat::METCollection>(consumes<pat::METCollection>(edm::InputTag("slimmedMETsMuEGClean","","b2gEDMNtuples")));
+  else         edm::EDGetTokenT<pat::METCollection>(consumes<pat::METCollection>(edm::InputTag("slimmedMETsMuClean",  "","b2gEDMNtuples")));
   edm::EDGetTokenT<pat::METCollection>(consumes<pat::METCollection>(edm::InputTag("slimmedMETsPuppi")));
   //edm::EDGetTokenT<pat::JetCollection>(consumes<pat::JetCollection>(edm::InputTag("slimmedJetsAK8")));
   
@@ -1240,7 +1241,8 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   iEvent.getByLabel(edm::InputTag("slimmedMETs"), mets_MuCleanOnly);
   const pat::MET &met_MuCleanOnly = mets_MuCleanOnly->front();
   edm::Handle<pat::METCollection> mets;
-  iEvent.getByLabel(edm::InputTag("slimmedMETsMuEGClean"), mets);
+  if (isData_) iEvent.getByLabel(edm::InputTag("slimmedMETsMuEGClean","","b2gEDMNtuples"), mets);
+  else         iEvent.getByLabel(edm::InputTag("slimmedMETsMuClean",  "","b2gEDMNtuples"), mets);
   const pat::MET &met = mets->front();
   edm::Handle<pat::METCollection> puppimets;
   iEvent.getByLabel(edm::InputTag("slimmedMETsPuppi"), puppimets);

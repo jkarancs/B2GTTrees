@@ -212,7 +212,7 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 	    # Check if task was completed already
 	    if ( `ls $TASKDIR/status/$short | grep ".txt" | wc -l` ) then
 		set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
-		set Status=`grep "Task status:" $status_txt | awk '{ print $3 }'`
+		set Status=`grep "Status on the scheduler:" $status_txt | awk '{ print $NF }'`
 		if ( $Status != "COMPLETED" ) then
 		    crab status -d $dir >! $TASKDIR/status/$short/$DATE.txt
 		endif
@@ -220,10 +220,10 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
 		crab status -d $dir >! $TASKDIR/status/$short/$DATE.txt
 	    endif
 	    set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
-	    set Status=`grep "Task status:" $status_txt | awk '{ print $3 }'`
+	    set Status=`grep "Status on the scheduler:" $status_txt | awk '{ print $NF }'`
 	    if ( $Status == "" && `ls -tr $TASKDIR/status/$short/*.txt | head -n -1 | wc -l` != 0 ) then
                 set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | head -n -1 | tail -1`
-                set Status=`if ( $status_txt != "" ) grep "Task status:" $status_txt | awk '{ print $3 }'`
+                set Status=`if ( $status_txt != "" ) grep "Status on the scheduler:" $status_txt | awk '{ print $NF }'`
 	    endif
 	endif
         printf "%-70s %s\n" $dir $Status
@@ -263,21 +263,11 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
         else if ( `echo $Status | grep COMPLETED | wc -l` == 0 ) then
 	    grep "%.*\(.*\)" $status_txt
             if ( $nfail != 0 ) then
-		if ( `grep "jobs failed with exit code 50660" $status_txt | wc -l` == 0 ) then
-		    echo "  -> Resubmitting failed jobs ...\n"
-		    eval_or_echo "crab resubmit -d $dir"
-		else
-		    # Exceed Memory
-		    if ( `find $dir -maxdepth 0 -type d -mtime 2 | wc -l` == 0 ) then
-			# Resubmit with 2500 MB initially
-			echo "  -> Jobs found that exceeded 2000MB memory, resubmitting with 2500MB ...\n"
-			eval_or_echo "crab resubmit -d $dir --maxmemory=2500"
-                    else
-			# Then after two days, 3000 MB
-			echo "  -> Jobs found that exceeded allocated memory after 2 days, resubmitting with 3000MB ...\n"
-			eval_or_echo "crab resubmit -d $dir --maxmemory=3000"
-		    endif
-		endif
+		set extra_arg=""
+		if ( `grep "jobs failed with exit code 50660" $status_txt | wc -l` != 0 ) set extra_arg="$extra_arg --maxmemory=3000"
+		if ( `grep "jobs failed with exit code 50664" $status_txt | wc -l` != 0 ) set extra_arg="$extra_arg --maxjobruntime=1900"
+		echo "  -> Resubmitting failed jobs ...\n"
+		eval_or_echo "crab resubmit -d $dir $extra_arg"
 		echo
 	    else
 		# Get more info about tasks not failing but near completion
@@ -390,10 +380,10 @@ else if ( `echo $cmd | grep "checkup" | wc -l` ) then
 	    if ( ! -e $TASKDIR/Duplicates_$DATE.txt ) touch $TASKDIR/Duplicates_$DATE.txt
 	    cat duplicates.txt >> $TASKDIR/Duplicates_$DATE.txt
 	else
-	    if ( `grep "Task status" $status_txt | awk '{ print $NF }'` == "COMPLETED" ) then
+	    if ( `grep "Status on the scheduler" $status_txt | awk '{ print $NF }'` == "COMPLETED" ) then
 		printf "%-70s OK\n" $short
 	    else
-		printf "%-70s %s\n" $short `grep "Task status" $status_txt | awk '{ print $NF }'`
+		printf "%-70s %s\n" $short `grep "Status on the scheduler" $status_txt | awk '{ print $NF }'`
 	    endif
 	endif
 	rm duplicates.txt
@@ -456,7 +446,7 @@ else if ( `echo $cmd | grep "recovery" | wc -l` ) then
         set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
 	set CERT=`grep lumiMask $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
 	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
-	set Status=`if ( $status_txt != "" ) grep "Task status:" $status_txt | awk '{ print $3 }'`
+	set Status=`if ( $status_txt != "" ) grep "Status on the scheduler:" $status_txt | awk '{ print $NF }'`
 	if ( $isData && `echo $Status | grep COMPLETED | wc -l` == 0 ) then
 	    das_client --limit=10000 --query "run dataset=$in_dataset" | tail -n+4 | sort -V > "$short"_runs.txt
 	    set MINRUN=`head -1 "$short"_runs.txt`
