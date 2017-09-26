@@ -89,6 +89,11 @@ void B2GEdmExtraVarProducer::init_tokens_() {
   edm::EDGetTokenT<std::vector<std::vector<int> > >(consumes<std::vector<std::vector<int> > >(edm::InputTag(AK8JetKeys_label_,"")));
   edm::EDGetTokenT<std::vector<std::vector<int> > >(consumes<std::vector<std::vector<int> > >(edm::InputTag(AK8SubjetKeys_label_,"")));
   
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(photons_label_, photons_prefix_+"Pt")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(photons_label_, photons_prefix_+"Eta")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(photons_label_, photons_prefix_+"Phi")));
+  edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(photons_label_, photons_prefix_+"E")));
+
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"Pt")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"Eta")));
   edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(electrons_label_, electrons_prefix_+"Phi")));
@@ -150,6 +155,8 @@ void B2GEdmExtraVarProducer::init_tokens_() {
     edm::EDGetTokenT<GenEventInfoProduct>(consumes<GenEventInfoProduct>(edm::InputTag("generator")));
     
     edm::EDGetTokenT<reco::GenParticleCollection>(consumes<reco::GenParticleCollection>(edm::InputTag("prunedGenParticles")));
+
+    edm::EDGetTokenT<std::vector<reco::GenJet> >(consumes<std::vector<reco::GenJet> >(edm::InputTag("slimmedGenJets")));
   }
 }
 
@@ -322,6 +329,12 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"neutralMultiplicity"),     h_floats_["AK8Sub_neutralMultiplicity"]);
   iEvent.getByLabel(edm::InputTag(AK8Subjets_label_, AK8Subjets_prefix_+"MuonEnergy"),              h_floats_["AK8Sub_MuonEnergy"]);
   
+  // photons
+  iEvent.getByLabel(edm::InputTag(photons_label_, photons_prefix_+"Pt"),     h_floats_["pho_Pt"]);
+  iEvent.getByLabel(edm::InputTag(photons_label_, photons_prefix_+"Eta"),    h_floats_["pho_Eta"]);
+  iEvent.getByLabel(edm::InputTag(photons_label_, photons_prefix_+"Phi"),    h_floats_["pho_Phi"]);
+  iEvent.getByLabel(edm::InputTag(photons_label_, photons_prefix_+"E"),      h_floats_["pho_E"]);
+
   // Leptons
   iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"Pt"),     h_floats_["ele_Pt"]);
   iEvent.getByLabel(edm::InputTag(electrons_label_, electrons_prefix_+"Eta"),    h_floats_["ele_Eta"]);
@@ -604,6 +617,7 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
   std::map<size_t, size_t > ele_genlep_index;
   std::map<size_t, size_t > mu_genlep_index;
   
+  size_t npho = h_floats_["pho_Pt"]->size();
   size_t nele = h_floats_["ele_Pt"]->size();
   size_t nmu =  h_floats_["mu_Pt"]->size();
   size_t njet_AK4 = h_floats_["AK4_Pt"]->size();
@@ -626,10 +640,11 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     size_t ngen =  h_floats_["gen_Pt"]->size();
     double stop_mass = -9999, gluino_mass = -9999, lsp_mass = -9999;
     for (size_t i=0; i<ngen; ++i) {
-      // Only saving b,t,W,l,nu
+      // Only saving b,t,W,l,nu,g/Z
       if (abs(h_floats_["gen_ID"]->at(i))==5||abs(h_floats_["gen_ID"]->at(i))==6||
-          (abs(h_floats_["gen_ID"]->at(i))>=11&&abs(h_floats_["gen_ID"]->at(i))<=16)
-          ||abs(h_floats_["gen_ID"]->at(i))==24||abs(h_floats_["gen_ID"]->at(i))>1000000) {
+          (abs(h_floats_["gen_ID"]->at(i))>=11&&abs(h_floats_["gen_ID"]->at(i))<=16)||
+	  h_floats_["gen_ID"]->at(i)==22||h_floats_["gen_ID"]->at(i)==23||
+          abs(h_floats_["gen_ID"]->at(i))==24||abs(h_floats_["gen_ID"]->at(i))>1000000) {
         vector_int_["gen_ID"].push_back(h_floats_["gen_ID"]->at(i));                                /* gen_ID  */
         vector_int_["gen_Status"].push_back(h_floats_["gen_Status"]->at(i));			    /* gen_Status */
         vector_int_["gen_Mom0ID"].push_back(h_floats_["gen_Mom0ID"]->at(i));			    /* gen_Mom0ID */
@@ -1270,6 +1285,64 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
       vector_float_["puppimetsyst_Phi"].push_back(puppimet_shiftedPhi);
     }
   
+  // gen met
+  if (isData_) {
+    single_float_["met_genPt"]  = -9999;
+    single_float_["met_genPhi"] = -9999;
+  } else {
+    single_float_["met_genPt"]  = met.genMET()->pt();
+    single_float_["met_genPhi"] = met.genMET()->phi();
+  }
+  
+  // ---------------------
+  // - Photons           -
+  // ---------------------
+  vector_int_["pho_isPromptDirect"].assign(npho,-9999);
+  vector_int_["pho_isPromptFrag"].assign(npho,-9999);
+  vector_int_["pho_isFake"].assign(npho,-9999);
+
+  // Loop on photons
+  if (!isData_) for (size_t iPho=0; iPho<npho; ++iPho) {
+    TLorentzVector pho; pho.SetPtEtaPhiE(h_floats_["pho_Pt"]->at(iPho), h_floats_["pho_Eta"]->at(iPho),
+					 h_floats_["pho_Phi"]->at(iPho), h_floats_["pho_E"]->at(iPho));
+    size_t nGen =  h_floats_["gen_Pt"]->size();
+    float minDR_genpho = 9999;
+    float minDR_genqg  = 9999;
+    for (size_t iGen=0; iGen<nGen; ++iGen) {
+      TLorentzVector genp; genp.SetPtEtaPhiE(h_floats_["gen_Pt"]->at(iGen), h_floats_["gen_Eta"]->at(iGen),
+					     h_floats_["gen_Phi"]->at(iGen), h_floats_["gen_E"]->at(iGen));
+      // Distance to generator photons
+      if (h_floats_["gen_ID"]->at(iGen)==22 &&
+	  ( (abs(h_floats_["gen_Mom0ID"]->at(iGen)) >= 1 && abs(h_floats_["gen_Mom0ID"]->at(iGen)) <= 6) || // quark or
+	    h_floats_["gen_Mom0ID"]->at(iGen) == 21 )) { // mother gluon 
+	float DR = pho.DeltaR(genp);
+	if (DR<minDR_genpho) minDR_genpho = DR;
+	//std::cout<<iPho<<" "<<iGen<<" mom="<<h_floats_["gen_Mom0ID"]->at(iGen)<<" "<<DR<<std::endl;
+      }
+      // Distance to generator q/g (status 23)
+      if ( ( (abs(h_floats_["gen_ID"]->at(iGen)) >=1 && abs(h_floats_["gen_ID"]->at(iGen)) <= 6) ||
+	     h_floats_["gen_ID"]->at(iGen) == 21 ) && h_floats_["gen_Status"]->at(iGen) == 23 ) {
+	float DR = pho.DeltaR(genp);
+	if (DR<minDR_genqg) minDR_genqg = DR;
+	//std::cout<<iPho<<" "<<iGen<<" q/g="<<h_floats_["gen_ID"]->at(iGen)<<" "<<DR<<std::endl;	
+      }
+    }
+    // Prompt Photons
+    if (minDR_genpho<0.3) {
+      if (minDR_genqg>0.4) {
+	vector_int_["pho_isPromptDirect"][iPho] = 1;
+	vector_int_["pho_isPromptFrag"][iPho]   = 0;
+      } else {
+	vector_int_["pho_isPromptDirect"][iPho] = 0;
+	vector_int_["pho_isPromptFrag"][iPho]   = 1;
+      }
+      vector_int_["pho_isFake"][iPho] = 0;
+    } else {
+      vector_int_["pho_isPromptDirect"][iPho] = 0;
+      vector_int_["pho_isPromptFrag"][iPho]   = 0;
+      vector_int_["pho_isFake"][iPho] = 1;
+    }
+  }
   
   // ---------------------
   // - Lepton Selection  -
@@ -1897,6 +1970,72 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
     }
   } else {
     std::cout<<"Too many AK4: "<<jets_AK4.size()<<" "<<njet_AK4<<std::endl;
+  }
+
+
+  // ----------------------
+  // -- ISR/FastSim Jets --
+  // ----------------------
+
+  // Initial state radiation (ISR) jets
+  // Implement recipe from: https://github.com/manuelfs/babymaker/blob/0136340602ee28caab14e3f6b064d1db81544a0a/bmaker/plugins/bmaker_full.cc#L1268-L1295
+  single_int_["evt_NISRJets"] = -9999;
+  if (!isData_) {
+    edm::Handle<reco::GenParticleCollection> genParticles;
+    iEvent.getByLabel(edm::InputTag("prunedGenParticles"),  genParticles);
+    
+    int nisr(0);
+    bool verbose(0);
+    for (size_t ijet(0); ijet<jets_AK4.size(); ijet++){
+      bool matched=false;
+      for (size_t imc(0); imc < genParticles->size(); imc++) {
+	if (matched) break;
+	const reco::GenParticle &mc = (*genParticles)[imc];
+	if (mc.status()!=23 || abs(mc.pdgId())>5) continue;
+	int momid = abs(mc.mother()->pdgId());
+	if(!(momid==6 || momid==23 || momid==24 || momid==25 || momid>1e6)) continue; 
+	//check against daughter in case of hard initial splitting
+	for (size_t idau(0); idau < mc.numberOfDaughters(); idau++) {
+	  float dR = reco::deltaR(jets_AK4[ijet].Eta(), jets_AK4[ijet].Phi(), mc.daughter(idau)->eta(), mc.daughter(idau)->phi());
+	  if(dR<0.3){
+	    if (verbose) std::cout<<"Jet: ("<<jets_AK4[ijet].Pt()<<", "<<jets_AK4[ijet].Eta()<<", "<<jets_AK4[ijet].Phi()
+				  <<"), MC: ("<<mc.daughter(idau)->pt()<<", "<<mc.daughter(idau)->eta()<<", "<<mc.daughter(idau)->phi()<<"), ID "<<mc.daughter(idau)->pdgId()<<". dR "<<dR <<std::endl;
+	    matched = true;
+	    break;
+	  }
+	}
+      } // Loop over MC particles
+      if(!matched) {
+	nisr++;
+      }
+      
+    } // Loop over jets
+    single_int_["evt_NISRJets"] = nisr;
+
+  }
+
+  // Pathological FastSim event veto: https://twiki.cern.ch/twiki/bin/viewauth/CMS/SUSRecommendationsMoriond17#Cleaning_up_of_fastsim_jets_from
+  single_int_["Flag_isPathologicalFastsimEvent"] = 0;
+  if (isFastSim_) {
+
+    edm::Handle<std::vector<reco::GenJet> > genJets;
+    iEvent.getByLabel(edm::InputTag("slimmedGenJets"), genJets); 
+
+    for (size_t i=0; i<njet_AK4; ++i) {
+      if (h_floats_["AK4_Pt"]->at(i) < 20) continue;
+      if (fabs(h_floats_["AK4_Eta"]->at(i))>=2.5) continue;
+
+      // Match to gen jets
+      bool isMatch = false;
+      for (size_t iGenJet=0, nGenJet = genJets->size(); iGenJet<nGenJet; ++iGenJet) {
+	double dR = reco::deltaR(genJets->at(iGenJet).eta(),genJets->at(iGenJet).phi(), h_floats_["AK4_Eta"]->at(i), h_floats_["AK4_Phi"]->at(i));
+	if ( dR < 0.3 ) isMatch = true;
+      }
+
+      if (!isMatch && h_floats_["AK4_chargedHadronEnergyFrac"]->at(i) < 0.1) {
+	single_int_["Flag_isPathologicalFastsimEvent"] = 1;
+      }
+    }
   }
 
 }

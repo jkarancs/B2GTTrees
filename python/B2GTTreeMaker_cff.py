@@ -392,7 +392,8 @@ else:
     muons_var      = copy.deepcopy(basicVars)
     muons_var     += muonVars
     
-    photons_var    = copy.deepcopy(photonVars)
+    photons_var    = copy.deepcopy(basicVars)
+    photons_var   += photonVars
     
     jetsAK4CHS_var      = copy.deepcopy(basicVars)
     jetsAK4CHS_var     += jetVars
@@ -535,12 +536,12 @@ B2GTTreeMaker = cms.EDAnalyzer("B2GTTreeMaker",
             vectorF = muons_var,
         ),
         # Photons
-        #cms.PSet(
-        #    label = cms.untracked.string("photons"),
-        #    prefix_in = photons.prefix,
-        #    prefix_out = cms.untracked.string("pho_"),
-        #    vectorF = photons_var,
-        #),
+        cms.PSet(
+            label = cms.untracked.string("photons"),
+            prefix_in = photons.prefix,
+            prefix_out = cms.untracked.string("pho_"),
+            vectorF = photons_var,
+        ),
         # Photon jets
         #cms.PSet(
         #    label = cms.untracked.string("photonjets"),

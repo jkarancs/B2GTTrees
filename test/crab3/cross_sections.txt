@@ -110,6 +110,18 @@ ZJetsToNuNu_HT-600To800_13TeV-madgraph                                          
 ZJetsToNuNu_HT-800To1200_13TeV-madgraph                                             1.1796    1.23
 ZJetsToNuNu_HT-1200To2500_13TeV-madgraph                                            0.28833   1.23
 ZJetsToNuNu_HT-2500ToInf_13TeV-madgraph                                             0.006945  1.23
+
+# Zpt binned samples
+ZJetsToNuNu_Zpt-100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                     35.41     1.00
+ZJetsToNuNu_Zpt-200toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                     4.298     1.00
+DYJetsToNuNu_Zpt-0To50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                      3483      1.00
+DYJetsToNuNu_Zpt-50To100_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                    233.6     1.00
+DYJetsToNuNu_PtZ-50To100_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                    593.9     1.00
+DYJetsToNuNu_PtZ-100To250_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                   55.03     1.00
+DYJetsToNuNu_PtZ-250To400_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                   2.082     1.00
+DYJetsToNuNu_PtZ-400To650_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                   0.2816    1.00
+DYJetsToNuNu_PtZ-650ToInf_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                   0.02639   1.00
+
 # Not applied below
 DYJetsToQQ_HT180_13TeV-madgraphMLM-pythia8                                          1187      1
 ZJetsToQQ_HT600toInf_13TeV-madgraph                                                 5.67      1     
@@ -134,12 +146,41 @@ WJetsToLNu_HT-1200To2500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                 
 WJetsToLNu_HT-2500ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                      0.03216   1.21
 
 WJetsToLNu_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8	                    18.77     1.21
+
+# https://indico.cern.ch/event/604912/contributions/2490008/attachments/1418885/2173433/HEEP7_Moriond_GSFix_final_RW_v3.pdf#search=WJetsToLNu%5FPt%2D100To250%5FTuneCUETP8M1%5F13TeV%2DamcatnloFXFX%2Dpythia8%20676%2E3
+WJetsToLNu_Pt-100To250_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                      676.3     1
+WJetsToLNu_Pt-250To400_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                      23.94     1
+WJetsToLNu_Pt-400To600_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                      3.031     1
+WJetsToLNu_Pt-600ToInf_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                      0.4524    1
+
+# https://cms-pdmv.cern.ch/mcm/requests?dataset_name=WJetsToLNu_Wpt-0To50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8&page=0&shown=524415
+# https://cms-pdmv.cern.ch/mcm/requests?dataset_name=WJetsToLNu_Wpt-50To100_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8&page=0&shown=524415
+# https://cms-pdmv.cern.ch/mcm/requests?dataset_name=WJetsToLNu_Wpt-100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8&page=0&shown=524415
+# https://cms-pdmv.cern.ch/mcm/requests?dataset_name=WJetsToLNu_Wpt-200toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8&page=0&shown=524415
+# For madgraph take values from, this table instead:
+# https://indico.cern.ch/event/566852/contributions/2352740/attachments/1361729/2060893/mc_status.pdf#search=WJetsToLNu%5FWpt
+# (NNLO/NLO) k-factor for mc@NLO   (not applied) - k = 61526.7 (NNLO) / 60781.5 (NLO unbinned xsec) = 1.012
+# (NNLO/LO)  k-factor for madgraph (not applied) - k = 61526.7 (NNLO) / 50690.0 (LO unbinned xsec)  = 1.21
+WJetsToLNu_Wpt-0To50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                        57280     1
+WJetsToLNu_Wpt-50To100_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                      3258      1
+WJetsToLNu_Wpt-100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                      484.7     1 # mcm: 459
+WJetsToLNu_Wpt-200toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                      50.71     1 # mcm: 50.71
+
 # not applied for the hadronic decay channel
 WJetsToQQ_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8 	                    95.14     1      
 WJetsToQQ_HT180_13TeV-madgraphMLM-pythia8                                           2788      1
 
 # unbinned
 WJetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                                   50690     1.21
+WJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                                  61526.7   1 # mcm: 60781.5 
+
+# Gamma+Jets
+# https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=151#Gamma_jets
+GJets_HT-40To100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                             20790     1
+GJets_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                            9238      1
+GJets_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                            2305      1
+GJets_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                            274.4     1
+GJets_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                            93.46     1
 
 # QCD - LO
 # https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=145#QCD
@@ -161,6 +202,24 @@ QCD_HT700to1000_GenJets5_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                 
 QCD_HT1000to1500_GenJets5_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                    630       1
 QCD_HT1500to2000_GenJets5_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                    73.7      1
 QCD_HT2000toInf_GenJets5_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                     15.52     1
+
+QCD_Pt_5to10_TuneCUETP8M1_13TeV_pythia8                                             61018300000 1
+QCD_Pt_10to15_TuneCUETP8M1_13TeV_pythia8                                            5887580000  1
+QCD_Pt_15to30_TuneCUETP8M1_13TeV_pythia8                                            1837410000  1
+QCD_Pt_30to50_TuneCUETP8M1_13TeV_pythia8                                            140932000   1
+QCD_Pt_50to80_TuneCUETP8M1_13TeV_pythia8                                            19204300    1
+QCD_Pt_80to120_TuneCUETP8M1_13TeV_pythia8                                           2762530     1
+QCD_Pt_120to170_TuneCUETP8M1_13TeV_pythia8                                          471100      1
+QCD_Pt_170to300_TuneCUETP8M1_13TeV_pythia8                                          117276      1
+QCD_Pt_300to470_TuneCUETP8M1_13TeV_pythia8                                          7823        1
+QCD_Pt_470to600_TuneCUETP8M1_13TeV_pythia8                                          648.2       1
+QCD_Pt_600to800_TuneCUETP8M1_13TeV_pythia8                                          186.9       1
+QCD_Pt_800to1000_TuneCUETP8M1_13TeV_pythia8                                         32.293      1
+QCD_Pt_1000to1400_TuneCUETP8M1_13TeV_pythia8                                        9.4183      1
+QCD_Pt_1400to1800_TuneCUETP8M1_13TeV_pythia8                                        0.84265     1
+QCD_Pt_1800to2400_TuneCUETP8M1_13TeV_pythia8                                        0.12163     1
+QCD_Pt_2400to3200_TuneCUETP8M1_13TeV_pythia8                                        0.00682981  1
+QCD_Pt_3200toInf_TuneCUETP8M1_13TeV_pythia8                                         0.000165445 1
 
 # G - LO
 # https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=126

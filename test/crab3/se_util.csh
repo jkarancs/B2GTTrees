@@ -57,6 +57,8 @@ set SITE_INFO=( \
 #    "pixel"           "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/store/group/dpg_tracker_pixel/comm_pixel/" \
 #    "caf"             "srm://srm-eoscms.cern.ch:8443/srm/v2/server"       "SFN=/eos/cms/store/caf/user/$USERNAME/" \
     "cern"            "gsiftp://eoscmsftp.cern.ch"                        "/eos/cms/" \
+    "eosuser"         "root://eosuser.cern.ch"                            "" \
+    "fnal"            "srm://cmsdcadisk01.fnal.gov:8443/srm/managerv2"    "SFN=/dcache/uscmsdisk/" \
     "pixel"           "gsiftp://eoscmsftp.cern.ch"                        "/eos/cms/store/group/dpg_tracker_pixel/comm_pixel/" \
     "caf"             "gsiftp://eoscmsftp.cern.ch"                        "/eos/cms/store/caf/user/$USERNAME/" \
     "kfki"            "srm://grid143.kfki.hu:8446/srm/managerv2"          "SFN=/dpm/kfki.hu/home/cms/phedex/store/user/$USERNAME/" \
@@ -166,7 +168,7 @@ else
 endif
 #set se_cp='lcg-cp -b -D srmv2 --vo cms'
 #set se_cp='env -i gfal-copy -p -n 4 -t 86400 -T 86400'
-set se_cp='env --unset=LD_LIBRARY_PATH gfal-copy -r'
+set se_cp='env --unset=LD_LIBRARY_PATH gfal-copy -rf'
 set se_cpv="$se_cp -v"
 #set se2_ls='lcg-ls -b -D srmv2 --vo cms'
 #set se2_ls_l='lcg-ls -b -D srmv2 --vo cms -l'
@@ -234,7 +236,7 @@ else if ( $cmd == "ls-l" ) then
     else if ( $use_eos == 1 ) then
 	echo_or_eval "$se_ls_l $arg1"
     else
-	echo_or_eval "$se_ls_l $arg1 | sed "\""s;/; ;g"\"" | awk '{ printf "\""%s %4d %4d %3d %12d %12s %s\\n"\"',$1,$2,$3,$4,$5,$6,$NF'" }'"
+	echo_or_eval "$se_ls_l $arg1 "#| sed "\""s;/; ;g"\"" | awk '{ printf "\""%s %4d %4d %3d %12d %12s %s\\n"\"',$1,$2,$3,$4,$5,$6,$NF'" }'"
     endif
 
 else if ( $cmd == "cp" ) then # specify filename
@@ -418,52 +420,16 @@ else if ( $cmd == "sync" ) then
 	echo "se sync <se_dir> <local_dir>"
     else
 	# Check recursively all files on source SE (similar to find)
-	echo "$arg1" >! se_subdirs_$RAND.txt
 	set Ndone=0
 	set Ntotal=0
-	echo -n "" >! unsorted_se_files_$RAND.txt
-	echo -n "" >! local_dirs_$RAND.txt
-	while ( `cat se_subdirs_$RAND.txt | wc -l` )
-	    set curr_dir=`head -1 se_subdirs_$RAND.txt`
-	    sed -i -e "1d" se_subdirs_$RAND.txt
-	    eval "$se_ls_l $curr_dir" >! lsout_$RAND.txt
-	    # Remove the same directory (stupid behaviour of lcg-ls for empty directories)
-	    grep '^d' lsout_$RAND.txt >! dirs_$RAND.txt
-	    if ( -f dirs_clean_$RAND.txt ) rm dirs_clean_$RAND.txt
-	    touch dirs_clean_$RAND.txt
-	    while ( `cat dirs_$RAND.txt | grep '^d' | wc -l` )
-	        set curr=`head -1 dirs_$RAND.txt | awk '{ print $NF }'`
-	        if ( ! `echo "$curr_dir" | grep $curr | wc -l` ) then
-	            head -1 dirs_$RAND.txt >> dirs_clean_$RAND.txt
-	        endif
-	        sed -i -e "1d" dirs_$RAND.txt
-	    end
-	    # Append new subdirs in front
-	    cat dirs_clean_$RAND.txt | sed "s;/; ;g" | awk '{ print $NF }' | sed 's;^;'"$curr_dir/"';;s;\?;\\\?;' >! newsubdirs_$RAND.txt
-	    if ( $Ntotal == 0 ) then
-	        set Ntotal=`cat newsubdirs_$RAND.txt | wc -l`
-	    endif
-	    cat se_subdirs_$RAND.txt >> newsubdirs_$RAND.txt
-	    mv newsubdirs_$RAND.txt se_subdirs_$RAND.txt
-	    rm dirs_$RAND.txt dirs_clean_$RAND.txt
-	    # Append list of root files found
-	    set arg1mod=`echo "$arg1" | sed "s;\\;;"`
-	    grep "\.root" lsout_$RAND.txt | awk '{ print "CURR_DIR/"$NF }' | sed "s;CURR_DIR;$curr_dir;;s;$arg1mod/;;;" >> unsorted_se_files_$RAND.txt
-	    # Append list of directories to create
-	    echo "CURR_DIR" | sed "s;CURR_DIR;$curr_dir;;s;$arg1mod;mkdir -p $arg2;;" >> local_dirs_$RAND.txt
-	end
-	sort unsorted_se_files_$RAND.txt > se_files_$RAND.txt
-	rm se_subdirs_$RAND.txt lsout_$RAND.txt unsorted_se_files_$RAND.txt
-	# Check if the target directory is a SE and check contents
-	if ( `echo "$arg2" | grep "://" | wc -l` ) then
-	    rm local_dirs_$RAND.txt
-	    echo "$arg2" >! se2_subdirs_$RAND.txt
-	    set Ndone=0
-	    set Ntotal=0
-	    echo -n "" >! unsorted_se2_files_$RAND.txt
-	    while ( `cat se2_subdirs_$RAND.txt | wc -l` )
-	        set curr_dir=`head -1 se2_subdirs_$RAND.txt`
-	        sed -i -e "1d" se2_subdirs_$RAND.txt 
+	# Check if the source directory is a SE and check contents
+	if ( `echo "$arg1" | grep "://" | wc -l` ) then
+	    echo "$arg1" >! source_se_subdirs_$RAND.txt
+	    echo -n "" >! unsorted_source_se_files_$RAND.txt
+	    echo -n "" >! local_dirs_$RAND.txt
+	    while ( `cat source_se_subdirs_$RAND.txt | wc -l` )
+	        set curr_dir=`head -1 source_se_subdirs_$RAND.txt`
+	        sed -i -e "1d" source_se_subdirs_$RAND.txt
 	        eval "$se_ls_l $curr_dir" >! lsout_$RAND.txt
 	        # Remove the same directory (stupid behaviour of lcg-ls for empty directories)
 	        grep '^d' lsout_$RAND.txt >! dirs_$RAND.txt
@@ -481,24 +447,72 @@ else if ( $cmd == "sync" ) then
 	        if ( $Ntotal == 0 ) then
 	            set Ntotal=`cat newsubdirs_$RAND.txt | wc -l`
 	        endif
-	        cat se2_subdirs_$RAND.txt >> newsubdirs_$RAND.txt
-	        mv newsubdirs_$RAND.txt se2_subdirs_$RAND.txt
+	        cat source_se_subdirs_$RAND.txt >> newsubdirs_$RAND.txt
+	        mv newsubdirs_$RAND.txt source_se_subdirs_$RAND.txt
+	        rm dirs_$RAND.txt dirs_clean_$RAND.txt
+	        # Append list of root files found
+	        set arg1mod=`echo "$arg1" | sed "s;\\;;"`
+	        grep "\.root" lsout_$RAND.txt | awk '{ print "CURR_DIR/"$NF" "$5 }' | sed "s;CURR_DIR;$curr_dir;;s;$arg1mod/;;;" >> unsorted_source_se_files_$RAND.txt
+	        # Append list of directories to create
+	        echo "CURR_DIR" | sed "s;CURR_DIR;$curr_dir;;s;$arg1mod;mkdir -p $arg2;;" >> local_dirs_$RAND.txt
+	    end
+	    sort unsorted_source_se_files_$RAND.txt > source_se_files_$RAND.txt
+	    rm source_se_subdirs_$RAND.txt lsout_$RAND.txt unsorted_source_se_files_$RAND.txt
+	else
+	    # Check contents of local source directory
+	    find "$arg1" -printf "%p %s\n" | grep "\.root" | sed "s;$arg1/;;;s;$arg1;;" | sort > source_local_files_$RAND.txt
+	endif
+	# Check if the target directory is a SE and check contents
+	if ( `echo "$arg2" | grep "://" | wc -l` ) then
+	    echo "$arg2" >! target_se_subdirs_$RAND.txt
+	    set Ndone=0
+	    set Ntotal=0
+	    echo -n "" >! unsorted_target_se_files_$RAND.txt
+	    while ( `cat target_se_subdirs_$RAND.txt | wc -l` )
+	        set curr_dir=`head -1 target_se_subdirs_$RAND.txt`
+	        sed -i -e "1d" target_se_subdirs_$RAND.txt 
+	        eval "$se_ls_l $curr_dir" >! lsout_$RAND.txt
+	        # Remove the same directory (stupid behaviour of lcg-ls for empty directories)
+	        grep '^d' lsout_$RAND.txt >! dirs_$RAND.txt
+	        if ( -f dirs_clean_$RAND.txt ) rm dirs_clean_$RAND.txt
+	        touch dirs_clean_$RAND.txt
+	        while ( `cat dirs_$RAND.txt | grep '^d' | wc -l` )
+	            set curr=`head -1 dirs_$RAND.txt | awk '{ print $NF }'`
+	            if ( ! `echo "$curr_dir" | grep $curr | wc -l` ) then
+	                head -1 dirs_$RAND.txt >> dirs_clean_$RAND.txt
+	            endif
+	            sed -i -e "1d" dirs_$RAND.txt
+	        end
+	        # Append new subdirs in front
+	        cat dirs_clean_$RAND.txt | sed "s;/; ;g" | awk '{ print $NF }' | sed 's;^;'"$curr_dir/"';;s;\?;\\\?;' >! newsubdirs_$RAND.txt
+	        if ( $Ntotal == 0 ) then
+	            set Ntotal=`cat newsubdirs_$RAND.txt | wc -l`
+	        endif
+	        cat target_se_subdirs_$RAND.txt >> newsubdirs_$RAND.txt
+	        mv newsubdirs_$RAND.txt target_se_subdirs_$RAND.txt
 	        rm dirs_$RAND.txt dirs_clean_$RAND.txt
 	        # Append list of root files found
 	        set arg2mod=`echo "$arg2" | sed "s;\\;;"`
-	        grep "\.root" lsout_$RAND.txt | awk '{ print "CURR_DIR/"$NF }' | sed "s;CURR_DIR;$curr_dir;;s;$arg2mod/;;;" >> unsorted_se2_files_$RAND.txt
+	        grep "\.root" lsout_$RAND.txt | awk '{ print "CURR_DIR/"$NF" "$5 }' | sed "s;CURR_DIR;$curr_dir;;s;$arg2mod/;;;" >> unsorted_target_se_files_$RAND.txt
 	    end
-	    sort unsorted_se2_files_$RAND.txt > se2_files_$RAND.txt
-	    # Diff file lists and create a list of missing files to copy
-	    diff se2_files_$RAND.txt se_files_$RAND.txt | grep '^>' | awk '{ print "'"$se_cp"' ARG1/"$NF" ARG2/"$NF }' | sed "s;ARG1;$arg1;;s;ARG2;$arg2;;s;?;\\?;g;" > sync_$DATE.sh
-	    rm se2_subdirs_$RAND.txt lsout_$RAND.txt unsorted_se2_files_$RAND.txt se_files_$RAND.txt se2_files_$RAND.txt
+	    sort unsorted_target_se_files_$RAND.txt > target_se_files_$RAND.txt
+	    if ( `echo "$arg1" | grep "://" | wc -l` ) then
+		# Diff file lists and create a list of missing files to copy
+		diff target_se_files_$RAND.txt source_se_files_$RAND.txt | grep '^>' | awk '{ print "'"$se_cp"' ARG1/"$(NF-1)" ARG2/"$(NF-1) }' | sed "s;ARG1;$arg1;;s;ARG2;$arg2;;s;?;\\?;g;" > sync_$DATE.sh
+		rm target_se_subdirs_$RAND.txt lsout_$RAND.txt unsorted_target_se_files_$RAND.txt source_se_files_$RAND.txt target_se_files_$RAND.txt
+		rm local_dirs_$RAND.txt
+	    else
+		# Diff file lists and create a list of missing files to copy
+		diff target_se_files_$RAND.txt source_local_files_$RAND.txt | grep '^>' | awk '{ print "'"$se_cp"' ARG1/"$(NF-1)" ARG2/"$(NF-1) }' | sed "s;ARG1;$arg1;;s;ARG2;$arg2;;s;?;\\?;g;" > sync_$DATE.sh
+		#rm target_se_subdirs_$RAND.txt lsout_$RAND.txt unsorted_target_se_files_$RAND.txt source_local_files_$RAND.txt target_se_files_$RAND.txt
+	    endif
 	else
 	    # Check local directories (First create if needed and look for root files in them)
-	    source local_mkdir_$RAND.txt
-	    find "$arg2" | sed "s;$arg2/;;;s;$arg2;;" | grep "\.root" | sort > local_files_$RAND.txt
+	    source local_dirs_$RAND.txt
+	    find "$arg2" -printf "%p %s\n" | grep "\.root" | sed "s;$arg2/;;;s;$arg2;;" | sort > target_local_files_$RAND.txt
 	    # Diff file lists and create a list of missing files to copy
-	    diff local_files_$RAND.txt se_files_$RAND.txt | grep '^>' | awk '{ print "'"$se_cp"' ARG1/"$NF" ARG2/"$NF }' | sed "s;ARG1;$arg1;;s;ARG2;$arg2;;s;?;\\?;g" > sync_$DATE.sh
-	    rm se_files_$RAND.txt local_files_$RAND.txt
+	    diff target_local_files_$RAND.txt source_se_files_$RAND.txt | grep '^>' | awk '{ print "'"$se_cp"' ARG1/"$(NF-1)" ARG2/"$(NF-1) }' | sed "s;ARG1;$arg1;;s;ARG2;$arg2;;s;?;\\?;g" > sync_$DATE.sh
+	    rm source_se_files_$RAND.txt target_local_files_$RAND.txt local_dirs_$RAND.txt
 	endif
 	# Download missing files
 	if ( ! -e sync_$DATE.sh ) then

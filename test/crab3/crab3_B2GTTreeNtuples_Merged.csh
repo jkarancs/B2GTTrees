@@ -265,7 +265,7 @@ else if ( `echo $cmd | grep "status" | wc -l` ) then
             if ( $nfail != 0 ) then
 		set extra_arg=""
 		if ( `grep "jobs failed with exit code 50660" $status_txt | wc -l` != 0 ) set extra_arg="$extra_arg --maxmemory=3000"
-		if ( `grep "jobs failed with exit code 50664" $status_txt | wc -l` != 0 ) set extra_arg="$extra_arg --maxjobruntime=1900"
+		if ( `grep "jobs failed with exit code 50664" $status_txt | wc -l` != 0 ) set extra_arg="$extra_arg --maxjobruntime=2800"
 		echo "  -> Resubmitting failed jobs ...\n"
 		eval_or_echo "crab resubmit -d $dir $extra_arg"
 		echo

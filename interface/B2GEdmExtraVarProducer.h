@@ -47,6 +47,8 @@ private:
   std::string met_prefix_;
   std::string gen_label_;
   std::string gen_prefix_;
+  std::string photons_label_;
+  std::string photons_prefix_;
   std::string electrons_label_;
   std::string electrons_prefix_;
   std::string muons_label_;
@@ -113,6 +115,8 @@ B2GEdmExtraVarProducer::B2GEdmExtraVarProducer(edm::ParameterSet const& iConfig)
   met_prefix_(iConfig.getUntrackedParameter<std::string>("met_prefix")),
   gen_label_(iConfig.getUntrackedParameter<std::string>("gen_label")),
   gen_prefix_(iConfig.getUntrackedParameter<std::string>("gen_prefix")),
+  photons_label_(iConfig.getUntrackedParameter<std::string>("photons_label")),
+  photons_prefix_(iConfig.getUntrackedParameter<std::string>("photons_prefix")),
   electrons_label_(iConfig.getUntrackedParameter<std::string>("electrons_label")),
   electrons_prefix_(iConfig.getUntrackedParameter<std::string>("electrons_prefix")),
   muons_label_(iConfig.getUntrackedParameter<std::string>("muons_label")),
