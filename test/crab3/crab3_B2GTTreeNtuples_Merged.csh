@@ -110,7 +110,8 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
     set SE_SITE=$6
     set SE_USERDIR=$7
     set CERT_DIR="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions16/13TeV/ReReco/Final"
-    set LATEST_GOLDEN_JSON=`ls -lrt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/ReReco/Final | awk '{ print $NF }' | grep -vE "MuonPhys|LowPU" | grep "\.txt" | tail -1`
+    #set LATEST_GOLDEN_JSON=`ls -lrt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/ReReco/Final | awk '{ print $NF }' | grep -vE "MuonPhys|LowPU" | grep "\.txt" | tail -1`
+    set LATEST_GOLDEN_JSON="Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt"
     set JSON="$LATEST_GOLDEN_JSON"
     mkdir $TASKDIR
     echo "SE_SITE "$SE_SITE >! $TASKDIR/config.txt
@@ -418,19 +419,26 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
     set N=`cat $TASKDIR/input_datasets.txt | wc -l`
     foreach i ( `seq 1 $N` )
         set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
-	#if ( `echo $in_dataset | grep Tprime | wc -l` == 0 ) then
 	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
         set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
 	set pubname=`grep outputDatasetTag $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
 	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
 	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
-        eval_or_echo "mkdir -p $DLDIR/$short"
-        echo "mkdir -p "'$1'"/$short" >> dl_$TASKNAME.csh
-	foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp` )
-	    eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand $DLDIR/$short/ --par $NPar --run"
-	    echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand "'$1'"/$short --par $NPar --run" >> dl_$TASKNAME.csh
-	end
-        #endif
+	if ( $#argv < 5 ) then
+            eval_or_echo "mkdir -p $DLDIR/$short"
+            echo "mkdir -p "'$1'"/$short" >> dl_$TASKNAME.csh
+	    foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp` )
+	        eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand $DLDIR/$short/ --par $NPar --run"
+	        echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand "'$1'"/$short --par $NPar --run" >> dl_$TASKNAME.csh
+	    end
+	else if ( `echo $in_dataset | grep $4 | wc -l` == 1 ) then
+            eval_or_echo "mkdir -p $DLDIR/$short"
+            echo "mkdir -p "'$1'"/$short" >> dl_$TASKNAME.csh
+	    foreach thousand ( `se ls $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp` )
+	        eval_or_echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand $DLDIR/$short/ --par $NPar --run"
+	        echo "se dl_mis $SE_SITE":"$SE_USERDIR/$primary_dataset/$pubname/$timestamp/$thousand "'$1'"/$short --par $NPar --run" >> dl_$TASKNAME.csh
+	    end
+	endif
     end
 
 else if ( `echo $cmd | grep "recovery" | wc -l` ) then

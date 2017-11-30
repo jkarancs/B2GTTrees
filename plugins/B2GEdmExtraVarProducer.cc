@@ -11,6 +11,7 @@
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/Math/interface/deltaR.h"
+#include "DataFormats/PatCandidates/interface/Tau.h"
 
 void B2GEdmExtraVarProducer::init_tokens_() {
   edm::EDGetTokenT<std::vector<std::string> >(mayConsume<std::vector<std::string>, edm::InRun>(edm::InputTag(trigger_label_, "triggerNameTree")));
@@ -130,6 +131,7 @@ void B2GEdmExtraVarProducer::init_tokens_() {
   else         edm::EDGetTokenT<pat::METCollection>(consumes<pat::METCollection>(edm::InputTag("slimmedMETsMuClean",  "","b2gEDMNtuples")));
   edm::EDGetTokenT<pat::METCollection>(consumes<pat::METCollection>(edm::InputTag("slimmedMETsPuppi")));
   //edm::EDGetTokenT<pat::JetCollection>(consumes<pat::JetCollection>(edm::InputTag("slimmedJetsAK8")));
+  edm::EDGetTokenT<pat::TauCollection>(consumes<pat::TauCollection>(edm::InputTag("slimmedTaus")));
   
   if (!isData_) {
     edm::EDGetTokenT<std::vector<float> >(consumes<std::vector<float> >(edm::InputTag(gen_label_, gen_prefix_+"Pt")));
@@ -1889,6 +1891,88 @@ void B2GEdmExtraVarProducer::calculate_variables(edm::Event const& iEvent, edm::
 	//  //if (iType==2) std::cout<<"\n";
         //}
       }
+    }
+  }
+
+  // ---------------------
+  // -- Taus            --
+  // ---------------------
+
+  edm::Handle<pat::TauCollection> taus;
+  iEvent.getByLabel(edm::InputTag("slimmedTaus"), taus);
+
+  size_t ntau =  taus->size();
+  vector_int_["tau_IsLoose"]                        .assign(ntau,-9999);
+  vector_int_["tau_IsMedium"]                       .assign(ntau,-9999);
+  vector_int_["tau_IsTight"]                        .assign(ntau,-9999);
+  vector_int_["tau_passEleVetoLoose"]               .assign(ntau,-9999);
+  vector_int_["tau_passEleVetoMedium"]              .assign(ntau,-9999);
+  vector_int_["tau_passEleVetoTight"]               .assign(ntau,-9999);
+  vector_int_["tau_passMuVetoLoose"]                .assign(ntau,-9999);
+  vector_int_["tau_passMuVetoTight"]                .assign(ntau,-9999);
+  vector_int_["tau_ID"]   	                    .assign(ntau,-9999);
+  vector_int_["tau_eleVetoCategory"]                .assign(ntau,-9999);
+  vector_float_["tau_eleVetoMVA"]                   .assign(ntau,-9999);
+  vector_float_["tau_E"]                            .assign(ntau,-9999);
+  vector_float_["tau_Pt"]  			    .assign(ntau,-9999);
+  vector_float_["tau_Eta"] 			    .assign(ntau,-9999);
+  vector_float_["tau_Phi"] 			    .assign(ntau,-9999);
+  vector_float_["tau_combinedIsoDeltaBetaCorr3Hits"].assign(ntau,-9999);
+  vector_float_["tau_chargedIsoPtSum"]              .assign(ntau,-9999);
+  vector_float_["tau_neutralIsoPtSum"]              .assign(ntau,-9999);
+  vector_float_["tau_puCorrPtSum"]                  .assign(ntau,-9999);
+  vector_float_["tau_isoMVAnewDMwLT"]               .assign(ntau,-9999);
+  vector_float_["tau_leadCandPt"]		    .assign(ntau,-9999);
+  vector_float_["tau_leadCandID"]		    .assign(ntau,-9999);
+  vector_float_["tau_leadChargedHadrCandPt"]	    .assign(ntau,-9999);
+  vector_float_["tau_leadChargedHadrCandID"]        .assign(ntau,-9999);
+  for (size_t iTau=0; iTau<ntau; ++iTau) {
+    const pat::Tau& tau = taus->at(iTau); 
+    // IDs
+    vector_int_["tau_IsLoose"][iTau]           = bool(tau.tauID("byLooseCombinedIsolationDeltaBetaCorr3Hits"));
+    vector_int_["tau_IsMedium"][iTau]          = bool(tau.tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits"));
+    vector_int_["tau_IsTight"][iTau]           = bool(tau.tauID("byTightCombinedIsolationDeltaBetaCorr3Hits"));
+    vector_int_["tau_passEleVetoLoose"][iTau]  = bool(tau.tauID("againstElectronLooseMVA6"));
+    vector_int_["tau_passEleVetoMedium"][iTau] = bool(tau.tauID("againstElectronMediumMVA6"));
+    vector_int_["tau_passEleVetoTight"][iTau]  = bool(tau.tauID("againstElectronTightMVA6"));
+    vector_int_["tau_passMuVetoLoose"][iTau]   = bool(tau.tauID("againstMuonLoose3"));
+    vector_int_["tau_passMuVetoTight"][iTau]   = bool(tau.tauID("againstMuonTight3") );  
+    vector_int_["tau_ID"][iTau] = 
+      1 * bool(tau.tauID("decayModeFinding")) +
+      2 * bool(tau.tauID("decayModeFindingNewDMs")) +
+      4 * bool(tau.tauID("againstElectronVLooseMVA6")) +
+      8 * bool(tau.tauID("againstElectronVTightMVA6")) +
+      16 * bool(tau.tauID("byVLooseIsolationMVArun2v1DBnewDMwLT")) +
+      32 * bool(tau.tauID("byLooseIsolationMVArun2v1DBnewDMwLT")) +
+      64 * bool(tau.tauID("byMediumIsolationMVArun2v1DBnewDMwLT")) +
+      128 * bool(tau.tauID("byTightIsolationMVArun2v1DBnewDMwLT")) +
+      256 * bool(tau.tauID("byVTightIsolationMVArun2v1DBnewDMwLT")) +
+      512 * bool(tau.tauID("byVVTightIsolationMVArun2v1DBnewDMwLT"));
+    vector_int_  ["tau_eleVetoCategory"][iTau] = tau.tauID("againstElectronMVA6category");
+    vector_float_["tau_eleVetoMVA"][iTau]      = tau.tauID("againstElectronMVA6Raw") ;
+
+    // Energy, Isolation etc.
+    vector_float_["tau_E"][iTau]   = tau.energy();
+    vector_float_["tau_Pt"][iTau]  = tau.pt();
+    vector_float_["tau_Eta"][iTau] = tau.eta();
+    vector_float_["tau_Phi"][iTau] = tau.phi();
+    vector_float_["tau_combinedIsoDeltaBetaCorr3Hits"][iTau] = tau.tauID("byCombinedIsolationDeltaBetaCorrRaw3Hits");
+    vector_float_["tau_chargedIsoPtSum"][iTau]               = tau.tauID("chargedIsoPtSum");
+    vector_float_["tau_neutralIsoPtSum"][iTau]               = tau.tauID("neutralIsoPtSum");
+    vector_float_["tau_puCorrPtSum"][iTau]                   = tau.tauID("puCorrPtSum");
+    vector_float_["tau_isoMVAnewDMwLT"][iTau]                = tau.tauID("byIsolationMVArun2v1DBnewDMwLTraw");
+
+    vector_float_["tau_leadCandPt"][iTau] = 0;
+    vector_float_["tau_leadCandID"][iTau] = 0;
+    vector_float_["tau_leadChargedHadrCandPt"][iTau] = 0;
+    vector_float_["tau_leadChargedHadrCandID"][iTau] = 0;
+    if (tau.leadCand().isNonnull()) {
+      vector_float_["tau_leadCandPt"][iTau] = tau.leadCand()->pt();
+      vector_float_["tau_leadCandID"][iTau] = tau.leadCand()->pdgId();
+    }
+    if (tau.leadChargedHadrCand().isNonnull()) { 
+      vector_float_["tau_leadChargedHadrCandPt"][iTau] = tau.leadChargedHadrCand()->pt();
+      vector_float_["tau_leadChargedHadrCandID"][iTau] = tau.leadChargedHadrCand()->pdgId();
     }
   }
 

@@ -186,7 +186,7 @@ GJets_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                        
 # https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=145#QCD
 # GenJets5 from McM
 
-QCD_HT50to100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                                
+QCD_HT50to100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                                248600000 1
 QCD_HT100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                               27990000  1
 QCD_HT200to300_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                               1712000   1
 QCD_HT300to500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                               347700    1
@@ -268,6 +268,12 @@ WWW_4F_TuneCUETP8M1_13TeV-amcatnlo-pythia8                                      
 WWZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8                                             0.1651    1
 WZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8                                             0.05565   1
 ZZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8                                             0.01398   1
+
+# VG samples
+WGJets_MonoPhoton_PtG-40to130_TuneCUETP8M1_13TeV-madgraph                           12.7      1
+WGJets_MonoPhoton_PtG-130_TuneCUETP8M1_13TeV-madgraph                               0.834     1
+WGToLNuG_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                                     405.271   1
+ZGTo2NuG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8                                    32.3      1
 
 # Marc's signal
 ZprimeToTprimeT_TprimeToWB_MZp-1500Nar_MTp-700Nar_LH_TuneCUETP8M1_13TeV-madgraphMLM-pythia8  0 0 

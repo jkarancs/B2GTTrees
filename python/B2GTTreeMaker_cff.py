@@ -179,6 +179,7 @@ else:
     muonVars = cms.untracked.vstring(
         'Key',
         'Iso04',
+        'Iso04db',
         'MiniIso',
         'Dxy',
         'Dz',
@@ -235,6 +236,7 @@ else:
         'ChargedHadronIso',
         'PhotonIso',
         'NeutralHadronIso',
+        'ChargedHadronIsoEAcorrectedsp15',
         'PhotonIsoEAcorrectedsp15',
         'NeutralHadronIsoEAcorrectedsp15',
         'PassLooseID',
