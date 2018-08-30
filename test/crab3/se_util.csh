@@ -81,10 +81,10 @@ foreach arg ( $rest_args )
         set k=`expr $i \* 3 - 1`
         set l=`expr $i \* 3`
 	set SITE=$SITE_INFO[$j]
-	if ( `echo $SITE_INFO[$k] | grep "gsiftp" | wc -l` ) then
-	    set PATH="$SITE_INFO[$k]$SITE_INFO[$l]"	    
-	else
+	if ( `echo $SITE_INFO[$k] | grep "srm://" | wc -l` ) then
 	    set PATH="$SITE_INFO[$k]\\?$SITE_INFO[$l]"
+	else
+	    set PATH="$SITE_INFO[$k]$SITE_INFO[$l]"	    
 	endif
 	# Check whether you can use eos/rfio commands and set suitable path for commands
         if ( `echo "$arg" | grep $SITE":" | wc -l` ) then
@@ -387,26 +387,37 @@ else if ( $cmd == "dl_mis" ) then
 	echo "Need more arguments, Use:"
 	echo "se dl_mis <se_dir> <local_dir>"
     else
-	eval "$se_ls $arg1" >! lsout_$RAND.txt;
+	eval "$se_ls_l $arg1" >! lsout_$RAND.txt;
 	sed "s;/; ;g" lsout_$RAND.txt | awk '{ print "'"$se_cp"' ARG1/"$NF" ARG2/"$NF }' | sed "s;ARG1;$arg1;;s;ARG2;$arg2;;s;?;\\?;g" >! dl_temp_$RAND.csh
-	sed "s;_[0-9]*_[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]\.root;\.root;;s;\.root;;;s;_; ;g" lsout_$RAND.txt | awk '{ printf "%d\n",$NF }' >! jobnums_se_$RAND.txt
-	rm lsout_$RAND.txt
+	## prev version, not matching file size
+	##  grep "\.root" lsout_$RAND.txt | sed "s;_[0-9]*_[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]\.root;\.root;;s;\.root;;;s;_; ;g" | awk '{ printf "%d\n",$NF }' >! jobnums_se_$RAND.txt
+	##  if ( `echo "$arg2" | grep "srm:" | wc -l` ) then
+	##      eval "$se2_ls_l -l $arg2" | grep "\.root" | sed "s;/; ;g" | awk '{ print $5,$NF }' | grep -v "^0" | sed "s;_[0-9]*_[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]\.root;\.root;;s;\.root;;;s;_; ;g" | awk '{ printf "%d\n",$NF }' > ! jobnums_dled_$RAND.txt
+	##  else
+	##      ls -l $arg2 | grep "\.root" | awk '{ print $5,$NF }' | grep -v "^0" | sed "s;_[0-9]*_[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]\.root;\.root;;s;\.root;;;s;_; ;g" | awk '{ printf "%d\n",$NF }' > ! jobnums_dled_$RAND.txt
+	##  endif
+	##  foreach jobnum ( `cat jobnums_se_$RAND.txt` )
+	##      if ( ! `grep '^'$jobnum'$' jobnums_dled_$RAND.txt | wc -l` ) then
+	##  	# old crab format
+	##  	#grep "_"$jobnum"_[0-9]_[0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z]\.root" dl_temp_$RAND.csh >>! dl_mis_$DATE.csh
+	##  	# This is for TSBatch output format
+	##  	#grep "_"`printf "%04d" $jobnum`"\.root" dl_temp_$RAND.csh >>! dl_mis_$DATE.csh
+	##  	# crab3 format
+	##  	grep "_"`printf "%d" $jobnum`"\.root" dl_temp_$RAND.csh >>! dl_mis_$DATE.csh
+	##      endif
+	##  end	
+	##  rm jobnums_se_$RAND.txt jobnums_dled_$RAND.txt dl_temp_$RAND.csh lsout_$RAND.txt
+	# new version matching also  the file size
 	if ( `echo "$arg2" | grep "srm:" | wc -l` ) then
-	    eval "$se2_ls_l -l $arg2" | grep "\.root" | sed "s;/; ;g" | awk '{ print $5,$NF }' | grep -v "^0" | sed "s;_[0-9]*_[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]\.root;\.root;;s;\.root;;;s;_; ;g" | awk '{ printf "%d\n",$NF }' > ! jobnums_dled_$RAND.txt
+	    eval "$se2_ls_l -l $arg2" | grep "\.root" | sed "s;/; ;g" | awk '{ print $NF,$5 }' | sort -V > ! files_dled_$RAND.txt
 	else
-	    ls -l $arg2 | grep "\.root" | awk '{ print $5,$NF }' | grep -v "^0" | sed "s;_[0-9]*_[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]\.root;\.root;;s;\.root;;;s;_; ;g" | awk '{ printf "%d\n",$NF }' > ! jobnums_dled_$RAND.txt
+	    ls -l $arg2 | grep "\.root" | awk '{ print $NF,$5 }' | sort -V > ! files_dled_$RAND.txt
 	endif
-	foreach jobnum ( `cat jobnums_se_$RAND.txt` )
-	    if ( ! `grep '^'$jobnum'$' jobnums_dled_$RAND.txt | wc -l` ) then
-		# old crab format
-		#grep "_"$jobnum"_[0-9]_[0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z]\.root" dl_temp_$RAND.csh >>! dl_mis_$DATE.csh
-		# This is for TSBatch output format
-		#grep "_"`printf "%04d" $jobnum`"\.root" dl_temp_$RAND.csh >>! dl_mis_$DATE.csh
-		# crab3 format
-		grep "_"`printf "%d" $jobnum`"\.root" dl_temp_$RAND.csh >>! dl_mis_$DATE.csh
-	    endif
+	grep "\.root" lsout_$RAND.txt | awk '{ print $NF,$5 }' | sort -V > ! files_se_$RAND.txt
+	foreach file ( `diff files_se_$RAND.txt files_dled_$RAND.txt | grep '^<' | awk '{ print $2 }'` )
+	    grep "$file" dl_temp_$RAND.csh >>! dl_mis_$DATE.csh
 	end
-	rm jobnums_se_$RAND.txt jobnums_dled_$RAND.txt dl_temp_$RAND.csh
+	rm files_se_$RAND.txt files_dled_$RAND.txt dl_temp_$RAND.csh lsout_$RAND.txt
 	if ( ! -e dl_mis_$DATE.csh ) then
 	    echo "All files are downloaded already"
 	else
@@ -568,13 +579,13 @@ else if ( $cmd == "dirsize" || $cmd == "ds" ) then
 		# Print total subdir size
 		set Ndone=`expr $Ndone + 1`
 		set subdir=`sed -n "$Ndone"p main_subdirs_$RAND.txt | sed "s;/; ;g" | awk '{ print $NF }'`
-		echo $SUBTOTAL $subdir | awk '{ printf "%5.1f GB    %s\n", $1/1073741824, $2 }'
+		echo $SUBTOTAL $subdir | awk '{ printf "%6.2f GB    %s\n", $1/1073741824, $2 }'
 		set TOTAL=`expr $TOTAL + $SUBTOTAL`
 		set SUBTOTAL=0
 	    endif
 	end
 	echo "---------------------"
-	echo $TOTAL "--TOTAL--" | awk '{ printf "%5.1f GB    %s\n", $1/1073741824, $2 }'
+	echo $TOTAL "--TOTAL--" | awk '{ printf "%6.2f GB    %s\n", $1/1073741824, $2 }'
 	rm main_subdirs_$RAND.txt lsout_$RAND.txt subdirs_$RAND.txt
     endif
 

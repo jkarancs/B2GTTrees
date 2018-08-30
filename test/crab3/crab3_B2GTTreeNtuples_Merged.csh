@@ -84,7 +84,7 @@ alias grep egrep
 
 set rest_args=""
 foreach n ( `seq 3 $#argv` )
-    set rest_args="$rest_args "$argv[$n]
+    set rest_args="$rest_args $argv[$n]"
 end
 if ( `echo "$rest_args" | grep "\-\-run" | wc -l` ) then
     alias eval_or_echo   'echo \!* >! temp.csh; source temp.csh; rm temp.csh'
@@ -99,6 +99,10 @@ set recov=0
 if ( `echo "$rest_args" | grep "\-\-recov" | wc -l` ) set recov=1
 
 set DATE=`date | cut -f2- -d" " | sed "s; ;_;g;s;:;h;1;s;:;m;1"`
+set CERT_DIR="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions16/13TeV/ReReco/Final"
+#set LATEST_GOLDEN_JSON=`ls -lrt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/ReReco/Final | awk '{ print $NF }' | grep -vE "MuonPhys|LowPU" | grep "\.txt" | tail -1`
+set LATEST_GOLDEN_JSON="Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt"
+set JSON="$LATEST_GOLDEN_JSON"
 
 if ( `echo $cmd | grep "create" | wc -l` ) then
     if ( $#argv < 6 ) then
@@ -109,10 +113,6 @@ if ( `echo $cmd | grep "create" | wc -l` ) then
     set XSEC_FILE=$5
     set SE_SITE=$6
     set SE_USERDIR=$7
-    set CERT_DIR="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions16/13TeV/ReReco/Final"
-    #set LATEST_GOLDEN_JSON=`ls -lrt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/ReReco/Final | awk '{ print $NF }' | grep -vE "MuonPhys|LowPU" | grep "\.txt" | tail -1`
-    set LATEST_GOLDEN_JSON="Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt"
-    set JSON="$LATEST_GOLDEN_JSON"
     mkdir $TASKDIR
     echo "SE_SITE "$SE_SITE >! $TASKDIR/config.txt
     echo "SE_USERDIR "$SE_USERDIR >> $TASKDIR/config.txt
@@ -421,6 +421,8 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
         set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
 	set primary_dataset=`echo $in_dataset | sed "s;/; ;g" | awk '{ print $1 }'`
         set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	if ( $recov ) set short=`echo "$short""_recovery"`
+	if ( ! -f $TASKDIR"/crab_"$short.py && $recov ) continue
 	set pubname=`grep outputDatasetTag $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
 	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
 	set timestamp=`grep "Task name" $status_txt | sed "s;\:; ;g" | awk '{ print $3 }'`
@@ -442,28 +444,65 @@ else if ( `echo $cmd | grep "download" | wc -l` ) then
     end
 
 else if ( `echo $cmd | grep "recovery" | wc -l` ) then
-    if ( $#argv < 3 ) then
-	cat Usage.txt; rm Usage.txt; exit
-    endif
-    eval_or_echo "mkdir -p $TASKDIR/missing_lumis"
-    set DLDIR=`echo $3"/"$TASKNAME | sed "s;//;/;"`
+    ##  if ( $#argv < 3 ) then
+    ##      cat Usage.txt; rm Usage.txt; exit
+    ##  endif
+    ##  eval_or_echo "mkdir -p $TASKDIR/missing_lumis"
+    ##  set DLDIR=`echo $3"/"$TASKNAME | sed "s;//;/;"`
+    ##  set N=`cat $TASKDIR/input_datasets.txt | wc -l`
+    ##  foreach i ( `seq 1 $N` )
+    ##      set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
+    ##      set isData=`echo $in_dataset | grep '/MINIAOD$' | wc -l`
+    ##      set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+    ##      set CERT=`grep lumiMask $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
+    ##      set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
+    ##      set Status=`if ( $status_txt != "" ) grep "Status on the scheduler:" $status_txt | awk '{ print $NF }'`
+    ##      if ( $isData && `echo $Status | grep COMPLETED | wc -l` == 0 ) then
+    ##          das_client --limit=10000 --query "run dataset=$in_dataset" | tail -n+4 | sort -V > "$short"_runs.txt
+    ##          set MINRUN=`head -1 "$short"_runs.txt`
+    ##          set MAXRUN=`tail -1 "$short"_runs.txt`
+    ##          rm "$short"_runs.txt
+    ##          ./print_lumis.sh $DLDIR/$short $CERT $MINRUN $MAXRUN > $TASKDIR/missing_lumis/missing_"$short"_JSON.txt
+    ##          sed "14s;$short;$short""_recovery;;s;$CERT;$TASKDIR/missing_lumis/missing_"$short"_JSON.txt;;" $TASKDIR/crab_$short.py > $TASKDIR/crab_"$short"_recovery.py
+    ##          ls -l $TASKDIR/crab_"$short"_recovery.py
+    ##      endif
+    ##  end
     set N=`cat $TASKDIR/input_datasets.txt | wc -l`
+    # First kill all jobs
     foreach i ( `seq 1 $N` )
-        set in_dataset=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $2 }'`
-	set isData=`echo $in_dataset | grep '/MINIAOD$' | wc -l`
-        set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
-	set CERT=`grep lumiMask $TASKDIR/crab_$short.py | sed "s;'; ;g" | awk '{ print $3 }'`
+	set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
 	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
-	set Status=`if ( $status_txt != "" ) grep "Status on the scheduler:" $status_txt | awk '{ print $NF }'`
-	if ( $isData && `echo $Status | grep COMPLETED | wc -l` == 0 ) then
-	    das_client --limit=10000 --query "run dataset=$in_dataset" | tail -n+4 | sort -V > "$short"_runs.txt
-	    set MINRUN=`head -1 "$short"_runs.txt`
-	    set MAXRUN=`tail -1 "$short"_runs.txt`
-	    rm "$short"_runs.txt
-	    ./print_lumis.sh $DLDIR/$short $CERT $MINRUN $MAXRUN > $TASKDIR/missing_lumis/missing_"$short"_JSON.txt
-	    sed "14s;$short;$short""_recovery;;s;$CERT;$TASKDIR/missing_lumis/missing_"$short"_JSON.txt;;" $TASKDIR/crab_$short.py > $TASKDIR/crab_"$short"_recovery.py
-	    ls -l $TASKDIR/crab_"$short"_recovery.py
+	set Status=`grep "Status on the scheduler:" $status_txt | awk '{ print $NF }'`
+	if ( $Status != "COMPLETED" ) then
+	    set dir=`echo $TASKDIR"/crab_"$short`
+	    eval_or_echo "crab kill -d $dir"
 	endif
+    end
+    echo
+    # Then create recovery task for each incomplete task
+    eval_or_echo "mkdir -p $TASKDIR/missing_lumis"
+    foreach i ( `seq 1 $N` )
+	set line=`sed -n "$i"p $TASKDIR/input_datasets.txt`
+	set short=`echo $line | awk '{ print $1 }'`
+	set DATASET=`echo $line | awk '{ print $2 }'`
+	set isData=`echo $DATASET | grep 'MINIAOD$' | wc -l`
+	set short=`sed -n "$i"p $TASKDIR/input_datasets.txt | awk '{ print $1 }'`
+	set dir=`echo $TASKDIR"/crab_"$short`
+	set status_txt=`ls -tr $TASKDIR/status/$short/*.txt | tail -1`
+	set Status=`grep "Status on the scheduler:" $status_txt | awk '{ print $NF }'`
+	if ( $Status != "COMPLETED" ) then
+	    eval_or_echo "crab report -d $dir"
+	    if ( -f $dir/results/notFinishedLumis.json ) then
+	        eval_or_echo "cp -p $dir/results/notFinishedLumis.json $TASKDIR/missing_lumis/missing_"$short"_JSON.txt"
+	        sed "14s;$short;$short""_recovery;;s;$CERT_DIR/$JSON;$TASKDIR/missing_lumis/missing_"$short"_JSON.txt;;" $TASKDIR/crab_$short.py > $TASKDIR/crab_"$short"_recovery.py
+	        if ( $isData == 0 ) then
+	            sed -i "36iconfig.Data.lumiMask = '$TASKDIR/missing_lumis/missing_"$short"_JSON.txt'" $TASKDIR/crab_"$short"_recovery.py
+	        endif
+	    else
+	        sed "14s;$short;$short""_recovery;;" $TASKDIR/crab_$short.py > $TASKDIR/crab_"$short"_recovery.py		
+	    endif
+	    ls -l $TASKDIR/crab_"$short"_recovery.py
+        endif
     end
 
 else if ( `echo $cmd | grep "find_missing" | wc -l` ) then

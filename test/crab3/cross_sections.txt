@@ -41,12 +41,8 @@ TTJets_HT-2500toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8                      
 # NLO Generator XSec (leptonDecays s/t-channel): 
 #   https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=145#Single_top
 
-ST_s-channel_4f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1                    3.36     1
+# Inclusive
 ST_s-channel_4f_InclusiveDecays_13TeV-amcatnlo-pythia8                              10.32    1
-ST_t-channel_4f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1                    70.69    1
-ST_t-channel_5f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1                    70.69    1
-ST_t-channel_top_4f_leptonDecays_13TeV-powheg-pythia8_TuneCUETP8M1                  44.33    1
-ST_t-channel_antitop_4f_leptonDecays_13TeV-powheg-pythia8_TuneCUETP8M1              26.38    1
 ST_t-channel_top_4f_inclusiveDecays_13TeV-powhegV2-madspin-pythia8_TuneCUETP8M1     136.02   1
 ST_t-channel_top_4f_inclusiveDecays_TuneCUETP8M2T4_13TeV-powhegV2-madspin           136.02   1
 ST_t-channel_antitop_4f_inclusiveDecays_13TeV-powhegV2-madspin-pythia8_TuneCUETP8M1 80.95    1
@@ -57,9 +53,16 @@ ST_tW_top_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M2T4                
 ST_tW_antitop_5f_DS_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1               71.7     0.5
 ST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1                  71.7     0.5
 ST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M2T4                71.7     0.5
+# Leptonic
+ST_s-channel_4f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1                    3.36     1
+ST_t-channel_4f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1                    70.69    1
+ST_t-channel_5f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1                    70.69    1
+ST_t-channel_top_4f_leptonDecays_13TeV-powheg-pythia8_TuneCUETP8M1                  44.33    1
+ST_t-channel_antitop_4f_leptonDecays_13TeV-powheg-pythia8_TuneCUETP8M1              26.38    1
+# NoFullyHadronic
+ST_tW_top_5f_NoFullyHadronicDecays_13TeV-powheg_TuneCUETP8M1                        35.85    0.543 # BR = 1 - 0.676*0.676
+ST_tW_antitop_5f_NoFullyHadronicDecays_13TeV-powheg_TuneCUETP8M1                    35.85    0.543 # BR = 1 - 0.676*0.676
 
-
-	 
 # TTV - L/NLO
 # https://twiki.cern.ch/twiki/bin/view/CMS/SummaryTable1G25ns?rev=145#TT_X
 # ttH: https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageAt13TeV#ttH_Process
@@ -243,7 +246,7 @@ WWTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8                                  
 WWToLNuQQ_13TeV-powheg			                                            49.997    1
 WWTo2L2Nu_13TeV-powheg			                                            12.178    1
 
-WZTo2Q2Nu_13TeV_amcatnloFXFX_madspin_pythia8                                        5.6       1 # copied from WZTo2L2Q
+WZTo2Q2Nu_13TeV_amcatnloFXFX_madspin_pythia8                                        6.488     1
 WZTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8                                      10.71     1
 WZTo1L3Nu_13TeV_amcatnloFXFX_madspin_pythia8                                        3.033     1
 WZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8                                         5.595     1
